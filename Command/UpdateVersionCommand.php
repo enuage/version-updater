@@ -150,22 +150,29 @@ class UpdateVersionCommand extends ContainerAwareCommand
                 $minorVersion++;
             }
 
+            $newVersion = $version;
             if ($options) {
-                $version = sprintf('%d.%d.%d%s%s', $majorVersion, $minorVersion, $patchVersion, $preRelease, $metadata);
+                $newVersion = sprintf('%d.%d.%d%s%s', $majorVersion, $minorVersion, $patchVersion, $preRelease, $metadata);
             }
+
+            unset($majorVersion, $minorVersion, $patchVersion, $preRelease, $metadata);
 
             $lastMatch = end($matches);
             $lastMatch = !$this->isInt($lastMatch) && count($matches) > 8 ? '${'.(count($matches) - 1).'}' : '';
 
-            if (!is_null($version)) {
-                $content = preg_replace($pattern, sprintf('${1}%s%s', $version, $lastMatch), $content);
+            if (!is_null($newVersion)) {
+                $content = preg_replace($pattern, sprintf('${1}%s%s', $newVersion, $lastMatch), $content);
 
                 file_put_contents($filePath, $content);
                 $output->writeln(sprintf('<comment>Updated project version in file: %s</comment>', $filePath));
             }
+
+            unset($matches, $filePath, $content, $pattern, $fileName);
         }
 
-        $output->writeln(sprintf('<info>Project version changed to: %s</info>', $version));
+        $output->writeln(sprintf('<info>Project version changed to: %s</info>', $newVersion));
+
+        $version = null;
     }
 
     /**
@@ -208,6 +215,8 @@ class UpdateVersionCommand extends ContainerAwareCommand
                 $preRelease .= '.'.$preReleaseVersion;
             }
         }
+
+        unset($name, $matches, $preReleaseVersion);
 
         return $preRelease;
     }
