@@ -1,5 +1,11 @@
 # Version updater command changelog
 
+### v1.0.0
+
+##### 2018-12-03 01:46:
+
+- Version 1.0.0 release
+
 ### v0.1.1-alpha
 
 ##### 2018-12-02 22:35:
