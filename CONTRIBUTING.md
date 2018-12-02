@@ -16,8 +16,7 @@ Please note we have a code of conduct, please follow it in all your interactions
 - License notification in each created file
 - List of changes in CHANGELOG.md
 - `@author` PHPDoc tag for each new method in changed files or once in header of each new file
-- Unit test for your changes
-- Documentation for your new API endpoint or method you created with short description of what it do
+- Documentation for your new action you created with short description of what it do
 
 ## Pull Request Process
 
