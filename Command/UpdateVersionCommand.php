@@ -31,6 +31,11 @@ class UpdateVersionCommand extends ContainerAwareCommand
     private $input;
 
     /**
+     * @var boolean $options
+     */
+    private $options = false;
+
+    /**
      * {@inheritdoc}
      */
     protected function configure()
@@ -67,11 +72,22 @@ class UpdateVersionCommand extends ContainerAwareCommand
 
         $root = $this->getContainer()->getParameter('kernel.root_dir');
         $files = $this->getContainer()->getParameter('enuage_version_updater.files');
-        $versionRegex = '((\d+)\.?(\d*)\.?(\d*)(?>\-(alpha|beta|rc)(?>\.(\d+))?)?(?>\+[a-zA-Z\d]+)*)';
+        $versionRegex = '(?>'.
+            '(?<majorVersion>\d+)\.?'.
+            '(?<minorVersion>\d*)\.?'.
+            '(?<patchVersion>\d*)'.
+            '(?>\-(?<preRelease>alpha|beta|rc)'.
+            '(?>\.(?<preReleaseVersion>\d+))?)?'.
+            '(?>\+[a-zA-Z\d]+)*'. // Metadata isn't captured
+            ')';
 
         $version = $input->getArgument('version');
+        $newVersion = $version;
 
-        $options = 0;
+        $this->hasOptions(false);
+
+        $metadata = $this->getMetadata();
+
         foreach ($files as $directive) {
             $fileName = key($directive);
             $pattern = $directive[$fileName];
@@ -82,83 +98,59 @@ class UpdateVersionCommand extends ContainerAwareCommand
             $content = file_get_contents($filePath);
 
             preg_match($pattern, $content, $matches);
-            $majorVersion = intval($matches[3]);
-            $minorVersion = intval($matches[4]);
-            $patchVersion = intval($matches[5]);
 
-            if(!$version) {
-                if ($input->hasParameterOption('--major')) {
-                    $this->isDown() ? $majorVersion-- : $majorVersion++;
+            $majorVersion = intval($matches['majorVersion']);
+            $minorVersion = intval($matches['minorVersion']);
+            $patchVersion = intval($matches['patchVersion']);
+
+            if (!$version) {
+                if ($this->hasParameterOption('major')) {
+                    $this->isDown() && $majorVersion > 0 ? $majorVersion-- : $majorVersion++;
                     $minorVersion = 0;
                     $patchVersion = 0;
-
-                    $options++;
                 }
 
-                if ($input->hasParameterOption('--minor')) {
-                    $this->isDown() ? $minorVersion-- : $minorVersion++;
+                if ($this->hasParameterOption('minor')) {
+                    $this->isDown() && $minorVersion > 0 ? $minorVersion-- : $minorVersion++;
                     $patchVersion = 0;
-
-                    $options++;
                 }
 
-                if ($input->hasParameterOption('--patch')) {
-                    $this->isDown() ? $patchVersion-- : $patchVersion++;
-
-                    $options++;
+                if ($this->hasParameterOption('patch')) {
+                    $this->isDown() && $patchVersion > 0 ? $patchVersion-- : $patchVersion++;
                 }
+            }
+
+            if ($minorVersion == 0 && $majorVersion == 0) {
+                $minorVersion = 1;
             }
 
             $preRelease = '';
             if (!$input->hasParameterOption('--release')) {
                 $preReleaseVersions = ['alpha', 'beta', 'rc'];
-                if (isset($matches[6]) && in_array($matches[6], $preReleaseVersions)) {
-                    $preRelease = '-'.$matches[6];
-                    if (isset($matches[7]) && $this->isInt($matches[7])) {
-                        $preRelease .= '.'.$matches[7];
-                    }
-                }
-
                 foreach ($preReleaseVersions as $preReleaseVersion) {
-                    if ($input->hasParameterOption('--'.$preReleaseVersion)) {
-                        $preRelease = $this->updatePreRelease($preReleaseVersion, $matches);
-
-                        $options++;
+                    if ($this->hasParameterOption($preReleaseVersion)) {
+                        $preRelease = $this->setPreRelease($preReleaseVersion, $matches);
                     }
                 }
             }
 
-            $metadata = '';
-            if ($input->hasParameterOption('--date')) {
-                $format = $input->getOption('date') ?? 'c';
-                $now = new \DateTime('now');
-                $metadata = '+'.$now->format($format);
-
-                $options++;
+            if ($this->hasOptions()) {
+                $newVersion = sprintf(
+                    '%d.%d.%d%s%s',
+                    $majorVersion,
+                    $minorVersion,
+                    $patchVersion,
+                    $preRelease,
+                    $metadata
+                );
             }
 
-            if ($input->hasParameterOption('--meta')) {
-                $inputMeta = $input->getOption('meta');
-                if (!empty($inputMeta)) {
-                    $metadata .= '+'.$inputMeta;
-                }
-
-                $options++;
-            }
-
-            if ($minorVersion == 0 && $majorVersion == 0) {
-                $minorVersion++;
-            }
-
-            $newVersion = $version;
-            if ($options) {
-                $newVersion = sprintf('%d.%d.%d%s%s', $majorVersion, $minorVersion, $patchVersion, $preRelease, $metadata);
-            }
-
-            unset($majorVersion, $minorVersion, $patchVersion, $preRelease, $metadata);
+            unset($majorVersion, $minorVersion, $patchVersion, $preRelease);
 
             $lastMatch = end($matches);
-            $lastMatch = !$this->isInt($lastMatch) && count($matches) > 8 ? '${'.(count($matches) - 1).'}' : '';
+
+            // 7 groups + 5 named groups. Fucking PHP doesn't exclude unnamed groups even if exists named groups. Facepalm
+            $lastMatch = !$this->isInt($lastMatch) && count($matches) > 12 ? end($matches) : '';
 
             if (!is_null($newVersion)) {
                 $content = preg_replace($pattern, sprintf('${1}%s%s', $newVersion, $lastMatch), $content);
@@ -176,6 +168,59 @@ class UpdateVersionCommand extends ContainerAwareCommand
     }
 
     /**
+     * @param bool $options
+     *
+     * @return bool
+     */
+    private function hasOptions(?bool $options = null): bool
+    {
+        if (is_bool($options)) {
+            $this->options = $options;
+        }
+
+        return $this->options;
+    }
+
+    /**
+     * @return string
+     *
+     * @throws \Exception
+     */
+    private function getMetadata(): string
+    {
+        $metadata = [];
+        if ($this->hasParameterOption('date')) {
+            $now = new \DateTime('now');
+            $metadata[] = $now->format($this->input->getOption('date') ?? 'c');
+        }
+
+        if ($this->hasParameterOption('meta')) {
+            $inputMeta = $this->input->getOption('meta');
+            if ($inputMeta) {
+                $metadata[] = $inputMeta;
+            }
+        }
+
+        return !empty($metadata) ? '+'.implode("+", $metadata) : '';
+    }
+
+    /**
+     * @param string $name
+     *
+     * @return bool
+     */
+    private function hasParameterOption(string $name): bool
+    {
+        $result = $this->input->hasParameterOption('--'.$name);
+
+        if ($result) {
+            $this->hasOptions(true);
+        }
+
+        return $result;
+    }
+
+    /**
      * @return bool
      */
     private function isDown(): bool
@@ -184,40 +229,40 @@ class UpdateVersionCommand extends ContainerAwareCommand
     }
 
     /**
-     * @param $value
-     *
-     * @return bool
-     */
-    private function isInt($value)
-    {
-        return (string)(int)$value === $value;
-    }
-
-    /**
      * @param string $name alpha|beta|rc
      * @param array $matches
      *
      * @return string
      */
-    private function updatePreRelease(string $name, array $matches): string
+    private function setPreRelease(string $name, array $matches): string
     {
         $preRelease = '-'.$name;
-        $isPreReleaseVersionDefined = isset($matches[7]) && $this->isInt($matches[7]);
+        $preReleaseDefined = isset($matches["preRelease"]) && $matches["preRelease"] == $name;
+        $preReleaseVersionDefined = isset($matches["preReleaseVersion"]) && $this->isInt($matches["preReleaseVersion"]);
 
-        if (isset($matches[6]) && $matches[6] == $name && !$this->isDown() && !$isPreReleaseVersionDefined) {
+        if ($preReleaseDefined && !$preReleaseVersionDefined && !$this->isDown()) {
             $preRelease .= '.1';
         }
 
-        if ($isPreReleaseVersionDefined && $matches[6] == $name) {
-            $preReleaseVersion = intval($matches[7]);
+        if ($preReleaseDefined && $preReleaseVersionDefined) {
+            $preReleaseVersion = intval($matches["preReleaseVersion"]);
             $preReleaseVersion = $this->isDown() ? --$preReleaseVersion : ++$preReleaseVersion;
+
             if ($preReleaseVersion > 0) {
                 $preRelease .= '.'.$preReleaseVersion;
             }
         }
 
-        unset($name, $matches, $preReleaseVersion);
-
         return $preRelease;
+    }
+
+    /**
+     * @param string $value
+     *
+     * @return bool
+     */
+    private function isInt(string $value): bool
+    {
+        return strval(intval($value)) === $value;
     }
 }
