@@ -36,6 +36,11 @@ class UpdateVersionCommand extends ContainerAwareCommand
     private $options = false;
 
     /**
+     * @var boolean $down
+     */
+    private $down = false;
+
+    /**
      * {@inheritdoc}
      */
     protected function configure()
@@ -69,9 +74,14 @@ class UpdateVersionCommand extends ContainerAwareCommand
     protected function execute(InputInterface $input, OutputInterface $output)
     {
         $this->input = $input;
+        $this->down = $this->hasParameterOption('down');
+        $this->hasOptions(false);
 
-        $root = $this->getContainer()->getParameter('kernel.root_dir');
-        $files = $this->getContainer()->getParameter('enuage_version_updater.files');
+        $metadata = $this->getMetadata();
+
+        $version = $input->getArgument('version');
+        $newVersion = $version;
+
         $versionRegex = '(?>'.
             '(?<majorVersion>\d+)\.?'.
             '(?<minorVersion>\d*)\.?'.
@@ -81,13 +91,8 @@ class UpdateVersionCommand extends ContainerAwareCommand
             '(?>\+[a-zA-Z\d]+)*'. // Metadata isn't captured
             ')';
 
-        $version = $input->getArgument('version');
-        $newVersion = $version;
-
-        $this->hasOptions(false);
-
-        $metadata = $this->getMetadata();
-
+        $root = $this->getContainer()->getParameter('kernel.root_dir');
+        $files = $this->getContainer()->getParameter('enuage_version_updater.files');
         foreach ($files as $directive) {
             $fileName = key($directive);
             $pattern = $directive[$fileName];
@@ -125,7 +130,7 @@ class UpdateVersionCommand extends ContainerAwareCommand
             }
 
             $preRelease = '';
-            if (!$input->hasParameterOption('--release')) {
+            if (!$this->hasParameterOption('release')) {
                 $preReleaseVersions = ['alpha', 'beta', 'rc'];
                 foreach ($preReleaseVersions as $preReleaseVersion) {
                     if ($this->hasParameterOption($preReleaseVersion)) {
@@ -150,7 +155,7 @@ class UpdateVersionCommand extends ContainerAwareCommand
             $lastMatch = end($matches);
 
             // 7 groups + 5 named groups. Fucking PHP doesn't exclude unnamed groups even if exists named groups. Facepalm
-            $lastMatch = !$this->isInt($lastMatch) && count($matches) > 12 ? end($matches) : '';
+            $lastMatch = !is_numeric($lastMatch) && count($matches) > 12 ? $lastMatch : '';
 
             if (!is_null($newVersion)) {
                 $content = preg_replace($pattern, sprintf('${1}%s%s', $newVersion, $lastMatch), $content);
@@ -164,7 +169,7 @@ class UpdateVersionCommand extends ContainerAwareCommand
 
         $output->writeln(sprintf('<info>Project version changed to: %s</info>', $newVersion));
 
-        $version = null;
+        $version = null; // Resolves cache issue
     }
 
     /**
@@ -225,7 +230,7 @@ class UpdateVersionCommand extends ContainerAwareCommand
      */
     private function isDown(): bool
     {
-        return $this->input->hasParameterOption('--down');
+        return $this->down;
     }
 
     /**
@@ -238,7 +243,7 @@ class UpdateVersionCommand extends ContainerAwareCommand
     {
         $preRelease = '-'.$name;
         $preReleaseDefined = isset($matches["preRelease"]) && $matches["preRelease"] == $name;
-        $preReleaseVersionDefined = isset($matches["preReleaseVersion"]) && $this->isInt($matches["preReleaseVersion"]);
+        $preReleaseVersionDefined = isset($matches["preReleaseVersion"]) && is_numeric($matches["preReleaseVersion"]);
 
         if ($preReleaseDefined && !$preReleaseVersionDefined && !$this->isDown()) {
             $preRelease .= '.1';
@@ -254,15 +259,5 @@ class UpdateVersionCommand extends ContainerAwareCommand
         }
 
         return $preRelease;
-    }
-
-    /**
-     * @param string $value
-     *
-     * @return bool
-     */
-    private function isInt(string $value): bool
-    {
-        return strval(intval($value)) === $value;
     }
 }
