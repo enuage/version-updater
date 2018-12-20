@@ -104,24 +104,24 @@ class UpdateVersionCommand extends ContainerAwareCommand
 
             preg_match($pattern, $content, $matches);
 
-            $majorVersion = intval($matches['majorVersion']);
-            $minorVersion = intval($matches['minorVersion']);
-            $patchVersion = intval($matches['patchVersion']);
+            $majorVersion = intval($matches['majorVersion'] ?? 0);
+            $minorVersion = intval($matches['minorVersion'] ?? 0);
+            $patchVersion = intval($matches['patchVersion'] ?? 0);
 
             if (!$version) {
                 if ($this->hasParameterOption('major')) {
-                    $this->isDown() && $majorVersion > 0 ? $majorVersion-- : $majorVersion++;
+                    $this->updateVersion($majorVersion);
                     $minorVersion = 0;
                     $patchVersion = 0;
                 }
 
                 if ($this->hasParameterOption('minor')) {
-                    $this->isDown() && $minorVersion > 0 ? $minorVersion-- : $minorVersion++;
+                    $this->updateVersion($minorVersion);
                     $patchVersion = 0;
                 }
 
                 if ($this->hasParameterOption('patch')) {
-                    $this->isDown() && $patchVersion > 0 ? $patchVersion-- : $patchVersion++;
+                    $this->updateVersion($patchVersion);
                 }
             }
 
@@ -173,6 +173,22 @@ class UpdateVersionCommand extends ContainerAwareCommand
     }
 
     /**
+     * @param string $name
+     *
+     * @return bool
+     */
+    private function hasParameterOption(string $name): bool
+    {
+        $result = $this->input->hasParameterOption('--'.$name);
+
+        if ($result) {
+            $this->hasOptions(true);
+        }
+
+        return $result;
+    }
+
+    /**
      * @param bool $options
      *
      * @return bool
@@ -210,19 +226,15 @@ class UpdateVersionCommand extends ContainerAwareCommand
     }
 
     /**
-     * @param string $name
-     *
-     * @return bool
+     * @param int $version
      */
-    private function hasParameterOption(string $name): bool
+    private function updateVersion(int &$version)
     {
-        $result = $this->input->hasParameterOption('--'.$name);
-
-        if ($result) {
-            $this->hasOptions(true);
+        if ($this->isDown()) {
+            $version > 0 ? $version-- : $version = 0;
+        } else {
+            $version++;
         }
-
-        return $result;
     }
 
     /**
@@ -245,8 +257,12 @@ class UpdateVersionCommand extends ContainerAwareCommand
         $preReleaseDefined = isset($matches["preRelease"]) && $matches["preRelease"] == $name;
         $preReleaseVersionDefined = isset($matches["preReleaseVersion"]) && is_numeric($matches["preReleaseVersion"]);
 
-        if ($preReleaseDefined && !$preReleaseVersionDefined && !$this->isDown()) {
-            $preRelease .= '.1';
+        if (!$preReleaseDefined && $this->isDown()) {
+            $preRelease = '';
+        }
+
+        if ($preReleaseDefined && !$preReleaseVersionDefined) {
+            $preRelease = !$this->isDown() ? $preRelease.'.1' : '';
         }
 
         if ($preReleaseDefined && $preReleaseVersionDefined) {
