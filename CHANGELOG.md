@@ -1,5 +1,18 @@
 # Version updater command changelog
 
+### v1.0.2
+
+##### 2018-12-20 02:23
+
+- Fix bugs
+- Add tests (Coverage 100%: 26 tests, 65 assertions)
+
+### v1.0.1
+
+##### 2018-12-05 10:24:43
+
+- Fix code
+
 ### v1.0.0
 
 ##### 2018-12-03 01:46:
