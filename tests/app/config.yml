@@ -1,0 +1,8 @@
+framework:
+  secret: "secret "
+  test: ~
+  session:
+    storage_id: session.storage.mock_file
+enuage_version_updater:
+  files:
+    - support/file.txt: /^(version=)\V/m
