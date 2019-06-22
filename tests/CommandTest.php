@@ -59,15 +59,6 @@ class CommandTest extends FunctionalTestCase
     }
 
     /**
-     * @param array $arguments
-     * @param array $options
-     */
-    private function runCommand(array $arguments = [], array $options = [])
-    {
-        $this->commandTester->run(array_merge(['command' => $this->commandName], $arguments), $options);
-    }
-
-    /**
      * @param string $data
      *
      * @return void
@@ -86,6 +77,15 @@ class CommandTest extends FunctionalTestCase
     }
 
     /**
+     * @param array $arguments
+     * @param array $options
+     */
+    private function runCommand(array $arguments = [], array $options = [])
+    {
+        $this->commandTester->run(array_merge(['command' => $this->commandName], $arguments), $options);
+    }
+
+    /**
      * @param string $expected
      */
     private function assertContentEqualTo(string $expected)
@@ -99,6 +99,15 @@ class CommandTest extends FunctionalTestCase
     private function statusQuo()
     {
         $this->setTestFileContent('');
+    }
+
+    public function testWithPrefix()
+    {
+        $this->runCommandTest(
+            [
+                'version=v0.1.0' => 'version=v0.1.0',
+            ]
+        );
     }
 
     public function testSetVersion()

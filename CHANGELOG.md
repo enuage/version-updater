@@ -1,5 +1,15 @@
 # Version updater command changelog
 
+- [ ] TODO: Composer version updating
+- [ ] TODO: .env file value updating
+
+##### 2019-06-23 02:06
+
+- Code clean and improvements
+- Added prefix recognition
+- Large code refactoring. Moved the code from command to separate
+files
+
 ### v1.0.2
 
 ##### 2018-12-20 02:23

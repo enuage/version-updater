@@ -26,11 +26,12 @@ class Configuration implements ConfigurationInterface
     /**
      * {@inheritdoc}
      */
-    public function getConfigTreeBuilder()
+    public function getConfigTreeBuilder(): TreeBuilder
     {
         $treeBuilder = new TreeBuilder();
         $rootNode = $treeBuilder->root('enuage_version_updater');
         $rootNode->append($this->getFilesNode());
+        $rootNode->children()->booleanNode('composer')->defaultFalse()->end();
 
         return $treeBuilder;
     }
