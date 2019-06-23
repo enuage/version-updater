@@ -59,7 +59,7 @@ class AppKernel extends Kernel
 Usage
 =====
 
-## Updating files via command line
+## Option 1: Updating files via command line
 
 ### Step 1: Define files and regular expression for version updating
 
@@ -104,7 +104,7 @@ Available options
 
 `--meta <data>`: Add metadata to the version
 
-## Updating version via service
+## Option 2: Updating version via service
 
 Example:
 
