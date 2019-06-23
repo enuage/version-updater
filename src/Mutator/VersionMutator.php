@@ -16,6 +16,9 @@
 namespace Enuage\VersionUpdaterBundle\Mutator;
 
 use DateTime;
+use Enuage\VersionUpdaterBundle\DTO\VersionOptions;
+use Enuage\VersionUpdaterBundle\Formatter\FormatterInterface;
+use Enuage\VersionUpdaterBundle\Formatter\VersionFormatter;
 use Enuage\VersionUpdaterBundle\ValueObject\Version;
 use Exception;
 
@@ -32,29 +35,70 @@ class VersionMutator
     private $version;
 
     /**
-     * @var bool
+     * @var VersionOptions
      */
-    private $down = false;
+    private $options;
 
     /**
      * VersionMutator constructor.
      *
      * @param Version $version
+     * @param VersionOptions $options
      */
-    public function __construct(Version $version)
+    public function __construct(Version $version, VersionOptions $options)
     {
         $this->version = $version;
+        $this->options = $options;
+    }
+
+    /**
+     * @return $this
+     *
+     * @throws Exception
+     */
+    public function update(): self
+    {
+        foreach (Version::MAIN_VERSIONS as $version) {
+            if ($this->options->has($version)) {
+                $this->updateVersion($version);
+            }
+        }
+
+        if (!$this->options->isRelease()) {
+            $preReleaseOptions = [];
+            foreach (Version::PRE_RELEASE_VERSIONS as $preReleaseVersion) {
+                $preReleaseOptions[$preReleaseVersion] = $this->options->has($preReleaseVersion);
+            }
+
+            $this->updatePreRelease($preReleaseOptions);
+        } else {
+            $this->release();
+        }
+
+        if ($this->options->isDateDefined()) {
+            $this->enableDateMeta($this->options->getDateFormat());
+        }
+
+        if ($this->options->isMetaDefined()) {
+            $this->enableMeta($this->options->getMetaValue());
+        }
+
+        return $this;
     }
 
     /**
      * @param string $key
      */
-    public function updateVersion(string $key)
+    private function updateVersion(string $key)
     {
         $value = $this->version->getVersion($key);
 
-        if ($this->isDown()) {
+        if ($this->options->isDowngrade()) {
             $value > 0 ? $value-- : $value = 0;
+
+            if (0 === $value && Version::MAJOR === $key) {
+                $this->version->setMinor(1);
+            }
         } else {
             $value++;
         }
@@ -63,17 +107,9 @@ class VersionMutator
     }
 
     /**
-     * @return bool
-     */
-    private function isDown(): bool
-    {
-        return $this->down;
-    }
-
-    /**
      * @param array $preReleaseOptions
      */
-    public function updatePreRelease(array $preReleaseOptions)
+    private function updatePreRelease(array $preReleaseOptions)
     {
         $preRelease = $this->version->getPreRelease();
         $this->version->clearPreRelease();
@@ -86,45 +122,71 @@ class VersionMutator
             $isPreReleaseDefined = $preRelease === $preReleaseOption;
 
             if ($isOptionEnabled) {
-                $this->version->clearPreRelease()->clearPreReleaseVersion()->setPreRelease($preReleaseOption);
+                $this->version
+                    ->clearPreRelease()
+                    ->clearPreReleaseVersion()
+                    ->setPreRelease($preReleaseOption);
 
-                if (!$isPreReleaseDefined && $this->isDown()) {
-                    $this->version->clearPreRelease();
+                if (!$isPreReleaseDefined && $this->options->isDowngrade()) {
+                    $this->release();
                 }
 
                 if ($isPreReleaseDefined && !$isPreReleaseVersionDefined) {
-                    if ($this->isDown()) {
-                        $this->version->setPreRelease($preReleaseOption, false)->clearPreReleaseVersion();
+                    if ($this->options->isDowngrade()) {
+                        $this->version
+                            ->setPreRelease($preReleaseOption, false)
+                            ->clearPreReleaseVersion();
                     } else {
-                        $this->version->setPreReleaseVersion(1);
+                        $this->updatePreReleaseVersion(1);
                     }
                 }
 
                 if ($isPreReleaseDefined && $isPreReleaseVersionDefined) {
-                    $newPreReleaseVersion = $this->isDown() ? --$preReleaseVersion : ++$preReleaseVersion;
-                    if ($newPreReleaseVersion) {
-                        $this->version->setPreReleaseVersion($newPreReleaseVersion);
-                    }
+                    $this->updatePreReleaseVersion(
+                        $preReleaseVersion,
+                        $this->options->isPreReleaseDowngrade() ? -1 : 1
+                    );
                 }
+            }
+        }
+
+        if (null !== $preRelease && !$this->options->isRelease() && $this->options->isPreReleaseVersionUpdatable()) {
+            $isDowngrade = $this->options->isPreReleaseDowngrade();
+
+            $this->version->setPreRelease($preRelease);
+            $this->updatePreReleaseVersion($preReleaseVersion ?? 0, $isDowngrade ? -1 : 1);
+
+            if ((null === $preReleaseVersion || $preReleaseVersion < 1) && $isDowngrade) {
+                $this->release();
             }
         }
     }
 
-    public function release()
-    {
-        $this->version->clearPreRelease()->clearPreReleaseVersion();
-    }
-
     /**
-     * @param bool $down
+     * @param int $value
+     * @param int $modifier
      *
      * @return VersionMutator
      */
-    public function setDown(bool $down): self
+    private function updatePreReleaseVersion(int $value, int $modifier = null): VersionMutator
     {
-        $this->down = $down;
+        if ($modifier) {
+            $value += $modifier;
+        }
+
+        if ($value && $value > 0) {
+            $this->version->setPreReleaseVersion($value);
+        }
 
         return $this;
+    }
+
+    /**
+     * @return void
+     */
+    private function release()
+    {
+        $this->version->clearPreRelease()->clearPreReleaseVersion();
     }
 
     /**
@@ -133,7 +195,7 @@ class VersionMutator
      * @return VersionMutator
      * @throws Exception
      */
-    public function enableDateMeta(string $format): self
+    private function enableDateMeta(string $format): self
     {
         $this->version->setDateMeta(true);
         $this->version->setDateMetaValue(new DateTime());
@@ -147,12 +209,22 @@ class VersionMutator
      *
      * @return VersionMutator
      */
-    public function enableMeta(string $value): self
+    private function enableMeta(string $value): self
     {
         $this->version->setMeta(true);
         $this->version->setMetaValue($value);
 
         return $this;
+    }
+
+    /**
+     * @return FormatterInterface
+     */
+    public function getFormatter(): FormatterInterface
+    {
+        $formatter = new VersionFormatter();
+
+        return $formatter->setVersion($this->getVersion());
     }
 
     /**

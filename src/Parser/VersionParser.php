@@ -85,15 +85,15 @@ class VersionParser extends AbstractParser
         }
 
         if ($this->matches->containsKey('majorVersion')) {
-            $version->setMajor($this->matches->get('majorVersion'));
+            $version->setMajor($this->matches->getValue('majorVersion', 0));
         }
 
         if ($this->matches->containsKey('minorVersion')) {
-            $version->setMinor($this->matches->get('minorVersion'));
+            $version->setMinor($this->matches->getValue('minorVersion', 0));
         }
 
         if ($this->matches->containsKey('patchVersion')) {
-            $version->setPatch($this->matches->get('patchVersion'));
+            $version->setPatch($this->matches->getValue('patchVersion', 0));
         }
 
         if ($this->matches->containsKey('preRelease')) {

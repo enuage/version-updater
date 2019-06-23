@@ -65,7 +65,7 @@ class FileParser extends AbstractParser
         $versionParser = new VersionParser($this->getFile()->getContents());
         $versionParser->setPattern($this->getPattern());
 
-        $this->cloneMatches($versionParser);
+        $this->cloneMatches($versionParser->getMatches());
 
         return $versionParser->parse();
     }
@@ -76,17 +76,5 @@ class FileParser extends AbstractParser
     public function getFile(): SplFileInfo
     {
         return $this->file;
-    }
-
-    /**
-     * @param VersionParser $versionParser
-     *
-     * @return AbstractParser
-     */
-    protected function cloneMatches($versionParser): AbstractParser
-    {
-        $this->matches = $versionParser->getMatches();
-
-        return $this;
     }
 }

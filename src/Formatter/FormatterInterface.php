@@ -27,5 +27,5 @@ interface FormatterInterface
      *
      * @return mixed
      */
-    public function format($subject);
+    public function format($subject = null);
 }

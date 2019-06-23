@@ -15,7 +15,7 @@
 
 namespace Enuage\VersionUpdaterBundle\Parser;
 
-use Doctrine\Common\Collections\ArrayCollection;
+use Enuage\VersionUpdaterBundle\Collection\ArrayCollection;
 use Enuage\VersionUpdaterBundle\ValueObject\Version;
 
 /**

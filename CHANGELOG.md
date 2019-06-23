@@ -3,6 +3,15 @@
 - [ ] TODO: Composer version updating
 - [ ] TODO: .env file value updating
 
+##### 2019-06-23 17:36
+
+- Add `command options parser`
+- Add `files finder`, moved all files operations there
+- Add `files array normalizer`
+- Add `version options` DTO
+- Updated `mutator`, moved there all code from command
+- Add tests for mutator (Coverage 99.72%: 34 tests, 102 assertions) 
+
 ##### 2019-06-23 02:06
 
 - Code clean and improvements

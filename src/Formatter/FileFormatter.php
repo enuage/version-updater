@@ -49,13 +49,13 @@ class FileFormatter implements FormatterInterface
     }
 
     /**
-     * @param VersionFormatter $versionFormatter
+     * @param FormatterInterface|VersionFormatter $versionFormatter
      *
      * @return bool
      *
      * @throws Exception
      */
-    public function format($versionFormatter): bool
+    public function format($versionFormatter = null): bool
     {
         $fileParser = $this->getFileParser();
 

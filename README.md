@@ -59,6 +59,8 @@ class AppKernel extends Kernel
 Usage
 =====
 
+## Updating files via command line
+
 ### Step 1: Define files and regular expression for version updating
 
 Use `\V` for define the version in regular expression. It will be replaced with the SemVer regular expression
@@ -101,3 +103,21 @@ Available options
 `--date <none|PHP date format>`: Add date metadata to the version. By default date format is equal to `c`
 
 `--meta <data>`: Add metadata to the version
+
+## Updating version via service
+
+Example:
+
+```php
+/** @var Container $container */
+use Enuage\VersionUpdaterBundle\DTO\VersionOptions;use Symfony\Component\DependencyInjection\Container;$service = $container->get('enuage.version.service');
+
+$version = '0.1.0-alpha.2';
+
+$options = new VersionOptions();
+$options->increasePreRelease();
+
+$service->update($version, $options); // Result: "0.1.0-alpha.3"
+```
+
+**TODO**: Add list of all methods of `VersionOptions`

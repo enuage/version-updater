@@ -80,7 +80,7 @@ class Version
     /**
      * @var bool
      */
-    private $releaseCandidate = false;
+    private $rc = false;
 
     /**
      * @var int|null
@@ -177,22 +177,13 @@ class Version
      */
     public function isReleaseCandidate(): bool
     {
-        return $this->releaseCandidate;
+        return $this->rc;
     }
 
     /**
-     * @param bool $isDefined
-     *
      * @return Version
      */
-    public function setReleaseCandidate(bool $isDefined): Version
-    {
-        $this->releaseCandidate = $isDefined;
-
-        return $this;
-    }
-
-    public function clearPreRelease()
+    public function clearPreRelease(): Version
     {
         foreach (self::PRE_RELEASE_VERSIONS as $version) {
             $this->{$version} = false;
@@ -207,7 +198,7 @@ class Version
      *
      * @return Version
      */
-    public function setPreRelease(string $type = null, bool $value = true): self
+    public function setPreRelease(string $type = null, bool $value = true): Version
     {
         switch ($type) {
             case self::ALPHA:
@@ -220,6 +211,18 @@ class Version
                 $this->setReleaseCandidate($value);
                 break;
         }
+
+        return $this;
+    }
+
+    /**
+     * @param bool $isDefined
+     *
+     * @return Version
+     */
+    public function setReleaseCandidate(bool $isDefined): Version
+    {
+        $this->rc = $isDefined;
 
         return $this;
     }
@@ -241,9 +244,10 @@ class Version
             case self::PATCH:
                 return $this->getPatch();
                 break;
+            default:
+                return null;
+                break;
         }
-
-        return null;
     }
 
     /**
@@ -323,7 +327,7 @@ class Version
      *
      * @return Version
      */
-    public function setVersion(string $type, int $value): self
+    public function setVersion(string $type, int $value): Version
     {
         switch ($type) {
             case self::MAJOR:
@@ -383,7 +387,7 @@ class Version
     /**
      * @return Version
      */
-    public function clearPreReleaseVersion(): self
+    public function clearPreReleaseVersion(): Version
     {
         $this->preReleaseVersion = null;
 

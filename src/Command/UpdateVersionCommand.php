@@ -12,21 +12,19 @@
 
 namespace Enuage\VersionUpdaterBundle\Command;
 
+use Enuage\VersionUpdaterBundle\Finder\FilesFinder;
 use Enuage\VersionUpdaterBundle\Formatter\FileFormatter;
-use Enuage\VersionUpdaterBundle\Formatter\VersionFormatter;
 use Enuage\VersionUpdaterBundle\Mutator\VersionMutator;
 use Enuage\VersionUpdaterBundle\Parser\AbstractParser;
+use Enuage\VersionUpdaterBundle\Parser\CommandOptionsParser;
 use Enuage\VersionUpdaterBundle\Parser\FileParser;
 use Enuage\VersionUpdaterBundle\Parser\VersionParser;
-use Enuage\VersionUpdaterBundle\ValueObject\Version;
 use Exception;
 use Symfony\Bundle\FrameworkBundle\Command\ContainerAwareCommand;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
-use Symfony\Component\Finder\Finder;
-use Symfony\Component\Finder\SplFileInfo;
 
 /**
  * Class UpdateVersionCommand
@@ -35,11 +33,6 @@ use Symfony\Component\Finder\SplFileInfo;
  */
 class UpdateVersionCommand extends ContainerAwareCommand
 {
-    /**
-     * @var InputInterface $input
-     */
-    private $input;
-
     /**
      * {@inheritdoc}
      */
@@ -75,139 +68,31 @@ class UpdateVersionCommand extends ContainerAwareCommand
      */
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        $this->input = $input;
-        $isDown = $this->hasParameterOption('down');
-        $isDateMetaDefined = $this->hasParameterOption(Version::META_DATE);
-        $isMetaDefined = $this->hasParameterOption(Version::META);
-        $isRelease = $this->hasParameterOption('release');
+        $finder = new FilesFinder($this->getContainer()->getParameter('enuage_version_updater.files'));
+        $finder->setRootDirectory($this->getContainer()->getParameter('kernel.root_dir'));
 
-        $version = $input->getArgument('version');
-        $newVersion = $version;
+        if ($finder->hasFiles()) {
+            $commandOptions = CommandOptionsParser::parse($input);
 
-        if (!($files = $this->getFilesArray())) {
-            $output->writeln('<info>No files found for update.</info>');
-            exit(1);
-        }
+            $finder->iterate(
+                static function ($file, $pattern) use ($commandOptions) {
+                    $fileParser = new FileParser($file, $pattern);
+                    $versionParser = new VersionParser($commandOptions->getVersion());
 
-        foreach ($files as $path => $pattern) {
-            $file = $this->getFile($path);
+                    /** @var AbstractParser $parser */
+                    $parser = $commandOptions->hasVersion() ? $versionParser : $fileParser;
+                    $mutator = new VersionMutator($parser->parse(), $commandOptions);
 
-            $fileParser = new FileParser($file, $pattern);
-            $versionParser = new VersionParser($version);
-
-            /** @var AbstractParser $parser */
-            $parser = $version ? $versionParser : $fileParser;
-            $mutator = new VersionMutator($parser->parse());
-
-            if (!$version) {
-                $mutator->setDown($isDown);
-
-                if ($isDateMetaDefined) {
-                    $mutator->enableDateMeta($this->input->getOption(Version::META_DATE));
-                }
-
-                if ($isMetaDefined) {
-                    $mutator->enableMeta($this->input->getOption(Version::META));
-                }
-
-                foreach (Version::MAIN_VERSIONS as $version) {
-                    if ($this->hasParameterOption($version)) {
-                        $mutator->updateVersion($version);
-                    }
-                }
-
-                if (!$isRelease) {
-                    $preReleaseOptions = [];
-                    foreach (Version::PRE_RELEASE_VERSIONS as $preReleaseVersion) {
-                        $preReleaseOptions[$preReleaseVersion] = $this->hasParameterOption($preReleaseVersion);
+                    if (!$commandOptions->hasVersion()) {
+                        $mutator->update();
                     }
 
-                    $mutator->updatePreRelease($preReleaseOptions);
-                } else {
-                    $mutator->release();
+                    $fileFormatter = new FileFormatter($fileParser);
+                    $fileFormatter->format($mutator->getFormatter());
                 }
-            }
+            );
 
-            $versionFormatter = new VersionFormatter();
-            $versionFormatter->setMutator($mutator);
-
-            $fileFormatter = new FileFormatter($fileParser);
-            $fileFormatter->format($versionFormatter);
+            $output->writeln('<info>All files were updated.</info>');
         }
-
-        $output->writeln(sprintf('<info>Project version changed to: %s</info>', $newVersion));
-    }
-
-    /**
-     * @param string $name
-     *
-     * @return bool
-     */
-    private function hasParameterOption(string $name): bool
-    {
-        return $this->input->hasParameterOption('--'.$name);
-    }
-
-    /**
-     * Regenerate files array to array<filePath, pattern>
-     *
-     * Input:
-     * ```php
-     * [
-     *    0 => [
-     *        ".env" => "/^(API_VERSION=)\V/m",
-     *    ],
-     *    1 => [
-     *        "README.md" => "/^(Version:\s)\V/m",
-     *    ],
-     * ]
-     * ```
-     *
-     * Output:
-     * ```
-     * [
-     *     ".env" => "/^(API_VERSION=)\V/m",
-     *     "README.md" => "/^(Version:\s)\V/m",
-     * ]
-     * ```
-     *
-     * @return array
-     */
-    private function getFilesArray(): array
-    {
-        $files = [];
-        $filesArray = $this->getContainer()->getParameter('enuage_version_updater.files');
-        if (!empty($filesArray)) {
-            array_walk_recursive($filesArray, static function ($value, $key) use (&$files) {
-                if (!is_numeric($key)) {
-                    $files[$key] = $value;
-                }
-            });
-        }
-
-        return $files;
-    }
-
-    /**
-     * @param string $fileName
-     *
-     * @return SplFileInfo
-     */
-    private function getFile(string $fileName): SplFileInfo
-    {
-        $root = $this->getContainer()->getParameter('kernel.root_dir');
-        $filePath = explode('/', $fileName);
-
-        $lastIndex = count($filePath) - 1;
-        $fileName = $filePath[$lastIndex];
-        unset($filePath[$lastIndex]);
-
-        $filePath = array_merge([$root, '..'], $filePath);
-        $filePath = implode('/', $filePath).'/';
-
-        $finder = new Finder();
-        $finder->files()->in($filePath)->name($fileName);
-
-        return array_values(iterator_to_array($finder->getIterator()))[0];
     }
 }
