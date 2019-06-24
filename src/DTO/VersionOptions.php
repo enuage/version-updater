@@ -115,6 +115,8 @@ class VersionOptions
     private $metaValue;
 
     /**
+     * TODO: refactor the code and remove this method
+     *
      * @param string $name
      * @param mixed $value
      *
@@ -128,37 +130,90 @@ class VersionOptions
     }
 
     /**
-     * @param bool $value
+     * FIXME
+     *
+     * This will be broken when user will try to do something like `...->increaseMajor()->decreasePatch()`, they both
+     * will be decreased. I suggest to add something like  major = (-1|0|1) and check his value during version update.
+     * Its also applicable to another main types of version. The value **SHOULD NOT** be less than -1 because
+     * `...->decreaseMajor()->decreaseMajor()->increaseMajor()` will decrease the value (result will be 0-1-1+1=-1,
+     * should be 0). Add the private method that will check availability for increment/decrement for prevent code
+     * duplication
+     *
+     * +1: increase version
+     * 0: do not modify, default value
+     * -1: decrease version
      *
      * @return VersionOptions
      */
-    public function updateMajor(bool $value): VersionOptions
+    public function increaseMajor(): VersionOptions
     {
-        $this->major = $value;
+        $this->major = true;
+        $this->down = false;
 
         return $this;
     }
 
     /**
-     * @param bool $value
+     * FIXME: Check lines 131-144
      *
      * @return VersionOptions
      */
-    public function updateMinor(bool $value): VersionOptions
+    public function decreaseMajor(): VersionOptions
     {
-        $this->minor = $value;
+        $this->major = true;
+        $this->down = true;
 
         return $this;
     }
 
     /**
-     * @param bool $value
+     * FIXME: Check lines 131-144
      *
      * @return VersionOptions
      */
-    public function updatePatch(bool $value): VersionOptions
+    public function increaseMinor(): VersionOptions
     {
-        $this->patch = $value;
+        $this->minor = true;
+        $this->down = false;
+
+        return $this;
+    }
+
+    /**
+     * FIXME: Check lines 131-144
+     *
+     * @return VersionOptions
+     */
+    public function decreaseMinor(): VersionOptions
+    {
+        $this->minor = true;
+        $this->down = true;
+
+        return $this;
+    }
+
+    /**
+     * FIXME: Check lines 131-144
+     *
+     * @return VersionOptions
+     */
+    public function increasePatch(): VersionOptions
+    {
+        $this->patch = true;
+        $this->down = false;
+
+        return $this;
+    }
+
+    /**
+     * FIXME: Check lines 131-144
+     *
+     * @return VersionOptions
+     */
+    public function decreasePatch(): VersionOptions
+    {
+        $this->patch = true;
+        $this->down = true;
 
         return $this;
     }

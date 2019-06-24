@@ -39,10 +39,10 @@ class VersionMutatorTest extends FunctionalTestCase
     public function testUpdateMajorVersion()
     {
         $versionOptions = new VersionOptions();
-        $versionOptions->updateMajor(true);
+        $versionOptions->increaseMajor();
         $this->assertVersions('2.0.0', $this->service->update('1', $versionOptions));
 
-        $versionOptions->downgrade();
+        $versionOptions->decreaseMajor();
         $this->assertVersions('0.1.0', $this->service->update('1', $versionOptions));
     }
 
@@ -64,10 +64,10 @@ class VersionMutatorTest extends FunctionalTestCase
     public function testUpdateMinorVersion()
     {
         $versionOptions = new VersionOptions();
-        $versionOptions->updateMinor(true);
+        $versionOptions->increaseMinor();
         $this->assertVersions('1.1.0', $this->service->update('1', $versionOptions));
 
-        $versionOptions->downgrade();
+        $versionOptions->decreaseMinor();
         $this->assertVersions('1.0.0', $this->service->update('1', $versionOptions));
     }
 
@@ -77,10 +77,10 @@ class VersionMutatorTest extends FunctionalTestCase
     public function testUpdatePatchVersion()
     {
         $versionOptions = new VersionOptions();
-        $versionOptions->updatePatch(true);
+        $versionOptions->increasePatch();
         $this->assertVersions('1.0.1', $this->service->update('1', $versionOptions));
 
-        $versionOptions->downgrade();
+        $versionOptions->decreasePatch();
         $this->assertVersions('1.0.0', $this->service->update('1', $versionOptions));
     }
 
@@ -168,6 +168,18 @@ class VersionMutatorTest extends FunctionalTestCase
         $this->assertVersions('1.0.0', $this->service->update('1.0.0-alpha', $versionOptions));
         $this->assertVersions('1.0.0', $this->service->update('1.0.0-beta', $versionOptions));
         $this->assertVersions('1.0.0', $this->service->update('1.0.0-rc', $versionOptions));
+    }
+
+    /**
+     * TODO: Should fall until VersionOptions:131-144 fix will be finished
+     *
+     * @throws Exception
+     */
+    public function testVersionMultipleModifications()
+    {
+        $versionOptions = new VersionOptions();
+        $versionOptions->increaseMajor()->decreasePatch();
+        $this->assertVersions('2.0.0', $this->service->update('1.0.0', $versionOptions));
     }
 
     /**
