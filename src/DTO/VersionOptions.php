@@ -459,4 +459,12 @@ class VersionOptions
 
         return false;
     }
+
+    /**
+     * @param null|string $version
+     */
+    public function setVersion(string $version = null)
+    {
+        $this->version = $version;
+    }
 }

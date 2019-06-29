@@ -34,7 +34,7 @@ final class CommandOptionsParser
     {
         $options = new VersionOptions();
 
-        $options->set('version', $input->getArgument('version'));
+        $options->setVersion($input->getArgument('version'));
 
         foreach (VersionOptions::OPTIONS as $option) {
             $options->set($option, $input->hasParameterOption('--'.$option));
