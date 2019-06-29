@@ -59,7 +59,7 @@ class VersionMutator
     public function update(): self
     {
         foreach (Version::MAIN_VERSIONS as $version) {
-            if ($this->options->has($version)) {
+            if ($this->options->isMainVersionUpdated($version)) {
                 $this->updateVersion($version);
             }
         }
@@ -67,7 +67,7 @@ class VersionMutator
         if (!$this->options->isRelease()) {
             $preReleaseOptions = [];
             foreach (Version::PRE_RELEASE_VERSIONS as $preReleaseVersion) {
-                $preReleaseOptions[$preReleaseVersion] = $this->options->has($preReleaseVersion);
+                $preReleaseOptions[$preReleaseVersion] = $this->options->isPreReleaseVersionUpdated($preReleaseVersion);
             }
 
             $this->updatePreRelease($preReleaseOptions);

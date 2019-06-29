@@ -389,9 +389,47 @@ class VersionOptions
      */
     public function hasPreRelease(): bool
     {
-        foreach (Version::PRE_RELEASE_VERSIONS as $preReleaseVersion) {
-            if ($this->has($preReleaseVersion)) {
+        $preReleaseVersions = [
+            $this->alpha,
+            $this->beta,
+            $this->rc,
+        ];
+
+        foreach ($preReleaseVersions as $preReleaseVersion) {
+            if (true === $preReleaseVersion) {
                 return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isPreReleaseVersionUpdatable(): bool
+    {
+        return $this->updatePreReleaseVersion;
+    }
+
+    /**
+     * @param string $name
+     *
+     * @return bool
+     */
+    public function isMainVersionUpdated(string $name): bool
+    {
+        if (in_array($name, Version::MAIN_VERSIONS, true)) {
+            switch ($name) {
+                case Version::MAJOR:
+                    return true === $this->major;
+                    break;
+                case Version::MINOR:
+                    return true === $this->minor;
+                    break;
+                case Version::PATCH:
+                    return true === $this->patch;
+                    break;
             }
         }
 
@@ -403,18 +441,22 @@ class VersionOptions
      *
      * @return bool
      */
-    public function has(string $name): bool
+    public function isPreReleaseVersionUpdated(string $name): bool
     {
-        $property = $this->{$name};
+        if (in_array($name, Version::PRE_RELEASE_VERSIONS, true)) {
+            switch ($name) {
+                case Version::ALPHA:
+                    return true === $this->alpha;
+                    break;
+                case Version::BETA:
+                    return true === $this->beta;
+                    break;
+                case Version::RELEASE_CANDIDATE:
+                    return true === $this->rc;
+                    break;
+            }
+        }
 
-        return null !== $property && false !== $property;
-    }
-
-    /**
-     * @return bool
-     */
-    public function isPreReleaseVersionUpdatable(): bool
-    {
-        return $this->updatePreReleaseVersion;
+        return false;
     }
 }
