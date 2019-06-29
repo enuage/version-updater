@@ -43,6 +43,10 @@ class VersionMutatorTest extends FunctionalTestCase
         $this->assertVersions('2.0.0', $this->service->update('1', $versionOptions));
 
         $versionOptions->decreaseMajor();
+        $this->assertVersions('1.0.0', $this->service->update('1', $versionOptions));
+
+        $versionOptions = new VersionOptions();
+        $versionOptions->decreaseMajor();
         $this->assertVersions('0.1.0', $this->service->update('1', $versionOptions));
     }
 
@@ -171,8 +175,6 @@ class VersionMutatorTest extends FunctionalTestCase
     }
 
     /**
-     * TODO: Should fall until VersionOptions:131-144 fix will be finished
-     *
      * @throws Exception
      */
     public function testVersionMultipleModifications()
@@ -180,6 +182,18 @@ class VersionMutatorTest extends FunctionalTestCase
         $versionOptions = new VersionOptions();
         $versionOptions->increaseMajor()->decreasePatch();
         $this->assertVersions('2.0.0', $this->service->update('1.0.0', $versionOptions));
+
+        $versionOptions = new VersionOptions();
+        $versionOptions->increaseMajor()->increaseMajor()->decreaseMinor();
+        $this->assertVersions('2.0.0', $this->service->update('1.0.0', $versionOptions));
+
+        $versionOptions = new VersionOptions();
+        $versionOptions->increaseMajor()->increaseMajor()->decreaseMinor()->increasePatch();
+        $this->assertVersions('2.0.1', $this->service->update('1.0.0', $versionOptions));
+
+        $versionOptions = new VersionOptions();
+        $versionOptions->decreaseMajor()->increaseMajor()->decreaseMinor()->increasePatch();
+        $this->assertVersions('1.0.1', $this->service->update('1.0.0', $versionOptions));
     }
 
     /**

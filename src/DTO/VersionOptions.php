@@ -15,6 +15,7 @@
 
 namespace Enuage\VersionUpdaterBundle\DTO;
 
+use Enuage\VersionUpdaterBundle\Collection\VersionModifierCollection;
 use Enuage\VersionUpdaterBundle\ValueObject\Version;
 
 /**
@@ -28,7 +29,6 @@ class VersionOptions
         Version::MAJOR,
         Version::MINOR,
         Version::PATCH,
-        'down',
         Version::ALPHA,
         Version::BETA,
         Version::RELEASE_CANDIDATE,
@@ -37,25 +37,19 @@ class VersionOptions
         Version::META,
     ];
 
+    const MAXIMAL_MODIFIER_VALUE = 1;
+    const IGNORED_MODIFIER_VALUE = 0;
+    const MINIMAL_MODIFIER_VALUE = -1;
+
     /**
      * @var null|string
      */
     private $version;
 
     /**
-     * @var bool
+     * @var VersionModifierCollection
      */
-    private $major = false;
-
-    /**
-     * @var bool
-     */
-    private $minor = false;
-
-    /**
-     * @var bool
-     */
-    private $patch = false;
+    private $mainVersions;
 
     /**
      * @var bool
@@ -65,19 +59,19 @@ class VersionOptions
     /**
      * @var bool
      */
-    private $alpha = false;
+    private $alphaEnabled = false;
 
     /**
      * @var bool
      */
-    private $beta = false;
+    private $betaEnabled = false;
 
     /**
      * Release candidate
      *
      * @var bool
      */
-    private $rc = false;
+    private $rcEnabled = false;
 
     /**
      * @var bool
@@ -97,7 +91,7 @@ class VersionOptions
     /**
      * @var bool
      */
-    private $date = false;
+    private $dateEnabled = false;
 
     /**
      * @var string
@@ -107,12 +101,20 @@ class VersionOptions
     /**
      * @var bool
      */
-    private $meta = false;
+    private $metaEnabled = false;
 
     /**
      * @var string|null
      */
     private $metaValue;
+
+    /**
+     * VersionOptions constructor.
+     */
+    public function __construct()
+    {
+        $this->mainVersions = new VersionModifierCollection(Version::MAIN_VERSIONS);
+    }
 
     /**
      * TODO: refactor the code
@@ -123,129 +125,95 @@ class VersionOptions
      */
     public function enable(string $option): VersionOptions
     {
+        $this->mainVersions->setDowngrade($this->down);
+
         if (in_array($option, self::OPTIONS, true)) {
+            if (in_array($option, Version::MAIN_VERSIONS, true)) {
+                $this->mainVersions->get($option)->update();
+            }
+
             switch ($option) {
-                case Version::MAJOR:
-                    $this->major = true;
-                    break;
-                case Version::MINOR:
-                    $this->minor = true;
-                    break;
-                case Version::PATCH:
-                    $this->patch = true;
-                    break;
-                case 'down':
-                    $this->down = true;
-                    break;
                 case Version::ALPHA:
-                    $this->alpha = true;
+                    $this->alphaEnabled = true;
                     break;
                 case Version::BETA:
-                    $this->beta = true;
+                    $this->betaEnabled = true;
                     break;
                 case Version::RELEASE_CANDIDATE:
-                    $this->rc = true;
+                    $this->rcEnabled = true;
                     break;
                 case 'release':
                     $this->release = true;
                     break;
                 case Version::META_DATE:
-                    $this->date = true;
+                    $this->dateEnabled = true;
                     break;
                 case Version::META:
-                    $this->meta = true;
+                    $this->metaEnabled = true;
                     break;
             }
+
         }
 
         return $this;
     }
 
     /**
-     * FIXME
-     *
-     * This will be broken when user will try to do something like `...->increaseMajor()->decreasePatch()`, they both
-     * will be decreased. I suggest to add something like  major = (-1|0|1) and check his value during version update.
-     * Its also applicable to another main types of version. The value **SHOULD NOT** be less than -1 because
-     * `...->decreaseMajor()->decreaseMajor()->increaseMajor()` will decrease the value (result will be 0-1-1+1=-1,
-     * should be 0). Add the private method that will check availability for increment/decrement for prevent code
-     * duplication
-     *
-     * +1: increase version
-     * 0: do not modify, default value
-     * -1: decrease version
-     *
      * @return VersionOptions
      */
     public function increaseMajor(): VersionOptions
     {
-        $this->major = true;
-        $this->down = false;
+        $this->mainVersions->get(Version::MAJOR)->setDowngrade(false)->update();
 
         return $this;
     }
 
     /**
-     * FIXME: Check lines 131-144
-     *
      * @return VersionOptions
      */
     public function decreaseMajor(): VersionOptions
     {
-        $this->major = true;
-        $this->down = true;
+        $this->mainVersions->get(Version::MAJOR)->setDowngrade(true)->update();
 
         return $this;
     }
 
     /**
-     * FIXME: Check lines 131-144
-     *
      * @return VersionOptions
      */
     public function increaseMinor(): VersionOptions
     {
-        $this->minor = true;
-        $this->down = false;
+        $this->mainVersions->get(Version::MINOR)->setDowngrade(false)->update();
 
         return $this;
     }
 
     /**
-     * FIXME: Check lines 131-144
-     *
      * @return VersionOptions
      */
     public function decreaseMinor(): VersionOptions
     {
-        $this->minor = true;
-        $this->down = true;
+        $this->mainVersions->get(Version::MINOR)->setDowngrade(true)->update();
 
         return $this;
     }
 
     /**
-     * FIXME: Check lines 131-144
-     *
      * @return VersionOptions
      */
     public function increasePatch(): VersionOptions
     {
-        $this->patch = true;
-        $this->down = false;
+        $this->mainVersions->get(Version::PATCH)->setDowngrade(false)->update();
 
         return $this;
     }
 
     /**
-     * FIXME: Check lines 131-144
-     *
      * @return VersionOptions
      */
     public function decreasePatch(): VersionOptions
     {
-        $this->patch = true;
-        $this->down = true;
+        $this->mainVersions->get(Version::PATCH)->setDowngrade(true)->update();
 
         return $this;
     }
@@ -273,7 +241,7 @@ class VersionOptions
      */
     public function updateAlpha(bool $value): VersionOptions
     {
-        $this->alpha = $value;
+        $this->alphaEnabled = $value;
 
         return $this;
     }
@@ -285,7 +253,7 @@ class VersionOptions
      */
     public function updateBeta(bool $value): VersionOptions
     {
-        $this->beta = $value;
+        $this->betaEnabled = $value;
 
         return $this;
     }
@@ -303,7 +271,7 @@ class VersionOptions
      */
     public function isDateDefined(): bool
     {
-        return $this->date;
+        return $this->dateEnabled;
     }
 
     /**
@@ -311,7 +279,7 @@ class VersionOptions
      */
     public function isMetaDefined(): bool
     {
-        return $this->meta;
+        return $this->metaEnabled;
     }
 
     /**
@@ -349,7 +317,7 @@ class VersionOptions
      */
     public function updateReleaseCandidate(bool $value): VersionOptions
     {
-        $this->rc = $value;
+        $this->rcEnabled = $value;
 
         return $this;
     }
@@ -422,9 +390,9 @@ class VersionOptions
     public function hasPreRelease(): bool
     {
         $preReleaseVersions = [
-            $this->alpha,
-            $this->beta,
-            $this->rc,
+            $this->alphaEnabled,
+            $this->betaEnabled,
+            $this->rcEnabled,
         ];
 
         foreach ($preReleaseVersions as $preReleaseVersion) {
@@ -451,21 +419,7 @@ class VersionOptions
      */
     public function isMainVersionUpdated(string $name): bool
     {
-        if (in_array($name, Version::MAIN_VERSIONS, true)) {
-            switch ($name) {
-                case Version::MAJOR:
-                    return true === $this->major;
-                    break;
-                case Version::MINOR:
-                    return true === $this->minor;
-                    break;
-                case Version::PATCH:
-                    return true === $this->patch;
-                    break;
-            }
-        }
-
-        return false;
+        return $this->mainVersions->get($name)->isUpdated();
     }
 
     /**
@@ -478,13 +432,13 @@ class VersionOptions
         if (in_array($name, Version::PRE_RELEASE_VERSIONS, true)) {
             switch ($name) {
                 case Version::ALPHA:
-                    return true === $this->alpha;
+                    return true === $this->alphaEnabled;
                     break;
                 case Version::BETA:
-                    return true === $this->beta;
+                    return true === $this->betaEnabled;
                     break;
                 case Version::RELEASE_CANDIDATE:
-                    return true === $this->rc;
+                    return true === $this->rcEnabled;
                     break;
             }
         }
@@ -498,5 +452,13 @@ class VersionOptions
     public function setVersion(string $version = null)
     {
         $this->version = $version;
+    }
+
+    /**
+     * @return VersionModifierCollection
+     */
+    public function getMainVersions(): VersionModifierCollection
+    {
+        return $this->mainVersions;
     }
 }

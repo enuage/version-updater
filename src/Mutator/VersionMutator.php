@@ -60,7 +60,7 @@ class VersionMutator
     {
         foreach (Version::MAIN_VERSIONS as $version) {
             if ($this->options->isMainVersionUpdated($version)) {
-                $this->updateVersion($version);
+                $this->updateMainVersion($version);
             }
         }
 
@@ -89,18 +89,16 @@ class VersionMutator
     /**
      * @param string $key
      */
-    private function updateVersion(string $key)
+    private function updateMainVersion(string $key)
     {
-        $value = $this->version->getVersion($key);
+        $value = $this->version->getVersion($key) + $this->options->getMainVersions()->get($key)->getModifier();
 
-        if ($this->options->isDowngrade()) {
-            $value > 0 ? $value-- : $value = 0;
+        if ($value < 0) {
+            $value = 0;
+        }
 
-            if (0 === $value && Version::MAJOR === $key) {
-                $this->version->setMinor(1);
-            }
-        } else {
-            $value++;
+        if (0 === $value && Version::MAJOR === $key) {
+            $this->version->setMinor(1);
         }
 
         $this->version->setMainVersion($key, $value);
@@ -163,6 +161,14 @@ class VersionMutator
     }
 
     /**
+     * @return void
+     */
+    private function release()
+    {
+        $this->version->clearPreRelease()->clearPreReleaseVersion();
+    }
+
+    /**
      * @param int $value
      * @param int $modifier
      *
@@ -179,14 +185,6 @@ class VersionMutator
         }
 
         return $this;
-    }
-
-    /**
-     * @return void
-     */
-    private function release()
-    {
-        $this->version->clearPreRelease()->clearPreReleaseVersion();
     }
 
     /**

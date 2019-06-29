@@ -36,6 +36,8 @@ final class CommandOptionsParser
 
         $options->setVersion($input->getArgument('version'));
 
+        $options->downgrade($input->hasParameterOption('--down'));
+
         foreach (VersionOptions::OPTIONS as $option) {
             if ($input->hasParameterOption('--'.$option)) {
                 $options->enable($option);
