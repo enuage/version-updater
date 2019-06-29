@@ -37,7 +37,9 @@ final class CommandOptionsParser
         $options->setVersion($input->getArgument('version'));
 
         foreach (VersionOptions::OPTIONS as $option) {
-            $options->set($option, $input->hasParameterOption('--'.$option));
+            if ($input->hasParameterOption('--'.$option)) {
+                $options->enable($option);
+            }
         }
 
         if ($options->isDateDefined()) {

@@ -115,16 +115,48 @@ class VersionOptions
     private $metaValue;
 
     /**
-     * TODO: refactor the code and remove this method
+     * TODO: refactor the code
      *
-     * @param string $name
-     * @param mixed $value
+     * @param string $option
      *
      * @return VersionOptions
      */
-    public function set(string $name, $value): VersionOptions
+    public function enable(string $option): VersionOptions
     {
-        $this->{$name} = $value;
+        if (in_array($option, self::OPTIONS, true)) {
+            switch ($option) {
+                case Version::MAJOR:
+                    $this->major = true;
+                    break;
+                case Version::MINOR:
+                    $this->minor = true;
+                    break;
+                case Version::PATCH:
+                    $this->patch = true;
+                    break;
+                case 'down':
+                    $this->down = true;
+                    break;
+                case Version::ALPHA:
+                    $this->alpha = true;
+                    break;
+                case Version::BETA:
+                    $this->beta = true;
+                    break;
+                case Version::RELEASE_CANDIDATE:
+                    $this->rc = true;
+                    break;
+                case 'release':
+                    $this->release = true;
+                    break;
+                case Version::META_DATE:
+                    $this->date = true;
+                    break;
+                case Version::META:
+                    $this->meta = true;
+                    break;
+            }
+        }
 
         return $this;
     }
