@@ -37,10 +37,6 @@ class VersionOptions
         Version::META,
     ];
 
-    const MAXIMAL_MODIFIER_VALUE = 1;
-    const IGNORED_MODIFIER_VALUE = 0;
-    const MINIMAL_MODIFIER_VALUE = -1;
-
     /**
      * @var null|string
      */
