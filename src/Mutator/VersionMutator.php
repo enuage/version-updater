@@ -67,7 +67,7 @@ class VersionMutator
         if (!$this->options->isRelease()) {
             $preReleaseOptions = [];
             foreach (Version::PRE_RELEASE_VERSIONS as $preReleaseVersion) {
-                $preReleaseOptions[$preReleaseVersion] = $this->options->isPreReleaseVersionUpdated($preReleaseVersion);
+                $preReleaseOptions[$preReleaseVersion] = $this->options->isPreReleaseVersionEnabled($preReleaseVersion);
             }
 
             $this->updatePreRelease($preReleaseOptions);

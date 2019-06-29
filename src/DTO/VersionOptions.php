@@ -48,26 +48,14 @@ class VersionOptions
     private $mainVersions;
 
     /**
+     * @var VersionModifierCollection
+     */
+    private $preReleaseVersions;
+
+    /**
      * @var bool
      */
     private $down = false;
-
-    /**
-     * @var bool
-     */
-    private $alphaEnabled = false;
-
-    /**
-     * @var bool
-     */
-    private $betaEnabled = false;
-
-    /**
-     * Release candidate
-     *
-     * @var bool
-     */
-    private $rcEnabled = false;
 
     /**
      * @var bool
@@ -110,6 +98,7 @@ class VersionOptions
     public function __construct()
     {
         $this->mainVersions = new VersionModifierCollection(Version::MAIN_VERSIONS, true);
+        $this->preReleaseVersions = new VersionModifierCollection(Version::PRE_RELEASE_VERSIONS);
     }
 
     /**
@@ -129,15 +118,6 @@ class VersionOptions
             }
 
             switch ($option) {
-                case Version::ALPHA:
-                    $this->alphaEnabled = true;
-                    break;
-                case Version::BETA:
-                    $this->betaEnabled = true;
-                    break;
-                case Version::RELEASE_CANDIDATE:
-                    $this->rcEnabled = true;
-                    break;
                 case 'release':
                     $this->release = true;
                     break;
@@ -149,6 +129,9 @@ class VersionOptions
                     break;
             }
 
+            if (in_array($option, Version::PRE_RELEASE_VERSIONS, true)) {
+                $this->preReleaseVersions->get($option)->enable();
+            }
         }
 
         return $this;
@@ -215,6 +198,36 @@ class VersionOptions
     }
 
     /**
+     * @return VersionOptions
+     */
+    public function updateAlpha(): VersionOptions
+    {
+        $this->preReleaseVersions->get(Version::ALPHA)->enable();
+
+        return $this;
+    }
+
+    /**
+     * @return VersionOptions
+     */
+    public function updateBeta(): VersionOptions
+    {
+        $this->preReleaseVersions->get(Version::BETA)->enable();
+
+        return $this;
+    }
+
+    /**
+     * @return VersionOptions
+     */
+    public function updateReleaseCandidate(): VersionOptions
+    {
+        $this->preReleaseVersions->get(Version::RELEASE_CANDIDATE)->enable();
+
+        return $this;
+    }
+
+    /**
      * @return bool
      */
     public function isDowngrade(): bool
@@ -228,30 +241,6 @@ class VersionOptions
     public function isPreReleaseDowngrade(): bool
     {
         return false === $this->increasePreRelease;
-    }
-
-    /**
-     * @param bool $value
-     *
-     * @return VersionOptions
-     */
-    public function updateAlpha(bool $value): VersionOptions
-    {
-        $this->alphaEnabled = $value;
-
-        return $this;
-    }
-
-    /**
-     * @param bool $value
-     *
-     * @return VersionOptions
-     */
-    public function updateBeta(bool $value): VersionOptions
-    {
-        $this->betaEnabled = $value;
-
-        return $this;
     }
 
     /**
@@ -302,18 +291,6 @@ class VersionOptions
     public function downgrade(bool $value = true): VersionOptions
     {
         $this->down = $value;
-
-        return $this;
-    }
-
-    /**
-     * @param bool $value
-     *
-     * @return VersionOptions
-     */
-    public function updateReleaseCandidate(bool $value): VersionOptions
-    {
-        $this->rcEnabled = $value;
 
         return $this;
     }
@@ -385,14 +362,8 @@ class VersionOptions
      */
     public function hasPreRelease(): bool
     {
-        $preReleaseVersions = [
-            $this->alphaEnabled,
-            $this->betaEnabled,
-            $this->rcEnabled,
-        ];
-
-        foreach ($preReleaseVersions as $preReleaseVersion) {
-            if (true === $preReleaseVersion) {
+        foreach (Version::PRE_RELEASE_VERSIONS as $type) {
+            if ($this->preReleaseVersions->get($type)->isEnabled()) {
                 return true;
             }
         }
@@ -419,27 +390,13 @@ class VersionOptions
     }
 
     /**
-     * @param string $name
+     * @param string $type
      *
      * @return bool
      */
-    public function isPreReleaseVersionUpdated(string $name): bool
+    public function isPreReleaseVersionEnabled(string $type): bool
     {
-        if (in_array($name, Version::PRE_RELEASE_VERSIONS, true)) {
-            switch ($name) {
-                case Version::ALPHA:
-                    return true === $this->alphaEnabled;
-                    break;
-                case Version::BETA:
-                    return true === $this->betaEnabled;
-                    break;
-                case Version::RELEASE_CANDIDATE:
-                    return true === $this->rcEnabled;
-                    break;
-            }
-        }
-
-        return false;
+        return $this->preReleaseVersions->get($type)->isEnabled();
     }
 
     /**

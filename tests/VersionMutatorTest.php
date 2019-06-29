@@ -94,7 +94,7 @@ class VersionMutatorTest extends FunctionalTestCase
     public function testUpdateAlpha()
     {
         $versionOptions = new VersionOptions();
-        $versionOptions->updateAlpha(true);
+        $versionOptions->updateAlpha();
         $this->assertVersions('1.0.0-alpha', $this->service->update('1', $versionOptions));
 
         $versionOptions->decreasePreRelease();
@@ -114,7 +114,7 @@ class VersionMutatorTest extends FunctionalTestCase
     public function testUpdateBeta()
     {
         $versionOptions = new VersionOptions();
-        $versionOptions->updateBeta(true);
+        $versionOptions->updateBeta();
         $this->assertVersions('1.0.0-beta', $this->service->update('1', $versionOptions));
 
         $versionOptions->decreasePreRelease();
@@ -134,7 +134,7 @@ class VersionMutatorTest extends FunctionalTestCase
     public function testUpdateReleaseCandidate()
     {
         $versionOptions = new VersionOptions();
-        $versionOptions->updateReleaseCandidate(true);
+        $versionOptions->updateReleaseCandidate();
         $this->assertVersions('1.0.0-rc', $this->service->update('1', $versionOptions));
 
         $versionOptions->decreasePreRelease();
