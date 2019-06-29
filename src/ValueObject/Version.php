@@ -47,6 +47,8 @@ class Version
     const META = 'meta';
     const META_DATE = 'date';
 
+    const DEFAULT_VALUE = 0;
+
     /**
      * @var string|null
      */
@@ -55,17 +57,17 @@ class Version
     /**
      * @var int
      */
-    private $major = 0;
+    private $major = self::DEFAULT_VALUE;
 
     /**
      * @var int
      */
-    private $minor = 0;
+    private $minor = self::DEFAULT_VALUE;
 
     /**
      * @var int
      */
-    private $patch = 0;
+    private $patch = self::DEFAULT_VALUE;
 
     /**
      * @var bool
@@ -268,8 +270,8 @@ class Version
         $this->major = $value;
 
         if ($value > 0) {
-            $this->setMinor(0);
-            $this->setPatch(0);
+            $this->setMinor(self::DEFAULT_VALUE);
+            $this->setPatch(self::DEFAULT_VALUE);
         }
 
         return $this;
@@ -294,7 +296,9 @@ class Version
             $value = 1;
         }
 
-        $this->setPatch(0);
+        if ($this->getMinor() !== $value) { // Check if value was changed
+            $this->setPatch(self::DEFAULT_VALUE);
+        }
 
         $this->minor = $value;
 

@@ -3,6 +3,10 @@
 - [ ] TODO: Composer version updating
 - [ ] TODO: .env file value updating
 
+##### 2019-06-29
+
+- Fix bug on decreasing minor and patch version at the same time
+
 ##### 2019-06-23 17:36
 
 - Add `command options parser`

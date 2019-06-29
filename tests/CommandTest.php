@@ -252,6 +252,29 @@ class CommandTest extends FunctionalTestCase
         );
     }
 
+    public function testDecreaseMinorAndPatchVersion()
+    {
+        $this->runCommandTest(
+            [
+                'version=0.1.0' => 'version=0.1.0',
+                'version=0.1.1' => 'version=0.1.0',
+                'version=0.1.2' => 'version=0.1.1',
+
+                'version=0.2.1' => 'version=0.1.0',
+                'version=0.2.2' => 'version=0.1.0',
+
+                'version=1.1.0' => 'version=1.0.0',
+                'version=1.1.1' => 'version=1.0.0',
+                'version=1.2.1' => 'version=1.1.0',
+            ],
+            [
+                '--minor' => true,
+                '--patch' => true,
+                '--down' => true,
+            ]
+        );
+    }
+
     public function testAlphaRelease()
     {
         $this->runCommandTest(
