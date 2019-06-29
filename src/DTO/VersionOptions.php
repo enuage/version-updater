@@ -25,16 +25,16 @@ use Enuage\VersionUpdaterBundle\ValueObject\Version;
 class VersionOptions
 {
     const OPTIONS = [
-        'major',
-        'minor',
-        'patch',
+        Version::MAJOR,
+        Version::MINOR,
+        Version::PATCH,
         'down',
-        'alpha',
-        'beta',
-        'rc',
+        Version::ALPHA,
+        Version::BETA,
+        Version::RELEASE_CANDIDATE,
         'release',
-        'date',
-        'meta',
+        Version::META_DATE,
+        Version::META,
     ];
 
     /**
