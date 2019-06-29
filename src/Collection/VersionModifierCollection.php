@@ -15,7 +15,6 @@
 
 namespace Enuage\VersionUpdaterBundle\Collection;
 
-use Closure;
 use Enuage\VersionUpdaterBundle\ValueObject\VersionModifier;
 
 /**
@@ -34,30 +33,18 @@ class VersionModifierCollection extends ArrayCollection
      * VersionModifierCollection constructor.
      *
      * @param array $types
+     * @param bool $isEnabled
      */
-    public function __construct(array $types = [])
+    public function __construct(array $types = [], bool $isEnabled = false)
     {
         $this->types = $types;
 
         $elements = [];
-
-        $this->iterate(
-            static function ($type) use (&$elements) {
-                $elements[$type] = new VersionModifier();
-            }
-        );
+        foreach ($types as $type) {
+            $elements[$type] = new VersionModifier($isEnabled);
+        }
 
         parent::__construct($elements);
-    }
-
-    /**
-     * @param Closure $closure
-     */
-    private function iterate(Closure $closure)
-    {
-        foreach ($this->types as $type) {
-            $closure($type);
-        }
     }
 
     /**
@@ -67,12 +54,9 @@ class VersionModifierCollection extends ArrayCollection
      */
     public function setDowngrade(bool $downgrade = false)
     {
-        $this->iterate(
-            function ($type) use ($downgrade) {
-                $versionModifier = $this->get($type);
-                $versionModifier->setDowngrade($downgrade);
-            }
-        );
+        foreach ($this->types as $type) {
+            $this->get($type)->setDowngrade($downgrade);
+        }
     }
 
     /**

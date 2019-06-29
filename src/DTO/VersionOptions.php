@@ -109,7 +109,7 @@ class VersionOptions
      */
     public function __construct()
     {
-        $this->mainVersions = new VersionModifierCollection(Version::MAIN_VERSIONS);
+        $this->mainVersions = new VersionModifierCollection(Version::MAIN_VERSIONS, true);
     }
 
     /**

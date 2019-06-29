@@ -37,16 +37,33 @@ class VersionModifier
     private $downgrade = false;
 
     /**
+     * @var bool
+     */
+    private $enabled;
+
+    /**
+     * VersionModifier constructor.
+     *
+     * @param bool $isEnabled
+     */
+    public function __construct(bool $isEnabled = false)
+    {
+        $this->enabled = $isEnabled;
+    }
+
+    /**
      * @return void
      */
     public function update()
     {
-        if (self::MINIMAL_MODIFIER_VALUE < $this->modifier && $this->isDowngrade()) {
-            $this->modifier--;
-        }
-
-        if (self::MAXIMAL_MODIFIER_VALUE > $this->modifier && !$this->isDowngrade()) {
-            $this->modifier++;
+        if ($this->isEnabled()) {
+            if ($this->isDowngrade()) {
+                if (self::MINIMAL_MODIFIER_VALUE < $this->modifier) {
+                    $this->modifier--;
+                }
+            } elseif (self::MAXIMAL_MODIFIER_VALUE > $this->modifier) {
+                $this->modifier++;
+            }
         }
     }
 
@@ -87,10 +104,10 @@ class VersionModifier
     }
 
     /**
-     * @return void
+     * @return bool
      */
-    public function setIgnored()
+    public function isEnabled(): bool
     {
-        $this->modifier = self::IGNORED_MODIFIER_VALUE;
+        return $this->enabled;
     }
 }
