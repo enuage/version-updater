@@ -103,7 +103,7 @@ class VersionMutator
             $value++;
         }
 
-        $this->version->setVersion($key, $value);
+        $this->version->setMainVersion($key, $value);
     }
 
     /**

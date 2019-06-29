@@ -331,7 +331,7 @@ class Version
      *
      * @return Version
      */
-    public function setVersion(string $type, int $value): Version
+    public function setMainVersion(string $type, int $value): Version
     {
         switch ($type) {
             case self::MAJOR:
