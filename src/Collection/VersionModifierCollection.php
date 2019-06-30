@@ -52,7 +52,7 @@ class VersionModifierCollection extends ArrayCollection
      *
      * @return void
      */
-    public function setDowngrade(bool $downgrade = false)
+    public function setDowngrade(bool $downgrade)
     {
         foreach ($this->types as $type) {
             $this->get($type)->setDowngrade($downgrade);

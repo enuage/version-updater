@@ -52,9 +52,9 @@ class VersionModifier
     }
 
     /**
-     * @return void
+     * @return VersionModifier
      */
-    public function update()
+    public function update(): VersionModifier
     {
         if ($this->isEnabled()) {
             if ($this->isDowngrade()) {
@@ -65,6 +65,8 @@ class VersionModifier
                 $this->modifier++;
             }
         }
+
+        return $this;
     }
 
     /**

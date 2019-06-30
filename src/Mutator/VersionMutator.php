@@ -16,10 +16,12 @@
 namespace Enuage\VersionUpdaterBundle\Mutator;
 
 use DateTime;
+use Enuage\VersionUpdaterBundle\Collection\VersionModifierCollection;
 use Enuage\VersionUpdaterBundle\DTO\VersionOptions;
 use Enuage\VersionUpdaterBundle\Formatter\FormatterInterface;
 use Enuage\VersionUpdaterBundle\Formatter\VersionFormatter;
 use Enuage\VersionUpdaterBundle\ValueObject\Version;
+use Enuage\VersionUpdaterBundle\ValueObject\VersionModifier;
 use Exception;
 
 /**
@@ -65,14 +67,9 @@ class VersionMutator
         }
 
         if (!$this->options->isRelease()) {
-            $preReleaseOptions = [];
-            foreach (Version::PRE_RELEASE_VERSIONS as $preReleaseVersion) {
-                $preReleaseOptions[$preReleaseVersion] = $this->options->isPreReleaseVersionEnabled($preReleaseVersion);
-            }
-
-            $this->updatePreRelease($preReleaseOptions);
+            $this->updatePreRelease($this->options->getPreReleaseTypes());
         } else {
-            $this->release();
+            $this->clearPreRelease();
         }
 
         if ($this->options->isDateDefined()) {
@@ -91,7 +88,7 @@ class VersionMutator
      */
     private function updateMainVersion(string $key)
     {
-        $value = $this->version->getVersion($key) + $this->options->getMainVersions()->get($key)->getModifier();
+        $value = $this->version->getVersion($key) + $this->options->getMainTypes()->get($key)->getModifier();
 
         if ($value < 0) {
             $value = 0;
@@ -105,31 +102,32 @@ class VersionMutator
     }
 
     /**
-     * @param array $types
+     * @param VersionModifierCollection $types
      */
-    private function updatePreRelease(array $types)
+    private function updatePreRelease(VersionModifierCollection $types)
     {
-        $preRelease = $this->version->getPreRelease();
+        $definedType = $this->version->getPreRelease();
         $this->version->clearPreRelease();
 
-        $preReleaseVersion = $this->version->getPreReleaseVersion();
+        $version = $this->version->getPreReleaseVersion();
         $this->version->clearPreReleaseVersion();
-        $isPreReleaseVersionDefined = null !== $preReleaseVersion && is_numeric($preReleaseVersion);
+        $isVersionDefined = null !== $version && is_numeric($version);
 
-        foreach ($types as $type => $isEnabled) {
-            $isPreReleaseDefined = $preRelease === $type;
+        /** @var VersionModifier $modifier */
+        foreach ($types as $type => $modifier) {
+            $isApplicable = $definedType === $type;
 
-            if ($isEnabled) {
+            if ($modifier->isEnabled()) {
                 $this->version
                     ->clearPreRelease()
                     ->clearPreReleaseVersion()
                     ->setPreRelease($type);
 
-                if (!$isPreReleaseDefined && $this->options->isDowngrade()) {
-                    $this->release();
+                if (!$isApplicable && $this->options->isDowngrade()) {
+                    $this->clearPreRelease();
                 }
 
-                if ($isPreReleaseDefined && !$isPreReleaseVersionDefined) {
+                if ($isApplicable && !$isVersionDefined) {
                     if ($this->options->isDowngrade()) {
                         $this->version
                             ->setPreRelease($type, false)
@@ -139,23 +137,26 @@ class VersionMutator
                     }
                 }
 
-                if ($isPreReleaseDefined && $isPreReleaseVersionDefined) {
+                if ($isApplicable && $isVersionDefined) {
                     $this->updatePreReleaseVersion(
-                        $preReleaseVersion,
-                        $this->options->isPreReleaseDowngrade() ? -1 : 1
+                        $version,
+                        $modifier->update()->getModifier()
                     );
                 }
             }
         }
 
-        if (null !== $preRelease && !$this->options->isRelease() && $this->options->isPreReleaseVersionUpdatable()) {
+        if (null !== $definedType && $this->options->isPreReleaseVersionUpdatable()) {
             $isDowngrade = $this->options->isPreReleaseDowngrade();
 
-            $this->version->setPreRelease($preRelease);
-            $this->updatePreReleaseVersion($preReleaseVersion ?? 0, $isDowngrade ? -1 : 1);
+            $modifier = new VersionModifier(true);
+            $modifier->setDowngrade($isDowngrade);
 
-            if ((null === $preReleaseVersion || $preReleaseVersion < 1) && $isDowngrade) {
-                $this->release();
+            $this->version->setPreRelease($definedType);
+            $this->updatePreReleaseVersion($version ?? 0, $modifier->update()->getModifier());
+
+            if ((null === $version || $version <= 0) && $isDowngrade) {
+                $this->clearPreRelease();
             }
         }
     }
@@ -163,7 +164,7 @@ class VersionMutator
     /**
      * @return void
      */
-    private function release()
+    private function clearPreRelease()
     {
         $this->version->clearPreRelease()->clearPreReleaseVersion();
     }
