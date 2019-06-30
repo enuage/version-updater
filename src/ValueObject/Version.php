@@ -262,4 +262,12 @@ class Version
     {
         return $this->metaComponents;
     }
+
+    /**
+     * @param ArrayCollection $metaComponents
+     */
+    public function setMetaComponents(ArrayCollection $metaComponents)
+    {
+        $this->metaComponents = $metaComponents;
+    }
 }

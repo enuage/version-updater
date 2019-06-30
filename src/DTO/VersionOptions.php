@@ -15,8 +15,12 @@
 
 namespace Enuage\VersionUpdaterBundle\DTO;
 
+use DateTime;
+use Enuage\VersionUpdaterBundle\Collection\ArrayCollection;
 use Enuage\VersionUpdaterBundle\Collection\VersionModifierCollection;
+use Enuage\VersionUpdaterBundle\ValueObject\MetaComponent;
 use Enuage\VersionUpdaterBundle\ValueObject\Version;
+use Exception;
 
 /**
  * Class VersionOptions
@@ -73,24 +77,9 @@ class VersionOptions
     private $updatePreReleaseVersion = false;
 
     /**
-     * @var bool
+     * @var ArrayCollection
      */
-    private $dateEnabled = false;
-
-    /**
-     * @var string
-     */
-    private $dateFormat = 'c';
-
-    /**
-     * @var bool
-     */
-    private $metaEnabled = false;
-
-    /**
-     * @var string|null
-     */
-    private $metaValue;
+    private $metaComponents;
 
     /**
      * VersionOptions constructor.
@@ -99,6 +88,7 @@ class VersionOptions
     {
         $this->mainTypes = new VersionModifierCollection(Version::MAIN_VERSIONS, true);
         $this->preReleaseTypes = new VersionModifierCollection(Version::PRE_RELEASE_VERSIONS);
+        $this->metaComponents = new ArrayCollection();
     }
 
     /**
@@ -107,33 +97,69 @@ class VersionOptions
      * @param string $option
      *
      * @return VersionOptions
+     *
+     * @throws Exception
      */
     public function enable(string $option): VersionOptions
     {
         $this->mainTypes->setDowngrade($this->down);
         $this->preReleaseTypes->setDowngrade($this->down);
 
-        if (in_array($option, self::OPTIONS, true)) {
-            if (in_array($option, Version::MAIN_VERSIONS, true)) {
-                $this->mainTypes->get($option)->update();
-            }
-
-            switch ($option) {
-                case 'release':
-                    $this->release = true;
-                    break;
-                case Version::META_DATE:
-                    $this->dateEnabled = true;
-                    break;
-                case Version::META:
-                    $this->metaEnabled = true;
-                    break;
-            }
-
-            if (in_array($option, Version::PRE_RELEASE_VERSIONS, true)) {
-                $this->preReleaseTypes->get($option)->enable();
-            }
+        if (in_array($option, Version::MAIN_VERSIONS, true)) {
+            $this->mainTypes->get($option)->update();
         }
+
+        if ('release' === $option) {
+            $this->release = true;
+        }
+
+        if (in_array($option, Version::PRE_RELEASE_VERSIONS, true)) {
+            $this->preReleaseTypes->get($option)->enable();
+        }
+
+        if (Version::META_DATE === $option) {
+            $this->addDateMeta();
+        }
+
+        if (Version::META === $option) {
+            $this->addMeta();
+        }
+
+        return $this;
+    }
+
+    /**
+     * @param string|null $format
+     *
+     * @return $this
+     *
+     * @throws Exception
+     */
+    public function addDateMeta(string $format = null): VersionOptions
+    {
+        $metaComponent = new MetaComponent();
+        $metaComponent->setType(MetaComponent::TYPE_DATETIME);
+        $metaComponent->setValue(new DateTime());
+        $metaComponent->setFormat($format ?? 'c');
+
+        $this->metaComponents->set(Version::META_DATE, $metaComponent);
+
+        return $this;
+    }
+
+    /**
+     * @param string|null $value
+     *
+     * @return $this
+     *
+     * @throws Exception
+     */
+    public function addMeta(string $value = null): VersionOptions
+    {
+        $metaComponent = new MetaComponent();
+        $metaComponent->setValue($value);
+
+        $this->metaComponents->set(Version::META, $metaComponent);
 
         return $this;
     }
@@ -253,27 +279,19 @@ class VersionOptions
     }
 
     /**
-     * @return bool
-     */
-    public function isDateDefined(): bool
-    {
-        return $this->dateEnabled;
-    }
-
-    /**
-     * @return bool
-     */
-    public function isMetaDefined(): bool
-    {
-        return $this->metaEnabled;
-    }
-
-    /**
      * @return null|string
      */
     public function getVersion()
     {
         return $this->version;
+    }
+
+    /**
+     * @param null|string $version
+     */
+    public function setVersion(string $version = null)
+    {
+        $this->version = $version;
     }
 
     /**
@@ -292,46 +310,6 @@ class VersionOptions
     public function downgrade(bool $value = true): VersionOptions
     {
         $this->down = $value;
-
-        return $this;
-    }
-
-    /**
-     * @return string
-     */
-    public function getDateFormat(): string
-    {
-        return $this->dateFormat;
-    }
-
-    /**
-     * @param string $dateFormat
-     *
-     * @return VersionOptions
-     */
-    public function setDateFormat(string $dateFormat): VersionOptions
-    {
-        $this->dateFormat = $dateFormat;
-
-        return $this;
-    }
-
-    /**
-     * @return null|string
-     */
-    public function getMetaValue()
-    {
-        return $this->metaValue;
-    }
-
-    /**
-     * @param null|string $metaValue
-     *
-     * @return VersionOptions
-     */
-    public function setMetaValue(string $metaValue): VersionOptions
-    {
-        $this->metaValue = $metaValue;
 
         return $this;
     }
@@ -395,14 +373,6 @@ class VersionOptions
     }
 
     /**
-     * @param null|string $version
-     */
-    public function setVersion(string $version = null)
-    {
-        $this->version = $version;
-    }
-
-    /**
      * @return VersionModifierCollection
      */
     public function getMainTypes(): VersionModifierCollection
@@ -416,5 +386,13 @@ class VersionOptions
     public function getPreReleaseTypes(): VersionModifierCollection
     {
         return $this->preReleaseTypes;
+    }
+
+    /**
+     * @return ArrayCollection
+     */
+    public function getMetaComponents(): ArrayCollection
+    {
+        return $this->metaComponents;
     }
 }

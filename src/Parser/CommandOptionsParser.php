@@ -16,6 +16,8 @@
 namespace Enuage\VersionUpdaterBundle\Parser;
 
 use Enuage\VersionUpdaterBundle\DTO\VersionOptions;
+use Enuage\VersionUpdaterBundle\ValueObject\Version;
+use Exception;
 use Symfony\Component\Console\Input\InputInterface;
 
 /**
@@ -29,6 +31,8 @@ final class CommandOptionsParser
      * @param InputInterface $input
      *
      * @return VersionOptions
+     *
+     * @throws Exception
      */
     public static function parse(InputInterface $input): VersionOptions
     {
@@ -44,12 +48,15 @@ final class CommandOptionsParser
             }
         }
 
-        if ($options->isDateDefined()) {
-            $options->setDateFormat($input->getOption('date'));
+        $metaComponents = $options->getMetaComponents();
+        if ($metaComponents->containsKey(Version::META_DATE)) {
+            $metaComponent = $metaComponents->get(Version::META_DATE);
+            $metaComponent->setFormat($input->getOption(Version::META_DATE));
         }
 
-        if ($options->isMetaDefined()) {
-            $options->setMetaValue($input->getOption('meta'));
+        if ($metaComponents->containsKey(Version::META)) {
+            $metaComponent = $metaComponents->get(Version::META);
+            $metaComponent->setValue($input->getOption(Version::META));
         }
 
         if ($options->hasPreRelease() && $options->isDowngrade()) {

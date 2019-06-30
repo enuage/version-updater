@@ -15,12 +15,10 @@
 
 namespace Enuage\VersionUpdaterBundle\Mutator;
 
-use DateTime;
 use Enuage\VersionUpdaterBundle\Collection\VersionModifierCollection;
 use Enuage\VersionUpdaterBundle\DTO\VersionOptions;
 use Enuage\VersionUpdaterBundle\Formatter\FormatterInterface;
 use Enuage\VersionUpdaterBundle\Formatter\VersionFormatter;
-use Enuage\VersionUpdaterBundle\ValueObject\MetaComponent;
 use Enuage\VersionUpdaterBundle\ValueObject\Version;
 use Enuage\VersionUpdaterBundle\ValueObject\VersionModifier;
 use Exception;
@@ -73,13 +71,7 @@ class VersionMutator
             $this->clearPreRelease();
         }
 
-        if ($this->options->isDateDefined()) {
-            $this->enableDateMeta($this->options->getDateFormat());
-        }
-
-        if ($this->options->isMetaDefined()) {
-            $this->enableMeta($this->options->getMetaValue());
-        }
+        $this->version->setMetaComponents($this->options->getMetaComponents());
 
         return $this;
     }
@@ -185,39 +177,6 @@ class VersionMutator
         if ($value && $value > 0) {
             $this->version->setPreReleaseVersion($value);
         }
-
-        return $this;
-    }
-
-    /**
-     * @param string $format
-     *
-     * @return VersionMutator
-     * @throws Exception
-     */
-    private function enableDateMeta(string $format): self
-    {
-        $metaComponent = new MetaComponent();
-        $metaComponent->setType(MetaComponent::TYPE_DATETIME);
-        $metaComponent->setValue(new DateTime());
-        $metaComponent->setFormat($format);
-
-        $this->version->getMetaComponents()->add($metaComponent);
-
-        return $this;
-    }
-
-    /**
-     * @param string $value
-     *
-     * @return VersionMutator
-     */
-    private function enableMeta(string $value): self
-    {
-        $metaComponent = new MetaComponent();
-        $metaComponent->setValue($value);
-
-        $this->version->getMetaComponents()->add($metaComponent);
 
         return $this;
     }
