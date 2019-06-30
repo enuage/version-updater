@@ -16,6 +16,7 @@
 namespace Enuage\VersionUpdaterBundle\ValueObject;
 
 use DateTime;
+use Enuage\VersionUpdaterBundle\Collection\VersionComponentsCollection;
 
 /**
  * Class Version
@@ -47,27 +48,15 @@ class Version
     const META = 'meta';
     const META_DATE = 'date';
 
-    const DEFAULT_VALUE = 0;
-
     /**
      * @var string|null
      */
     private $prefix;
 
     /**
-     * @var int
+     * @var VersionComponentsCollection
      */
-    private $major = self::DEFAULT_VALUE;
-
-    /**
-     * @var int
-     */
-    private $minor = self::DEFAULT_VALUE;
-
-    /**
-     * @var int
-     */
-    private $patch = self::DEFAULT_VALUE;
+    private $mainComponents;
 
     /**
      * @var bool
@@ -113,6 +102,14 @@ class Version
      * @var string|null
      */
     private $metaValue;
+
+    /**
+     * Version constructor.
+     */
+    public function __construct()
+    {
+        $this->mainComponents = new VersionComponentsCollection(self::MAIN_VERSIONS);
+    }
 
     /**
      * @return null|string
@@ -236,28 +233,7 @@ class Version
      */
     public function getVersion(string $type)
     {
-        switch ($type) {
-            case self::MAJOR:
-                return $this->getMajor();
-                break;
-            case self::MINOR:
-                return $this->getMinor();
-                break;
-            case self::PATCH:
-                return $this->getPatch();
-                break;
-            default:
-                return null;
-                break;
-        }
-    }
-
-    /**
-     * @return int
-     */
-    public function getMajor(): int
-    {
-        return $this->major;
+        return $this->mainComponents->get($type)->getValue();
     }
 
     /**
@@ -267,22 +243,9 @@ class Version
      */
     public function setMajor(int $value): Version
     {
-        $this->major = $value;
-
-        if ($value > 0) {
-            $this->setMinor(self::DEFAULT_VALUE);
-            $this->setPatch(self::DEFAULT_VALUE);
-        }
+        $this->mainComponents->set(self::MAJOR, $value);
 
         return $this;
-    }
-
-    /**
-     * @return int
-     */
-    public function getMinor(): int
-    {
-        return $this->minor;
     }
 
     /**
@@ -292,25 +255,9 @@ class Version
      */
     public function setMinor(int $value): Version
     {
-        if ($value === 0 && $this->getMajor() === 0) {
-            $value = 1;
-        }
-
-        if ($this->getMinor() !== $value) { // Check if value was changed
-            $this->setPatch(self::DEFAULT_VALUE);
-        }
-
-        $this->minor = $value;
+        $this->mainComponents->set(self::MINOR, $value);
 
         return $this;
-    }
-
-    /**
-     * @return int
-     */
-    public function getPatch(): int
-    {
-        return $this->patch;
     }
 
     /**
@@ -320,7 +267,7 @@ class Version
      */
     public function setPatch(int $value): Version
     {
-        $this->patch = $value;
+        $this->mainComponents->set(self::PATCH, $value);
 
         return $this;
     }
@@ -333,17 +280,7 @@ class Version
      */
     public function setMainVersion(string $type, int $value): Version
     {
-        switch ($type) {
-            case self::MAJOR:
-                $this->setMajor($value);
-                break;
-            case self::MINOR:
-                $this->setMinor($value);
-                break;
-            case self::PATCH:
-                $this->setPatch($value);
-                break;
-        }
+        $this->mainComponents->set($type, $value);
 
         return $this;
     }
@@ -488,5 +425,13 @@ class Version
         $this->dateMetaValue = $value;
 
         return $this;
+    }
+
+    /**
+     * @return VersionComponentsCollection
+     */
+    public function getMainComponents(): VersionComponentsCollection
+    {
+        return $this->mainComponents;
     }
 }

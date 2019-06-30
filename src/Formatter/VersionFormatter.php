@@ -17,6 +17,7 @@ namespace Enuage\VersionUpdaterBundle\Formatter;
 
 use Enuage\VersionUpdaterBundle\Mutator\VersionMutator;
 use Enuage\VersionUpdaterBundle\ValueObject\Version;
+use Enuage\VersionUpdaterBundle\ValueObject\VersionComponent;
 
 /**
  * Class VersionFormatter
@@ -39,14 +40,13 @@ class VersionFormatter implements FormatterInterface
     {
         $result = $this->version->getPrefix() ?? '';
 
-        $result .= implode(
-            '.',
-            [
-                $this->version->getMajor(),
-                $this->version->getMinor(),
-                $this->version->getPatch(),
-            ]
-        );
+        $mainVersionValues = [];
+        /** @var VersionComponent $component */
+        foreach ($this->version->getMainComponents()->getIterator() as $component) {
+            $mainVersionValues[] = $component->getValue();
+        }
+
+        $result .= implode('.', $mainVersionValues);
 
         if ($preRelease = $this->version->getPreRelease()) {
             $result .= '-'.$preRelease;
