@@ -1,7 +1,14 @@
 # Version updater command changelog
 
-- [ ] TODO: Composer version updating
-- [ ] TODO: .env file value updating
+### v1.1.0
+
+##### 2019-06-30 22:22
+
+- Enable GitLab CI
+- Update documentation
+- Add version parser test
+- Update code of pre-release versions data manipulations
+- Code clean and improvements
 
 ##### 2019-06-29
 
