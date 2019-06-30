@@ -39,11 +39,9 @@ class FilesFinder
     private $rootDirectory;
 
     /**
-     * FilesFinder constructor.
-     *
      * @param array $files
      */
-    public function __construct(array $files)
+    public function setFiles(array $files)
     {
         $this->files = FilesArrayNormalizer::normalize($files);
     }

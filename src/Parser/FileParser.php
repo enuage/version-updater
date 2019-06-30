@@ -1,6 +1,6 @@
 <?php
 /**
- * TextParser
+ * FileParser
  *
  * Created at 2019-06-23 12:30 AM
  *
@@ -19,7 +19,7 @@ use Enuage\VersionUpdaterBundle\ValueObject\Version;
 use Symfony\Component\Finder\SplFileInfo;
 
 /**
- * Class TextParser
+ * Class FileParser
  *
  * @author Serghei Niculaev <spam312sn@gmail.com>
  */
@@ -33,7 +33,7 @@ class FileParser extends AbstractParser
     private $file;
 
     /**
-     * TextParser constructor.
+     * FileParser constructor.
      *
      * @param SplFileInfo $file
      * @param string $pattern

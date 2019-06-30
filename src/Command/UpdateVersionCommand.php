@@ -12,8 +12,11 @@
 
 namespace Enuage\VersionUpdaterBundle\Command;
 
+use Enuage\VersionUpdaterBundle\DTO\VersionOptions;
 use Enuage\VersionUpdaterBundle\Finder\FilesFinder;
 use Enuage\VersionUpdaterBundle\Formatter\FileFormatter;
+use Enuage\VersionUpdaterBundle\Handler\AbstractHandler;
+use Enuage\VersionUpdaterBundle\Handler\TextHandler;
 use Enuage\VersionUpdaterBundle\Mutator\VersionMutator;
 use Enuage\VersionUpdaterBundle\Parser\AbstractParser;
 use Enuage\VersionUpdaterBundle\Parser\CommandOptionsParser;
@@ -34,6 +37,11 @@ use Symfony\Component\Console\Output\OutputInterface;
 class UpdateVersionCommand extends ContainerAwareCommand
 {
     /**
+     * @var VersionOptions
+     */
+    private $options;
+
+    /**
      * {@inheritdoc}
      */
     protected function configure()
@@ -45,8 +53,12 @@ class UpdateVersionCommand extends ContainerAwareCommand
         $this->addOption('minor', null, InputOption::VALUE_NONE, 'Update minor version');
         $this->addOption('patch', null, InputOption::VALUE_NONE, 'Update patch version');
 
-        $this->addOption('down', null, InputOption::VALUE_NONE,
-            'Decrease version. It\'s also applicable to prerelease versions');
+        $this->addOption(
+            'down',
+            null,
+            InputOption::VALUE_NONE,
+            'Decrease version. It\'s also applicable to prerelease versions'
+        );
 
         // Prerelease versions
         $this->addOption('alpha', null, InputOption::VALUE_NONE, 'Increase or define the alpha version');
@@ -66,31 +78,45 @@ class UpdateVersionCommand extends ContainerAwareCommand
      */
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        $finder = new FilesFinder($this->getContainer()->getParameter('enuage_version_updater.files'));
+        $this->options = CommandOptionsParser::parse($input);
+
+        $finder = new FilesFinder();
         $finder->setRootDirectory($this->getContainer()->getParameter('kernel.root_dir'));
 
-        if ($finder->hasFiles()) {
-            $commandOptions = CommandOptionsParser::parse($input);
+        $finder->setFiles($this->getContainer()->getParameter('enuage_version_updater.files'));
+        $this->updateFiles($finder, new TextHandler());
 
+// TODO
+//        $finder->setFiles($this->getContainer()->getParameter('enuage_version_updater.json'));
+//        $this->updateFiles($finder, new JsonHandler());
+    }
+
+    /**
+     * @param FilesFinder $finder
+     * @param AbstractHandler $handler
+     */
+    private function updateFiles(FilesFinder $finder, AbstractHandler $handler)
+    {
+        if ($finder->hasFiles()) {
             $finder->iterate(
-                static function ($file, $pattern) use ($commandOptions) {
+                function ($file, $pattern) use ($handler) {
                     $fileParser = new FileParser($file, $pattern);
-                    $versionParser = new VersionParser($commandOptions->getVersion());
+                    $versionParser = new VersionParser($this->options->getVersion());
 
                     /** @var AbstractParser $parser */
-                    $parser = $commandOptions->hasVersion() ? $versionParser : $fileParser;
-                    $mutator = new VersionMutator($parser->parse(), $commandOptions);
+                    $parser = $this->options->hasVersion() ? $versionParser : $fileParser;
 
-                    if (!$commandOptions->hasVersion()) {
+                    $mutator = new VersionMutator($parser->parse(), $this->options);
+
+                    if (!$this->options->hasVersion()) {
                         $mutator->update();
                     }
 
                     $fileFormatter = new FileFormatter($fileParser);
+                    // TODO set handler
                     $fileFormatter->format($mutator->getFormatter());
                 }
             );
-
-            $output->writeln('<info>All files were updated.</info>');
         }
     }
 }
