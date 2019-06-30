@@ -33,12 +33,11 @@ class VersionComponentsCollection extends ArrayCollection
      */
     public function __construct(array $types = [], bool $enableAll = self::ENABLE_ALL)
     {
-        $elements = [];
-        foreach ($types as $type) {
-            $elements[$type] = new VersionComponent(true === $enableAll);
-        }
+        parent::__construct();
 
-        parent::__construct($elements);
+        foreach ($types as $type) {
+            parent::set($type, new VersionComponent(true === $enableAll));
+        }
     }
 
     /**
@@ -73,5 +72,13 @@ class VersionComponentsCollection extends ArrayCollection
     public function get($type): VersionComponent
     {
         return parent::get($type);
+    }
+
+    public function disableAll()
+    {
+        /** @var VersionComponent $type */
+        foreach ($this->getIterator() as $type) {
+            $type->setEnabled(false);
+        }
     }
 }

@@ -15,6 +15,7 @@
 
 namespace Enuage\VersionUpdaterBundle\Tests;
 
+use DateTime;
 use Enuage\VersionUpdaterBundle\DTO\VersionOptions;
 use Enuage\VersionUpdaterBundle\Formatter\VersionFormatter;
 use Enuage\VersionUpdaterBundle\Mutator\VersionMutator;
@@ -97,12 +98,15 @@ class VersionMutatorTest extends FunctionalTestCase
         $versionOptions->updateAlpha();
         $this->assertVersions('1.0.0-alpha', $this->service->update('1', $versionOptions));
 
+        $versionOptions = new VersionOptions();
         $versionOptions->decreasePreRelease();
         $this->assertVersions('1.0.0', $this->service->update('1', $versionOptions));
 
+        $versionOptions = new VersionOptions();
         $versionOptions->increasePreRelease();
         $this->assertVersions('1.0.0-alpha.1', $this->service->update('1-alpha', $versionOptions));
 
+        $versionOptions = new VersionOptions();
         $versionOptions->decreasePreRelease();
         $this->assertVersions('1.0.0-alpha', $this->service->update('1-alpha.1', $versionOptions));
         $this->assertVersions('1.0.0-alpha.1', $this->service->update('1-alpha.2', $versionOptions));
@@ -117,12 +121,15 @@ class VersionMutatorTest extends FunctionalTestCase
         $versionOptions->updateBeta();
         $this->assertVersions('1.0.0-beta', $this->service->update('1', $versionOptions));
 
+        $versionOptions = new VersionOptions();
         $versionOptions->decreasePreRelease();
         $this->assertVersions('1.0.0', $this->service->update('1', $versionOptions));
 
+        $versionOptions = new VersionOptions();
         $versionOptions->increasePreRelease();
         $this->assertVersions('1.0.0-beta.1', $this->service->update('1-beta', $versionOptions));
 
+        $versionOptions = new VersionOptions();
         $versionOptions->decreasePreRelease();
         $this->assertVersions('1.0.0-beta', $this->service->update('1-beta.1', $versionOptions));
         $this->assertVersions('1.0.0-beta.1', $this->service->update('1-beta.2', $versionOptions));
@@ -137,12 +144,15 @@ class VersionMutatorTest extends FunctionalTestCase
         $versionOptions->updateReleaseCandidate();
         $this->assertVersions('1.0.0-rc', $this->service->update('1', $versionOptions));
 
+        $versionOptions = new VersionOptions();
         $versionOptions->decreasePreRelease();
         $this->assertVersions('1.0.0', $this->service->update('1', $versionOptions));
 
+        $versionOptions = new VersionOptions();
         $versionOptions->increasePreRelease();
         $this->assertVersions('1.0.0-rc.1', $this->service->update('1-rc', $versionOptions));
 
+        $versionOptions = new VersionOptions();
         $versionOptions->decreasePreRelease();
         $this->assertVersions('1.0.0-rc', $this->service->update('1-rc.1', $versionOptions));
         $this->assertVersions('1.0.0-rc.1', $this->service->update('1-rc.2', $versionOptions));
@@ -161,17 +171,38 @@ class VersionMutatorTest extends FunctionalTestCase
         $this->assertVersions('1.0.0-beta.1', $this->service->update('1.0.0-beta', $versionOptions));
 
         $this->assertVersions('1.0.0-rc.1', $this->service->update('1.0.0-rc', $versionOptions));
+    }
 
+    /**
+     * @throws Exception
+     */
+    public function testDecreasePreReleaseVersion()
+    {
+        $versionOptions = new VersionOptions();
         $versionOptions->decreasePreRelease();
         $this->assertVersions('1.0.0-alpha.1', $this->service->update('1.0.0-alpha.2', $versionOptions));
         $this->assertVersions('1.0.0-beta.1', $this->service->update('1.0.0-beta.2', $versionOptions));
         $this->assertVersions('1.0.0-rc.1', $this->service->update('1.0.0-rc.2', $versionOptions));
+
         $this->assertVersions('1.0.0-alpha', $this->service->update('1.0.0-alpha.1', $versionOptions));
         $this->assertVersions('1.0.0-beta', $this->service->update('1.0.0-beta.1', $versionOptions));
         $this->assertVersions('1.0.0-rc', $this->service->update('1.0.0-rc.1', $versionOptions));
+
         $this->assertVersions('1.0.0', $this->service->update('1.0.0-alpha', $versionOptions));
         $this->assertVersions('1.0.0', $this->service->update('1.0.0-beta', $versionOptions));
         $this->assertVersions('1.0.0', $this->service->update('1.0.0-rc', $versionOptions));
+    }
+
+    /**
+     * @throws Exception
+     */
+    public function testPreReleaseVersionModifications()
+    {
+        $versionOptions = new VersionOptions();
+        $versionOptions->decreasePreRelease();
+        $this->assertVersions('1.0.0-alpha.1', $this->service->update('1.0.0-alpha.2', $versionOptions));
+        $versionOptions->increasePreRelease();
+        $this->assertVersions('1.0.0-alpha.2', $this->service->update('1.0.0-alpha.2', $versionOptions));
     }
 
     /**
@@ -211,6 +242,63 @@ class VersionMutatorTest extends FunctionalTestCase
         $versionOptions = new VersionOptions();
         $versionOptions->decreaseMajor()->increaseMajor()->decreaseMinor()->increasePatch();
         $this->assertVersions('1.0.1', $this->service->update('1.0.0', $versionOptions));
+
+        $versionOptions = new VersionOptions();
+        $versionOptions->decreasePreRelease()->increasePreRelease()->decreasePreRelease()->increasePreRelease();
+        $this->assertVersions('1.0.0-alpha', $this->service->update('1.0.0-alpha', $versionOptions));
+
+        $versionOptions = new VersionOptions();
+        $versionOptions->decreasePreRelease()->increasePreRelease()->decreasePreRelease();
+        $this->assertVersions('1.0.0', $this->service->update('1.0.0-alpha', $versionOptions));
+
+        $versionOptions = new VersionOptions();
+        $versionOptions->increasePreRelease()->decreasePreRelease()->increasePreRelease();
+        $this->assertVersions('1.0.0-alpha.1', $this->service->update('1.0.0-alpha', $versionOptions));
+
+        $versionOptions = new VersionOptions();
+        $versionOptions->updateAlpha()->decreasePreRelease()->increasePreRelease();
+        $this->assertVersions('1.0.0-alpha', $this->service->update('1.0.0-alpha', $versionOptions));
+
+        $versionOptions = new VersionOptions();
+        $versionOptions->updateBeta()->decreasePreRelease()->increasePreRelease();
+        $this->assertVersions('1.0.0-beta', $this->service->update('1.0.0-alpha', $versionOptions));
+
+        $versionOptions = new VersionOptions();
+        $versionOptions->updateBeta()->increasePreRelease();
+        $this->assertVersions('1.0.0-beta', $this->service->update('1.0.0-alpha', $versionOptions));
+    }
+
+    /**
+     * @throws Exception
+     */
+    public function testAddMeta()
+    {
+        $date = new DateTime();
+        $versionOptions = new VersionOptions();
+        $versionOptions->addDateMeta();
+        $this->assertVersions('1.0.0+'.$date->format('c'), $this->service->update('1.0.0', $versionOptions));
+
+        $date = new DateTime();
+        $versionOptions = new VersionOptions();
+        $versionOptions->addDateMeta('U');
+        $this->assertVersions('1.0.0+'.$date->format('U'), $this->service->update('1.0.0', $versionOptions));
+
+        $meta = md5('test');
+        $versionOptions = new VersionOptions();
+        $versionOptions->addMeta($meta);
+        $this->assertVersions('1.0.0+'.$meta, $this->service->update('1.0.0', $versionOptions));
+
+        $meta = sha1('test');
+        $versionOptions = new VersionOptions();
+        $versionOptions->addMeta($meta);
+        $this->assertVersions('1.0.0+'.$meta, $this->service->update('1.0.0', $versionOptions));
+
+        $date = new DateTime();
+        $meta = sha1('meta');
+        $versionOptions = new VersionOptions();
+        $versionOptions->addDateMeta('U');
+        $versionOptions->addMeta($meta);
+        $this->assertVersions('1.0.0+'.$date->format('U').'+'.$meta, $this->service->update('1.0.0', $versionOptions));
     }
 
     /**

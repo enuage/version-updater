@@ -57,7 +57,7 @@ class FileFormatter implements FormatterInterface
      */
     public function format($versionFormatter = null): bool
     {
-        $fileParser = $this->getFileParser();
+        $fileParser = $this->fileParser;
 
         $matches = $fileParser->getMatches();
         $lastMatch = $matches->last();
@@ -74,13 +74,5 @@ class FileFormatter implements FormatterInterface
         $this->fileSystem->dumpFile($file->getRealPath(), $content);
 
         return true;
-    }
-
-    /**
-     * @return FileParser
-     */
-    private function getFileParser(): FileParser
-    {
-        return $this->fileParser;
     }
 }

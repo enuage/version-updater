@@ -57,8 +57,6 @@ class UpdateVersionCommand extends ContainerAwareCommand
         // Metadata
         $this->addOption('date', null, InputOption::VALUE_OPTIONAL, 'Add date metadata to the version');
         $this->addOption('meta', null, InputOption::VALUE_OPTIONAL, 'Add metadata to the version');
-
-//        $this->addOption('composer', null, InputOption::VALUE_NONE, 'Update composer file');
     }
 
     /**

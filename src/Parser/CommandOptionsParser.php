@@ -42,25 +42,39 @@ final class CommandOptionsParser
 
         $options->downgrade($input->hasParameterOption('--down'));
 
-        foreach (VersionOptions::OPTIONS as $option) {
-            if ($input->hasParameterOption('--'.$option)) {
-                $options->enable($option);
+        $options->getMainTypes()->downgradeAll($options->isDowngrade());
+        $options->getPreReleaseTypes()->downgradeAll($options->isDowngrade());
+
+        if ($input->hasParameterOption('--release')) {
+            $options->release();
+        }
+
+        foreach (Version::MAIN_VERSIONS as $type) {
+            if ($input->hasParameterOption('--'.$type)) {
+                $options->getMainTypes()->get($type)->update();
             }
         }
 
-        $metaComponents = $options->getMetaComponents();
-        if ($metaComponents->containsKey(Version::META_DATE)) {
-            $metaComponent = $metaComponents->get(Version::META_DATE);
-            $metaComponent->setFormat($input->getOption(Version::META_DATE));
+        foreach (Version::PRE_RELEASE_VERSIONS as $type) {
+            if ($input->hasParameterOption('--'.$type)) {
+                $options->getPreReleaseTypes()->get($type)->enable();
+            }
         }
 
-        if ($metaComponents->containsKey(Version::META)) {
-            $metaComponent = $metaComponents->get(Version::META);
-            $metaComponent->setValue($input->getOption(Version::META));
+        if ($input->hasParameterOption('--release')) {
+            $options->release();
         }
 
-        if ($options->hasPreRelease() && $options->isDowngrade()) {
-            $options->decreasePreRelease();
+        if ($input->hasParameterOption('--'.Version::META_DATE)) {
+            $options->addDateMeta($input->getOption(Version::META_DATE));
+        }
+
+        if ($input->hasParameterOption('--'.Version::META)) {
+            $options->addMeta($input->getOption(Version::META));
+        }
+
+        if ($options->hasPreRelease()) {
+            $options->isDowngrade() ? $options->decreasePreRelease() : $options->increasePreRelease();
         }
 
         return $options;

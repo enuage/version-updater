@@ -72,25 +72,17 @@ class VersionModifier
     /**
      * @return bool
      */
-    private function isDowngrade(): bool
+    public function isEnabled(): bool
     {
-        return $this->downgrade;
+        return $this->enabled;
     }
 
     /**
      * @return bool
      */
-    public function isUpdated(): bool
+    public function isDowngrade(): bool
     {
-        return self::IGNORED_MODIFIER_VALUE !== $this->modifier;
-    }
-
-    /**
-     * @return int
-     */
-    public function getModifier(): int
-    {
-        return $this->modifier;
+        return $this->downgrade;
     }
 
     /**
@@ -108,9 +100,17 @@ class VersionModifier
     /**
      * @return bool
      */
-    public function isEnabled(): bool
+    public function isUpdated(): bool
     {
-        return $this->enabled;
+        return self::IGNORED_MODIFIER_VALUE !== $this->modifier;
+    }
+
+    /**
+     * @return int
+     */
+    public function getModifier(): int
+    {
+        return $this->modifier;
     }
 
     /**

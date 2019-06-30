@@ -30,5 +30,4 @@ class VersionUpdaterBundle extends Bundle
     {
         return new EnuageVersionUpdaterExtension();
     }
-
 }

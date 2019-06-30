@@ -78,10 +78,11 @@ abstract class AbstractParser
 
     /**
      * @param string $pattern
-     *
-     * @return AbstractParser
      */
-    abstract public function setPattern(string $pattern): AbstractParser;
+    protected function setPattern(string $pattern)
+    {
+        $this->pattern = $pattern;
+    }
 
     /**
      * @param array|ArrayCollection $matches

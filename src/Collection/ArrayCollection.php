@@ -34,7 +34,7 @@ class ArrayCollection extends DoctrineArrayCollection
     {
         $value = $this->get($key);
 
-        if (!$value && null !== $default) {
+        if (!$value) {
             $value = $default;
         }
 

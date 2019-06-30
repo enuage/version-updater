@@ -52,8 +52,9 @@ class VersionFormatter implements FormatterInterface
         if ($preRelease = $this->version->getPreRelease()) {
             $result .= '-'.$preRelease;
 
-            if ($preReleaseVersion = $this->version->getPreReleaseVersion()) {
-                $result .= '.'.$preReleaseVersion;
+            $preReleaseVersion = $this->version->getPreReleaseComponent($preRelease);
+            if ($preReleaseVersion->getValue() > 0) {
+                $result .= '.'.$preReleaseVersion->getValue();
             }
         }
 

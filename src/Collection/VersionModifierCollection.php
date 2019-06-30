@@ -24,41 +24,30 @@ use Enuage\VersionUpdaterBundle\ValueObject\VersionModifier;
  */
 class VersionModifierCollection extends ArrayCollection
 {
-    /**
-     * @var array
-     */
-    private $types;
+    const DISABLE_ALL = false;
+    const ENABLE_ALL = true;
 
     /**
      * VersionModifierCollection constructor.
      *
      * @param array $types
-     * @param bool $isEnabled
+     * @param bool $enableAll
      */
-    public function __construct(array $types = [], bool $isEnabled = false)
+    public function __construct(array $types = [], bool $enableAll = self::DISABLE_ALL)
     {
-        $this->types = $types;
+        parent::__construct();
 
-        $elements = [];
         foreach ($types as $type) {
-            $elements[$type] = new VersionModifier($isEnabled);
+            $this->set($type, new VersionModifier(true === $enableAll));
         }
-
-        parent::__construct($elements);
     }
 
     /**
-     * @param bool $downgrade
-     *
-     * @return VersionModifierCollection
+     * @param string $type
      */
-    public function setDowngrade(bool $downgrade): VersionModifierCollection
+    public function enable(string $type)
     {
-        foreach ($this->types as $type) {
-            $this->get($type)->setDowngrade($downgrade);
-        }
-
-        return $this;
+        $this->get($type)->enable();
     }
 
     /**
@@ -71,10 +60,34 @@ class VersionModifierCollection extends ArrayCollection
         return parent::get($key);
     }
 
-    public function updateAll()
+    /**
+     * @param string $type
+     */
+    public function decrease(string $type)
     {
-        foreach ($this->types as $type) {
-            $this->get($type)->update();
+        $this->get($type)->setDowngrade(true)->update();
+    }
+
+    /**
+     * @param string $type
+     */
+    public function increase(string $type)
+    {
+        $this->get($type)->setDowngrade(false)->update();
+    }
+
+    /**
+     * @param bool $downgrade
+     *
+     * @return VersionModifierCollection
+     */
+    public function downgradeAll(bool $downgrade): VersionModifierCollection
+    {
+        /** @var VersionModifier $type */
+        foreach ($this->getIterator() as $type) {
+            $type->setDowngrade($downgrade);
         }
+
+        return $this;
     }
 }

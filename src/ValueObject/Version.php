@@ -64,11 +64,6 @@ class Version
     private $preReleaseComponents;
 
     /**
-     * @var int|null
-     */
-    private $preReleaseVersion;
-
-    /**
      * @var ArrayCollection
      */
     private $metaComponents;
@@ -114,7 +109,25 @@ class Version
      */
     public function getMainVersion(string $type)
     {
-        return $this->mainComponents->get($type)->getValue();
+        return $this->getMainComponentValue($type);
+    }
+
+    /**
+     * @param string $type
+     *
+     * @return int
+     */
+    private function getMainComponentValue(string $type): int
+    {
+        return $this->getMainComponents()->get($type)->getValue();
+    }
+
+    /**
+     * @return VersionComponentsCollection
+     */
+    public function getMainComponents(): VersionComponentsCollection
+    {
+        return $this->mainComponents;
     }
 
     /**
@@ -135,7 +148,7 @@ class Version
      */
     public function getMajor(): int
     {
-        return $this->mainComponents->get(self::MAJOR)->getValue();
+        return $this->getMainComponentValue(self::MAJOR);
     }
 
     /**
@@ -155,7 +168,7 @@ class Version
      */
     public function getMinor(): int
     {
-        return $this->mainComponents->get(self::MINOR)->getValue();
+        return $this->getMainComponentValue(self::MINOR);
     }
 
     /**
@@ -175,7 +188,7 @@ class Version
      */
     public function getPatch(): int
     {
-        return $this->mainComponents->get(self::PATCH)->getValue();
+        return $this->getMainComponentValue(self::PATCH);
     }
 
     /**
@@ -188,6 +201,46 @@ class Version
         $this->mainComponents->set(self::PATCH, $value);
 
         return $this;
+    }
+
+    /**
+     * @return Version
+     */
+    public function clearPreRelease(): Version
+    {
+        $this->preReleaseComponents->disableAll();
+
+        return $this;
+    }
+
+    /**
+     * @param string $type
+     *
+     * @return Version
+     */
+    public function enablePreRelease(string $type): Version
+    {
+        $this->getPreReleaseComponent($type)->setEnabled(true);
+
+        return $this;
+    }
+
+    /**
+     * @param string $type
+     *
+     * @return VersionComponent
+     */
+    public function getPreReleaseComponent(string $type): VersionComponent
+    {
+        return $this->preReleaseComponents->getValue($type);
+    }
+
+    /**
+     * @return null|int
+     */
+    public function getPreReleaseVersion()
+    {
+        return $this->getPreReleaseComponent($this->getPreRelease())->getValue();
     }
 
     /**
@@ -206,77 +259,12 @@ class Version
     }
 
     /**
-     * @return Version
-     */
-    public function clearPreRelease(): Version
-    {
-        foreach (self::PRE_RELEASE_VERSIONS as $version) {
-            $this->preReleaseComponents->get($version)->setEnabled(false);
-        }
-
-        return $this;
-    }
-
-    /**
      * @param string $type
-     *
-     * @return Version
+     * @param int $value
      */
-    public function enablePreRelease(string $type): Version
+    public function setPreReleaseVersion(string $type, int $value)
     {
-        $this->preReleaseComponents->get($type)->setEnabled(true);
-
-        return $this;
-    }
-
-    /**
-     * @param string $type
-     *
-     * @return Version
-     */
-    public function disablePreRelease(string $type): Version
-    {
-        $this->preReleaseComponents->get($type)->setEnabled(false);
-
-        return $this;
-    }
-
-    /**
-     * @return null|int
-     */
-    public function getPreReleaseVersion()
-    {
-        return $this->preReleaseVersion;
-    }
-
-    /**
-     * @param null|int $preReleaseVersion
-     *
-     * @return Version
-     */
-    public function setPreReleaseVersion(int $preReleaseVersion): Version
-    {
-        $this->preReleaseVersion = $preReleaseVersion;
-
-        return $this;
-    }
-
-    /**
-     * @return Version
-     */
-    public function clearPreReleaseVersion(): Version
-    {
-        $this->preReleaseVersion = null;
-
-        return $this;
-    }
-
-    /**
-     * @return VersionComponentsCollection
-     */
-    public function getMainComponents(): VersionComponentsCollection
-    {
-        return $this->mainComponents;
+        $this->getPreReleaseComponent($type)->setValue($value);
     }
 
     /**

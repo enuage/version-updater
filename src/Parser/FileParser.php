@@ -44,17 +44,7 @@ class FileParser extends AbstractParser
 
         $this->file = $file;
 
-        $this->setPattern($pattern);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public function setPattern(string $pattern): AbstractParser
-    {
-        $this->pattern = str_replace(self::FILE_VERSION_PATTERN, self::VERSION_PATTERN, $pattern);
-
-        return $this;
+        $this->setPattern(str_replace(self::FILE_VERSION_PATTERN, self::VERSION_PATTERN, $pattern));
     }
 
     /**

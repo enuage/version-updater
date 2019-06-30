@@ -20,6 +20,7 @@ use Enuage\VersionUpdaterBundle\Collection\ArrayCollection;
 use Enuage\VersionUpdaterBundle\Collection\VersionModifierCollection;
 use Enuage\VersionUpdaterBundle\ValueObject\MetaComponent;
 use Enuage\VersionUpdaterBundle\ValueObject\Version;
+use Enuage\VersionUpdaterBundle\ValueObject\VersionModifier;
 use Exception;
 
 /**
@@ -29,18 +30,6 @@ use Exception;
  */
 class VersionOptions
 {
-    const OPTIONS = [
-        Version::MAJOR,
-        Version::MINOR,
-        Version::PATCH,
-        Version::ALPHA,
-        Version::BETA,
-        Version::RELEASE_CANDIDATE,
-        'release',
-        Version::META_DATE,
-        Version::META,
-    ];
-
     /**
      * @var null|string
      */
@@ -67,14 +56,9 @@ class VersionOptions
     private $release = false;
 
     /**
-     * @var bool
+     * @var VersionModifier
      */
-    private $increasePreRelease = true;
-
-    /**
-     * @var bool
-     */
-    private $updatePreReleaseVersion = false;
+    private $preReleaseVersionModifier;
 
     /**
      * @var ArrayCollection
@@ -86,44 +70,14 @@ class VersionOptions
      */
     public function __construct()
     {
-        $this->mainTypes = new VersionModifierCollection(Version::MAIN_VERSIONS, true);
+        $this->mainTypes = new VersionModifierCollection(
+            Version::MAIN_VERSIONS,
+            VersionModifierCollection::ENABLE_ALL
+        );
         $this->preReleaseTypes = new VersionModifierCollection(Version::PRE_RELEASE_VERSIONS);
         $this->metaComponents = new ArrayCollection();
-    }
-
-    /**
-     * @param string $option
-     *
-     * @return VersionOptions
-     *
-     * @throws Exception
-     */
-    public function enable(string $option): VersionOptions
-    {
-        $this->mainTypes->setDowngrade($this->down);
-        $this->preReleaseTypes->setDowngrade($this->down);
-
-        if (in_array($option, Version::MAIN_VERSIONS, true)) {
-            $this->mainTypes->get($option)->update();
-        }
-
-        if ('release' === $option) {
-            $this->release = true;
-        }
-
-        if (in_array($option, Version::PRE_RELEASE_VERSIONS, true)) {
-            $this->preReleaseTypes->get($option)->enable();
-        }
-
-        if (Version::META_DATE === $option) {
-            $this->addDateMeta();
-        }
-
-        if (Version::META === $option) {
-            $this->addMeta();
-        }
-
-        return $this;
+        $this->preReleaseVersionModifier = new VersionModifier();
+        $this->preReleaseVersionModifier->enable();
     }
 
     /**
@@ -167,9 +121,17 @@ class VersionOptions
      */
     public function increaseMajor(): VersionOptions
     {
-        $this->mainTypes->get(Version::MAJOR)->setDowngrade(false)->update();
+        $this->getMainTypes()->increase(Version::MAJOR);
 
         return $this;
+    }
+
+    /**
+     * @return VersionModifierCollection
+     */
+    public function getMainTypes(): VersionModifierCollection
+    {
+        return $this->mainTypes;
     }
 
     /**
@@ -177,7 +139,7 @@ class VersionOptions
      */
     public function decreaseMajor(): VersionOptions
     {
-        $this->mainTypes->get(Version::MAJOR)->setDowngrade(true)->update();
+        $this->getMainTypes()->decrease(Version::MAJOR);
 
         return $this;
     }
@@ -187,7 +149,7 @@ class VersionOptions
      */
     public function increaseMinor(): VersionOptions
     {
-        $this->mainTypes->get(Version::MINOR)->setDowngrade(false)->update();
+        $this->getMainTypes()->increase(Version::MINOR);
 
         return $this;
     }
@@ -197,7 +159,7 @@ class VersionOptions
      */
     public function decreaseMinor(): VersionOptions
     {
-        $this->mainTypes->get(Version::MINOR)->setDowngrade(true)->update();
+        $this->getMainTypes()->decrease(Version::MINOR);
 
         return $this;
     }
@@ -207,7 +169,7 @@ class VersionOptions
      */
     public function increasePatch(): VersionOptions
     {
-        $this->mainTypes->get(Version::PATCH)->setDowngrade(false)->update();
+        $this->getMainTypes()->increase(Version::PATCH);
 
         return $this;
     }
@@ -217,7 +179,7 @@ class VersionOptions
      */
     public function decreasePatch(): VersionOptions
     {
-        $this->mainTypes->get(Version::PATCH)->setDowngrade(true)->update();
+        $this->getMainTypes()->decrease(Version::PATCH);
 
         return $this;
     }
@@ -227,9 +189,17 @@ class VersionOptions
      */
     public function updateAlpha(): VersionOptions
     {
-        $this->preReleaseTypes->get(Version::ALPHA)->enable();
+        $this->getPreReleaseTypes()->enable(Version::ALPHA);
 
         return $this;
+    }
+
+    /**
+     * @return VersionModifierCollection
+     */
+    public function getPreReleaseTypes(): VersionModifierCollection
+    {
+        return $this->preReleaseTypes;
     }
 
     /**
@@ -237,7 +207,7 @@ class VersionOptions
      */
     public function updateBeta(): VersionOptions
     {
-        $this->preReleaseTypes->get(Version::BETA)->enable();
+        $this->getPreReleaseTypes()->enable(Version::BETA);
 
         return $this;
     }
@@ -247,7 +217,7 @@ class VersionOptions
      */
     public function updateReleaseCandidate(): VersionOptions
     {
-        $this->preReleaseTypes->get(Version::RELEASE_CANDIDATE)->enable();
+        $this->getPreReleaseTypes()->enable(Version::RELEASE_CANDIDATE);
 
         return $this;
     }
@@ -263,9 +233,17 @@ class VersionOptions
     /**
      * @return bool
      */
-    public function isPreReleaseDowngrade(): bool
+    private function isPreReleaseDowngrade(): bool
     {
-        return false === $this->increasePreRelease;
+        return $this->getPreReleaseVersionModifier()->isDowngrade();
+    }
+
+    /**
+     * @return VersionModifier
+     */
+    public function getPreReleaseVersionModifier(): VersionModifier
+    {
+        return $this->preReleaseVersionModifier;
     }
 
     /**
@@ -309,28 +287,17 @@ class VersionOptions
     {
         $this->down = $value;
 
-        if (true === $value) {
-            $this->getMainTypes()->setDowngrade(true)->updateAll();
-            $this->getPreReleaseTypes()->setDowngrade(true)->updateAll();
-        }
-
         return $this;
     }
 
     /**
-     * @return VersionModifierCollection
+     * @param string $type
+     *
+     * @return VersionModifier|null
      */
-    public function getMainTypes(): VersionModifierCollection
+    public function getMainType(string $type)
     {
-        return $this->mainTypes;
-    }
-
-    /**
-     * @return VersionModifierCollection
-     */
-    public function getPreReleaseTypes(): VersionModifierCollection
-    {
-        return $this->preReleaseTypes;
+        return $this->getMainTypes()->getValue($type);
     }
 
     /**
@@ -338,10 +305,7 @@ class VersionOptions
      */
     public function increasePreRelease(): VersionOptions
     {
-        $this->increasePreRelease = true;
-        $this->updatePreReleaseVersion = true;
-
-        $this->preReleaseTypes->setDowngrade(false);
+        $this->getPreReleaseVersionModifier()->setDowngrade(false)->update();
 
         return $this;
     }
@@ -351,10 +315,7 @@ class VersionOptions
      */
     public function decreasePreRelease(): VersionOptions
     {
-        $this->increasePreRelease = false;
-        $this->updatePreReleaseVersion = true;
-
-        $this->preReleaseTypes->setDowngrade(true);
+        $this->getPreReleaseVersionModifier()->setDowngrade(true)->update();
 
         return $this;
     }
@@ -364,21 +325,13 @@ class VersionOptions
      */
     public function hasPreRelease(): bool
     {
-        foreach (Version::PRE_RELEASE_VERSIONS as $type) {
-            if ($this->preReleaseTypes->get($type)->isEnabled()) {
+        foreach ($this->getPreReleaseTypes()->getIterator() as $type) {
+            if ($type->isEnabled()) {
                 return true;
             }
         }
 
         return false;
-    }
-
-    /**
-     * @return bool
-     */
-    public function isPreReleaseVersionUpdatable(): bool
-    {
-        return $this->updatePreReleaseVersion;
     }
 
     /**
@@ -388,7 +341,7 @@ class VersionOptions
      */
     public function isMainVersionUpdated(string $name): bool
     {
-        return $this->mainTypes->get($name)->isUpdated();
+        return $this->getMainTypes()->get($name)->isUpdated();
     }
 
     /**
@@ -399,12 +352,16 @@ class VersionOptions
         return $this->metaComponents;
     }
 
+    /**
+     * @return void
+     */
     public function release()
     {
         $this->release = true;
 
-        foreach (Version::PRE_RELEASE_VERSIONS as $type) {
-            $this->getPreReleaseTypes()->get($type)->disable();
+        /** @var VersionModifier $type */
+        foreach ($this->getPreReleaseTypes()->getIterator() as $type) {
+            $type->disable();
         }
     }
 }

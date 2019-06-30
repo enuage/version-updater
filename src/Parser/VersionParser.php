@@ -46,16 +46,6 @@ class VersionParser extends AbstractParser
     /**
      * {@inheritDoc}
      */
-    public function setPattern(string $pattern): AbstractParser
-    {
-        $this->pattern = $pattern;
-
-        return $this;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
     public function parse(): Version
     {
         preg_match($this->getPattern(), $this->getSubject(), $matches);
@@ -97,11 +87,14 @@ class VersionParser extends AbstractParser
         }
 
         if ($this->matches->containsKey('preRelease')) {
-            $version->enablePreRelease($this->matches->get('preRelease'));
-        }
+            $type = $this->matches->get('preRelease');
+            $version->enablePreRelease($type);
 
-        if ($this->matches->containsKey('preReleaseVersion')) {
-            $version->setPreReleaseVersion($this->matches->get('preReleaseVersion'));
+            if ($this->matches->containsKey('preReleaseVersion')) {
+                $version->getPreReleaseComponent($type)->setValue(
+                    $this->matches->getValue('preReleaseVersion', 0)
+                );
+            }
         }
 
         return $version;
