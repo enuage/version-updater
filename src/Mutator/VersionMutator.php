@@ -20,6 +20,7 @@ use Enuage\VersionUpdaterBundle\Collection\VersionModifierCollection;
 use Enuage\VersionUpdaterBundle\DTO\VersionOptions;
 use Enuage\VersionUpdaterBundle\Formatter\FormatterInterface;
 use Enuage\VersionUpdaterBundle\Formatter\VersionFormatter;
+use Enuage\VersionUpdaterBundle\ValueObject\MetaComponent;
 use Enuage\VersionUpdaterBundle\ValueObject\Version;
 use Enuage\VersionUpdaterBundle\ValueObject\VersionModifier;
 use Exception;
@@ -196,9 +197,12 @@ class VersionMutator
      */
     private function enableDateMeta(string $format): self
     {
-        $this->version->setDateMeta(true);
-        $this->version->setDateMetaValue(new DateTime());
-        $this->version->setDateMetaFormat($format);
+        $metaComponent = new MetaComponent();
+        $metaComponent->setType(MetaComponent::TYPE_DATETIME);
+        $metaComponent->setValue(new DateTime());
+        $metaComponent->setFormat($format);
+
+        $this->version->getMetaComponents()->add($metaComponent);
 
         return $this;
     }
@@ -210,8 +214,10 @@ class VersionMutator
      */
     private function enableMeta(string $value): self
     {
-        $this->version->setMeta(true);
-        $this->version->setMetaValue($value);
+        $metaComponent = new MetaComponent();
+        $metaComponent->setValue($value);
+
+        $this->version->getMetaComponents()->add($metaComponent);
 
         return $this;
     }

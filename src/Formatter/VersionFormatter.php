@@ -16,6 +16,7 @@
 namespace Enuage\VersionUpdaterBundle\Formatter;
 
 use Enuage\VersionUpdaterBundle\Mutator\VersionMutator;
+use Enuage\VersionUpdaterBundle\ValueObject\MetaComponent;
 use Enuage\VersionUpdaterBundle\ValueObject\Version;
 use Enuage\VersionUpdaterBundle\ValueObject\VersionComponent;
 
@@ -56,14 +57,18 @@ class VersionFormatter implements FormatterInterface
             }
         }
 
-        if ($this->version->isDateMetaDefined()) {
-            $dateFormat = $this->version->getDateMetaFormat();
+        $metaComponents = $this->version->getMetaComponents();
+        if (!$metaComponents->isEmpty()) {
+            /** @var MetaComponent $component */
+            foreach ($metaComponents->getIterator() as $component) {
+                $value = $component->getValue();
+                $format = $component->getFormat();
+                if (null !== $format && MetaComponent::TYPE_DATETIME === $component->getType()) {
+                    $value = $value->format($format) ?? 'c';
+                }
 
-            $result .= '+'.$this->version->getDateMetaValue()->format($dateFormat);
-        }
-
-        if ($meta = $this->version->getMetaValue()) {
-            $result .= '+'.$meta;
+                $result .= '+'.$value;
+            }
         }
 
         return $result;

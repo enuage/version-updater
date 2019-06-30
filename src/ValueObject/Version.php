@@ -15,7 +15,7 @@
 
 namespace Enuage\VersionUpdaterBundle\ValueObject;
 
-use DateTime;
+use Enuage\VersionUpdaterBundle\Collection\ArrayCollection;
 use Enuage\VersionUpdaterBundle\Collection\VersionComponentsCollection;
 
 /**
@@ -69,29 +69,9 @@ class Version
     private $preReleaseVersion;
 
     /**
-     * @var bool
+     * @var ArrayCollection
      */
-    private $dateMeta = false;
-
-    /**
-     * @var DateTime
-     */
-    private $dateMetaValue;
-
-    /**
-     * @var string
-     */
-    private $dateMetaFormat = 'c';
-
-    /**
-     * @var bool
-     */
-    private $meta = false;
-
-    /**
-     * @var string|null
-     */
-    private $metaValue;
+    private $metaComponents;
 
     /**
      * Version constructor.
@@ -103,6 +83,8 @@ class Version
             self::PRE_RELEASE_VERSIONS,
             VersionComponentsCollection::DISABLE_ALL
         );
+
+        $this->metaComponents = new ArrayCollection();
     }
 
     /**
@@ -266,102 +248,18 @@ class Version
     }
 
     /**
-     * @return bool
-     */
-    public function isDateMetaDefined(): bool
-    {
-        return $this->dateMeta;
-    }
-
-    /**
-     * @param bool $isDefined
-     *
-     * @return Version
-     */
-    public function setDateMeta(bool $isDefined): Version
-    {
-        $this->dateMeta = $isDefined;
-
-        return $this;
-    }
-
-    /**
-     * @return string
-     */
-    public function getDateMetaFormat(): string
-    {
-        return $this->dateMetaFormat;
-    }
-
-    /**
-     * @param string $format
-     *
-     * @return Version
-     */
-    public function setDateMetaFormat(string $format): Version
-    {
-        $this->dateMetaFormat = $format;
-
-        return $this;
-    }
-
-    /**
-     * @param bool $isDefined
-     *
-     * @return Version
-     */
-    public function setMeta(bool $isDefined): Version
-    {
-        $this->meta = $isDefined;
-
-        return $this;
-    }
-
-    /**
-     * @return null|string
-     */
-    public function getMetaValue()
-    {
-        return $this->metaValue;
-    }
-
-    /**
-     * @param null|string $value
-     *
-     * @return Version
-     */
-    public function setMetaValue(string $value): Version
-    {
-        $this->metaValue = $value;
-
-        return $this;
-    }
-
-    /**
-     * @return DateTime
-     */
-    public function getDateMetaValue(): DateTime
-    {
-        return $this->dateMetaValue;
-    }
-
-    /**
-     * @param DateTime $value
-     *
-     * @return Version
-     */
-    public function setDateMetaValue(DateTime $value): Version
-    {
-        $this->dateMetaValue = $value;
-
-        return $this;
-    }
-
-    /**
      * @return VersionComponentsCollection
      */
     public function getMainComponents(): VersionComponentsCollection
     {
         return $this->mainComponents;
+    }
+
+    /**
+     * @return ArrayCollection
+     */
+    public function getMetaComponents(): ArrayCollection
+    {
+        return $this->metaComponents;
     }
 }
