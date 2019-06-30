@@ -120,4 +120,12 @@ class VersionModifier
     {
         $this->enabled = true;
     }
+
+    /**
+     * @return void
+     */
+    public function disable()
+    {
+        $this->enabled = false;
+    }
 }

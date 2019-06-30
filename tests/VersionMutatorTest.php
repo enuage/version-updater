@@ -177,6 +177,23 @@ class VersionMutatorTest extends FunctionalTestCase
     /**
      * @throws Exception
      */
+    public function testRelease()
+    {
+        $versionOptions = new VersionOptions();
+        $versionOptions->release();
+        $this->assertVersions('1.0.0', $this->service->update('1.0.0-alpha', $versionOptions));
+        $this->assertVersions('1.0.0', $this->service->update('1.0.0-alpha.1', $versionOptions));
+
+        $this->assertVersions('1.0.0', $this->service->update('1.0.0-beta', $versionOptions));
+        $this->assertVersions('1.0.0', $this->service->update('1.0.0-beta.1', $versionOptions));
+
+        $this->assertVersions('1.0.0', $this->service->update('1.0.0-rc', $versionOptions));
+        $this->assertVersions('1.0.0', $this->service->update('1.0.0-rc.1', $versionOptions));
+    }
+
+    /**
+     * @throws Exception
+     */
     public function testVersionMultipleModifications()
     {
         $versionOptions = new VersionOptions();

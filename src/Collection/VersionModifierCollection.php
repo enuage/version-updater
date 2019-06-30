@@ -50,13 +50,15 @@ class VersionModifierCollection extends ArrayCollection
     /**
      * @param bool $downgrade
      *
-     * @return void
+     * @return VersionModifierCollection
      */
-    public function setDowngrade(bool $downgrade)
+    public function setDowngrade(bool $downgrade): VersionModifierCollection
     {
         foreach ($this->types as $type) {
             $this->get($type)->setDowngrade($downgrade);
         }
+
+        return $this;
     }
 
     /**
@@ -67,5 +69,12 @@ class VersionModifierCollection extends ArrayCollection
     public function get($key): VersionModifier
     {
         return parent::get($key);
+    }
+
+    public function updateAll()
+    {
+        foreach ($this->types as $type) {
+            $this->get($type)->update();
+        }
     }
 }

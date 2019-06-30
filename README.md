@@ -120,4 +120,24 @@ $options->increasePreRelease();
 $service->update($version, $options); // Result: "0.1.0-alpha.3"
 ```
 
-**TODO**: Add list of all methods of `VersionOptions`
+Available methods
+-----------------
+
+- `addDateMeta(format = null)`: Enable date meta in provided format or ['c'][1] by default
+- `addMeta(value = null)`: Add custom meta to the tag
+- `increaseMajor()`: Enable major version increase
+- `decreaseMajor()`: Disable major version increase
+- `increaseMinor()`: Enable minor version increase
+- `decreaseMinor()`: Disable minor version increase
+- `increasePatch()`: Enable patch version increase
+- `decreasePatch()`: Disable patch version increase
+- `updateAlpha()`: Enable pre-release version `alpha` modifications
+- `updateBeta()`: Enable pre-release version `beta` modifications
+- `updateReleaseCandidate()`: Enable pre-release version `rc` modifications
+- `increasePreRelease()`: Increase pre-release version  (e.g: `0.1.0-alpha.2` -> `0.1.0-alpha.3`)
+- `decreasePreRelease()`: Decrease pre-release version (e.g: `0.1.0-alpha.2` -> `0.1.0-alpha.1`)
+- `setVersion()`: Set custom version value
+- `downgrade()`: Downgrade the version, including pre-release
+- `release()`: Disable all pre-release postfixes
+
+[1]: https://www.php.net/manual/en/function.date.php

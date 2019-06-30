@@ -92,8 +92,6 @@ class VersionOptions
     }
 
     /**
-     * TODO: refactor the code
-     *
      * @param string $option
      *
      * @return VersionOptions
@@ -311,7 +309,28 @@ class VersionOptions
     {
         $this->down = $value;
 
+        if (true === $value) {
+            $this->getMainTypes()->setDowngrade(true)->updateAll();
+            $this->getPreReleaseTypes()->setDowngrade(true)->updateAll();
+        }
+
         return $this;
+    }
+
+    /**
+     * @return VersionModifierCollection
+     */
+    public function getMainTypes(): VersionModifierCollection
+    {
+        return $this->mainTypes;
+    }
+
+    /**
+     * @return VersionModifierCollection
+     */
+    public function getPreReleaseTypes(): VersionModifierCollection
+    {
+        return $this->preReleaseTypes;
     }
 
     /**
@@ -373,26 +392,19 @@ class VersionOptions
     }
 
     /**
-     * @return VersionModifierCollection
-     */
-    public function getMainTypes(): VersionModifierCollection
-    {
-        return $this->mainTypes;
-    }
-
-    /**
-     * @return VersionModifierCollection
-     */
-    public function getPreReleaseTypes(): VersionModifierCollection
-    {
-        return $this->preReleaseTypes;
-    }
-
-    /**
      * @return ArrayCollection
      */
     public function getMetaComponents(): ArrayCollection
     {
         return $this->metaComponents;
+    }
+
+    public function release()
+    {
+        $this->release = true;
+
+        foreach (Version::PRE_RELEASE_VERSIONS as $type) {
+            $this->getPreReleaseTypes()->get($type)->disable();
+        }
     }
 }
