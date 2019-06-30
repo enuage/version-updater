@@ -12,6 +12,14 @@
 
 namespace Enuage\VersionUpdaterBundle\Command;
 
+use Enuage\VersionUpdaterBundle\Finder\FilesFinder;
+use Enuage\VersionUpdaterBundle\Formatter\FileFormatter;
+use Enuage\VersionUpdaterBundle\Mutator\VersionMutator;
+use Enuage\VersionUpdaterBundle\Parser\AbstractParser;
+use Enuage\VersionUpdaterBundle\Parser\CommandOptionsParser;
+use Enuage\VersionUpdaterBundle\Parser\FileParser;
+use Enuage\VersionUpdaterBundle\Parser\VersionParser;
+use Exception;
 use Symfony\Bundle\FrameworkBundle\Command\ContainerAwareCommand;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
@@ -25,21 +33,6 @@ use Symfony\Component\Console\Output\OutputInterface;
  */
 class UpdateVersionCommand extends ContainerAwareCommand
 {
-    /**
-     * @var InputInterface $input
-     */
-    private $input;
-
-    /**
-     * @var boolean $options
-     */
-    private $options = false;
-
-    /**
-     * @var boolean $down
-     */
-    private $down = false;
-
     /**
      * {@inheritdoc}
      */
@@ -69,211 +62,35 @@ class UpdateVersionCommand extends ContainerAwareCommand
     /**
      * {@inheritdoc}
      *
-     * @throws \Exception
+     * @throws Exception
      */
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        $this->input = $input;
-        $this->down = $this->hasParameterOption('down');
-        $this->hasOptions(false);
+        $finder = new FilesFinder($this->getContainer()->getParameter('enuage_version_updater.files'));
+        $finder->setRootDirectory($this->getContainer()->getParameter('kernel.root_dir'));
 
-        $metadata = $this->getMetadata();
+        if ($finder->hasFiles()) {
+            $commandOptions = CommandOptionsParser::parse($input);
 
-        $version = $input->getArgument('version');
-        $newVersion = $version;
+            $finder->iterate(
+                static function ($file, $pattern) use ($commandOptions) {
+                    $fileParser = new FileParser($file, $pattern);
+                    $versionParser = new VersionParser($commandOptions->getVersion());
 
-        $versionRegex = '(?>'.
-            '(?<majorVersion>\d+)\.?'.
-            '(?<minorVersion>\d*)\.?'.
-            '(?<patchVersion>\d*)'.
-            '(?>\-(?<preRelease>alpha|beta|rc)'.
-            '(?>\.(?<preReleaseVersion>\d+))?)?'.
-            '(?>\+[a-zA-Z\d]+)*'. // Metadata isn't captured
-            ')';
+                    /** @var AbstractParser $parser */
+                    $parser = $commandOptions->hasVersion() ? $versionParser : $fileParser;
+                    $mutator = new VersionMutator($parser->parse(), $commandOptions);
 
-        $root = $this->getContainer()->getParameter('kernel.root_dir');
-        $files = $this->getContainer()->getParameter('enuage_version_updater.files');
-        foreach ($files as $directive) {
-            $fileName = key($directive);
-            $pattern = $directive[$fileName];
-
-            $pattern = str_replace('\V', $versionRegex, $pattern);
-            $filePath = realpath(sprintf('%s/../%s', $root, $fileName));
-
-            $content = file_get_contents($filePath);
-
-            preg_match($pattern, $content, $matches);
-
-            $majorVersion = intval($matches['majorVersion'] ?? 0);
-            $minorVersion = intval($matches['minorVersion'] ?? 0);
-            $patchVersion = intval($matches['patchVersion'] ?? 0);
-
-            if (!$version) {
-                if ($this->hasParameterOption('major')) {
-                    $this->updateVersion($majorVersion);
-                    $minorVersion = 0;
-                    $patchVersion = 0;
-                }
-
-                if ($this->hasParameterOption('minor')) {
-                    $this->updateVersion($minorVersion);
-                    $patchVersion = 0;
-                }
-
-                if ($this->hasParameterOption('patch')) {
-                    $this->updateVersion($patchVersion);
-                }
-            }
-
-            if ($minorVersion == 0 && $majorVersion == 0) {
-                $minorVersion = 1;
-            }
-
-            $preRelease = '';
-            if (!$this->hasParameterOption('release')) {
-                $preReleaseVersions = ['alpha', 'beta', 'rc'];
-                foreach ($preReleaseVersions as $preReleaseVersion) {
-                    if ($this->hasParameterOption($preReleaseVersion)) {
-                        $preRelease = $this->setPreRelease($preReleaseVersion, $matches);
+                    if (!$commandOptions->hasVersion()) {
+                        $mutator->update();
                     }
+
+                    $fileFormatter = new FileFormatter($fileParser);
+                    $fileFormatter->format($mutator->getFormatter());
                 }
-            }
+            );
 
-            if ($this->hasOptions()) {
-                $newVersion = sprintf(
-                    '%d.%d.%d%s%s',
-                    $majorVersion,
-                    $minorVersion,
-                    $patchVersion,
-                    $preRelease,
-                    $metadata
-                );
-            }
-
-            unset($majorVersion, $minorVersion, $patchVersion, $preRelease);
-
-            $lastMatch = end($matches);
-
-            // 7 groups + 5 named groups. Fucking PHP doesn't exclude unnamed groups even if exists named groups. Facepalm
-            $lastMatch = !is_numeric($lastMatch) && count($matches) > 12 ? $lastMatch : '';
-
-            if (!is_null($newVersion)) {
-                $content = preg_replace($pattern, sprintf('${1}%s%s', $newVersion, $lastMatch), $content);
-
-                file_put_contents($filePath, $content);
-                $output->writeln(sprintf('<comment>Updated project version in file: %s</comment>', $filePath));
-            }
-
-            unset($matches, $filePath, $content, $pattern, $fileName);
+            $output->writeln('<info>All files were updated.</info>');
         }
-
-        $output->writeln(sprintf('<info>Project version changed to: %s</info>', $newVersion));
-
-        $version = null; // Resolves cache issue
-    }
-
-    /**
-     * @param string $name
-     *
-     * @return bool
-     */
-    private function hasParameterOption(string $name): bool
-    {
-        $result = $this->input->hasParameterOption('--'.$name);
-
-        if ($result) {
-            $this->hasOptions(true);
-        }
-
-        return $result;
-    }
-
-    /**
-     * @param bool $options
-     *
-     * @return bool
-     */
-    private function hasOptions(?bool $options = null): bool
-    {
-        if (is_bool($options)) {
-            $this->options = $options;
-        }
-
-        return $this->options;
-    }
-
-    /**
-     * @return string
-     *
-     * @throws \Exception
-     */
-    private function getMetadata(): string
-    {
-        $metadata = [];
-        if ($this->hasParameterOption('date')) {
-            $now = new \DateTime('now');
-            $metadata[] = $now->format($this->input->getOption('date') ?? 'c');
-        }
-
-        if ($this->hasParameterOption('meta')) {
-            $inputMeta = $this->input->getOption('meta');
-            if ($inputMeta) {
-                $metadata[] = $inputMeta;
-            }
-        }
-
-        return !empty($metadata) ? '+'.implode("+", $metadata) : '';
-    }
-
-    /**
-     * @param int $version
-     */
-    private function updateVersion(int &$version)
-    {
-        if ($this->isDown()) {
-            $version > 0 ? $version-- : $version = 0;
-        } else {
-            $version++;
-        }
-    }
-
-    /**
-     * @return bool
-     */
-    private function isDown(): bool
-    {
-        return $this->down;
-    }
-
-    /**
-     * @param string $name alpha|beta|rc
-     * @param array $matches
-     *
-     * @return string
-     */
-    private function setPreRelease(string $name, array $matches): string
-    {
-        $preRelease = '-'.$name;
-        $preReleaseDefined = isset($matches["preRelease"]) && $matches["preRelease"] == $name;
-        $preReleaseVersionDefined = isset($matches["preReleaseVersion"]) && is_numeric($matches["preReleaseVersion"]);
-
-        if (!$preReleaseDefined && $this->isDown()) {
-            $preRelease = '';
-        }
-
-        if ($preReleaseDefined && !$preReleaseVersionDefined) {
-            $preRelease = !$this->isDown() ? $preRelease.'.1' : '';
-        }
-
-        if ($preReleaseDefined && $preReleaseVersionDefined) {
-            $preReleaseVersion = intval($matches["preReleaseVersion"]);
-            $preReleaseVersion = $this->isDown() ? --$preReleaseVersion : ++$preReleaseVersion;
-
-            if ($preReleaseVersion > 0) {
-                $preRelease .= '.'.$preReleaseVersion;
-            }
-        }
-
-        return $preRelease;
     }
 }

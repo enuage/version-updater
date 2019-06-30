@@ -1,0 +1,32 @@
+stages:
+    - lint
+    - test
+
+lint:full:
+    image: spam312sn/symfony:php7.2-xdebug
+    stage: lint
+    before_script: # Override global `before_script`
+        - php -v
+    script:
+        - find './' -type f -name '*.php' -not -path './vendor/*' -not -path './var/*' -print0 | xargs -n 1 -0 php -l
+    when: always
+
+test:all:
+    image: spam312sn/symfony:php7.2-xdebug
+    stage: test
+    script:
+        - composer install --dev -q
+        - php vendor/bin/phpunit
+    when: always
+
+test:coverage:
+    image: spam312sn/symfony:php7.2-xdebug
+    stage: test
+    artifacts:
+        paths:
+            - tests/output/
+        expire_in: 2 day
+    script:
+        - composer install --dev -q
+        - php vendor/bin/phpunit --coverage-html=tests/output
+    when: manual

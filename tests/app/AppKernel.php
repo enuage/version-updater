@@ -13,6 +13,7 @@
 namespace Enuage\VersionUpdaterBundle\Tests;
 
 use Enuage\VersionUpdaterBundle\VersionUpdaterBundle;
+use Exception;
 use Symfony\Bundle\FrameworkBundle\FrameworkBundle;
 use Symfony\Component\Config\Loader\LoaderInterface;
 use Symfony\Component\HttpKernel\Bundle\BundleInterface;
@@ -45,7 +46,7 @@ class AppKernel extends Kernel
      *
      * @param LoaderInterface $loader
      *
-     * @throws \Exception
+     * @throws Exception
      */
     public function registerContainerConfiguration(LoaderInterface $loader)
     {

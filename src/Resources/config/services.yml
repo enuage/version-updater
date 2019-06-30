@@ -1,0 +1,3 @@
+services:
+    enuage.version.service:
+        class: Enuage\VersionUpdaterBundle\Service\VersionService

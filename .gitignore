@@ -4,3 +4,4 @@ composer.lock
 tests/output/
 var/
 tests/support/file.txt
+tests/support/composer.json

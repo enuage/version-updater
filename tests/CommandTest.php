@@ -36,11 +36,26 @@ class CommandTest extends FunctionalTestCase
 
     public function testNothingHappens()
     {
-        $initialValue = 'version=0.1.0';
-        $this->setTestFileContent($initialValue);
-        $this->commandTester->run(['command' => $this->commandName]);
-        $this->assertContentEqualTo($initialValue);
-        $this->statusQuo();
+        $this->runCommandTest(
+            [
+                'version=0.1.0' => 'version=0.1.0',
+            ]
+        );
+    }
+
+    /**
+     * @param array $cases
+     * @param array $arguments
+     * @param array $options
+     */
+    private function runCommandTest(array $cases, array $arguments = [], array $options = [])
+    {
+        foreach ($cases as $init => $expected) {
+            $this->setTestFileContent($init);
+            $this->runCommand($arguments, $options);
+            $this->assertContentEqualTo($expected);
+            $this->statusQuo();
+        }
     }
 
     /**
@@ -48,7 +63,7 @@ class CommandTest extends FunctionalTestCase
      *
      * @return void
      */
-    private function setTestFileContent(string $data): void
+    private function setTestFileContent(string $data)
     {
         file_put_contents($this->getTestFilePath(), $data);
     }
@@ -62,6 +77,15 @@ class CommandTest extends FunctionalTestCase
     }
 
     /**
+     * @param array $arguments
+     * @param array $options
+     */
+    private function runCommand(array $arguments = [], array $options = [])
+    {
+        $this->commandTester->run(array_merge(['command' => $this->commandName], $arguments), $options);
+    }
+
+    /**
      * @param string $expected
      */
     private function assertContentEqualTo(string $expected)
@@ -72,549 +96,367 @@ class CommandTest extends FunctionalTestCase
     /**
      * @return void
      */
-    private function statusQuo(): void
+    private function statusQuo()
     {
         $this->setTestFileContent('');
     }
 
+    public function testWithPrefix()
+    {
+        $this->runCommandTest(
+            [
+                'version=v0.1.0' => 'version=v0.1.0',
+            ]
+        );
+    }
+
     public function testSetVersion()
     {
-        $initialValue = 'version=0.1.0';
-        $this->setTestFileContent($initialValue);
-        $this->commandTester->run(
+        $this->runCommandTest(
             [
-                'command' => $this->commandName,
+                'version=0.1.0' => 'version=1.0.0',
+            ],
+            [
                 'version' => '1.0.0',
             ]
         );
-        $this->assertContentEqualTo('version=1.0.0');
-        $this->statusQuo();
     }
 
     public function testIncreaseMajorVersion()
     {
-        $input = [
-            'command' => $this->commandName,
-            '--major' => true,
-        ];
-
-        $initialValue = 'version=0.1.0';
-        $this->setTestFileContent($initialValue);
-        $this->commandTester->run($input);
-        $this->assertContentEqualTo('version=1.0.0');
-        $this->statusQuo();
-
-        $initialValue = 'version=1.1.0';
-        $this->setTestFileContent($initialValue);
-        $this->commandTester->run($input);
-        $this->assertContentEqualTo('version=2.0.0');
-        $this->statusQuo();
+        $this->runCommandTest(
+            [
+                'version=0.1.0' => 'version=1.0.0',
+                'version=1.1.0' => 'version=2.0.0',
+            ],
+            [
+                '--major' => true,
+            ]
+        );
     }
 
     public function testDecreaseMajorVersion()
     {
-        $input = [
-            'command' => $this->commandName,
-            '--major' => true,
-            '--down' => true,
-        ];
-
-        $initialValue = 'version=0.1.0';
-        $this->setTestFileContent($initialValue);
-        $this->commandTester->run($input);
-        $this->assertContentEqualTo($initialValue);
-        $this->statusQuo();
-
-        $initialValue = 'version=1.1.0';
-        $this->setTestFileContent($initialValue);
-        $this->commandTester->run($input);
-        $this->assertContentEqualTo('version=0.1.0');
-        $this->statusQuo();
+        $this->runCommandTest(
+            [
+                'version=0.1.0' => 'version=0.1.0',
+                'version=1.1.0' => 'version=0.1.0',
+            ],
+            [
+                '--major' => true,
+                '--down' => true,
+            ]
+        );
     }
 
     public function testIncreaseMinorVersion()
     {
-        $input = [
-            'command' => $this->commandName,
-            '--minor' => true,
-        ];
-
-        $initialValue = 'version=0.1.0';
-        $this->setTestFileContent($initialValue);
-        $this->commandTester->run($input);
-        $this->assertContentEqualTo('version=0.2.0');
-        $this->statusQuo();
-
-        $initialValue = 'version=0.2.0';
-        $this->setTestFileContent($initialValue);
-        $this->commandTester->run($input);
-        $this->assertContentEqualTo('version=0.3.0');
-        $this->statusQuo();
+        $this->runCommandTest(
+            [
+                'version=0.1.0' => 'version=0.2.0',
+                'version=0.2.0' => 'version=0.3.0',
+            ],
+            [
+                '--minor' => true,
+            ]
+        );
     }
 
     public function testDecreaseMinorVersion()
     {
-        $input = [
-            'command' => $this->commandName,
-            '--minor' => true,
-            '--down' => true,
-        ];
-
-        $initialValue = 'version=0.1.0';
-        $this->setTestFileContent($initialValue);
-        $this->commandTester->run($input);
-        $this->assertContentEqualTo($initialValue);
-        $this->statusQuo();
-
-        $initialValue = 'version=0.2.0';
-        $this->setTestFileContent($initialValue);
-        $this->commandTester->run($input);
-        $this->assertContentEqualTo('version=0.1.0');
-        $this->statusQuo();
+        $this->runCommandTest(
+            [
+                'version=0.1.0' => 'version=0.1.0',
+                'version=0.2.0' => 'version=0.1.0',
+            ],
+            [
+                '--minor' => true,
+                '--down' => true,
+            ]
+        );
     }
 
     public function testIncreaseMajorAndMinorVersion()
     {
-        $input = [
-            'command' => $this->commandName,
-            '--major' => true,
-            '--minor' => true,
-        ];
-
-        $initialValue = 'version=0.1.0';
-        $this->setTestFileContent($initialValue);
-        $this->commandTester->run($input);
-        $this->assertContentEqualTo('version=1.1.0');
-        $this->statusQuo();
-
-        $initialValue = 'version=1.2.0';
-        $this->setTestFileContent($initialValue);
-        $this->commandTester->run($input);
-        $this->assertContentEqualTo('version=2.1.0');
-        $this->statusQuo();
+        $this->runCommandTest(
+            [
+                'version=0.1.0' => 'version=1.1.0',
+                'version=1.2.0' => 'version=2.1.0',
+            ],
+            [
+                '--major' => true,
+                '--minor' => true,
+            ]
+        );
     }
 
     public function testDecreaseMajorAndMinorVersion()
     {
-        $input = [
-            'command' => $this->commandName,
-            '--major' => true,
-            '--minor' => true,
-            '--down' => true,
-        ];
-
-        $initialValue = 'version=0.1.0';
-        $this->setTestFileContent($initialValue);
-        $this->commandTester->run($input);
-        $this->assertContentEqualTo($initialValue);
-        $this->statusQuo();
-
-        $initialValue = 'version=0.2.0';
-        $this->setTestFileContent($initialValue);
-        $this->commandTester->run($input);
-        $this->assertContentEqualTo('version=0.1.0');
-        $this->statusQuo();
-
-        $initialValue = 'version=1.1.0';
-        $this->setTestFileContent($initialValue);
-        $this->commandTester->run($input);
-        $this->assertContentEqualTo('version=0.1.0');
-        $this->statusQuo();
-
-        $initialValue = 'version=2.1.0';
-        $this->setTestFileContent($initialValue);
-        $this->commandTester->run($input);
-        $this->assertContentEqualTo('version=1.0.0');
-        $this->statusQuo();
+        $this->runCommandTest(
+            [
+                'version=0.1.0' => 'version=0.1.0',
+                'version=0.2.0' => 'version=0.1.0',
+                'version=1.1.0' => 'version=0.1.0',
+                'version=2.1.0' => 'version=1.0.0',
+            ],
+            [
+                '--major' => true,
+                '--minor' => true,
+                '--down' => true,
+            ]
+        );
     }
 
     public function testIncreasePatchVersion()
     {
-        $input = [
-            'command' => $this->commandName,
-            '--patch' => true,
-        ];
-
-        $initialValue = 'version=0.1.0';
-        $this->setTestFileContent($initialValue);
-        $this->commandTester->run($input);
-        $this->assertContentEqualTo('version=0.1.1');
-        $this->statusQuo();
-
-        $initialValue = 'version=0.1.1';
-        $this->setTestFileContent($initialValue);
-        $this->commandTester->run($input);
-        $this->assertContentEqualTo('version=0.1.2');
-        $this->statusQuo();
+        $this->runCommandTest(
+            [
+                'version=0.1.0' => 'version=0.1.1',
+                'version=0.1.1' => 'version=0.1.2',
+            ],
+            [
+                '--patch' => true,
+            ]
+        );
     }
 
     public function testDecreasePatchVersion()
     {
-        $input = [
-            'command' => $this->commandName,
-            '--patch' => true,
-            '--down' => true,
-        ];
-
-        $initialValue = 'version=0.1.0';
-        $this->setTestFileContent($initialValue);
-        $this->commandTester->run($input);
-        $this->assertContentEqualTo('version=0.1.0');
-        $this->statusQuo();
-
-        $initialValue = 'version=0.1.1';
-        $this->setTestFileContent($initialValue);
-        $this->commandTester->run($input);
-        $this->assertContentEqualTo('version=0.1.0');
-        $this->statusQuo();
+        $this->runCommandTest(
+            [
+                'version=0.1.0' => 'version=0.1.0',
+                'version=0.1.1' => 'version=0.1.0',
+            ],
+            [
+                '--patch' => true,
+                '--down' => true,
+            ]
+        );
     }
 
     public function testDecreaseMajorMinorAndPatchVersion()
     {
-        $input = [
-            'command' => $this->commandName,
-            '--major' => true,
-            '--minor' => true,
-            '--patch' => true,
-            '--down' => true,
-        ];
+        $this->runCommandTest(
+            [
+                'version=0.1.0' => 'version=0.1.0',
+                'version=0.1.1' => 'version=0.1.0',
+                'version=1.1.1' => 'version=0.1.0',
+                'version=2.1.1' => 'version=1.0.0',
+            ],
+            [
+                '--major' => true,
+                '--minor' => true,
+                '--patch' => true,
+                '--down' => true,
+            ]
+        );
+    }
 
-        $initialValue = 'version=0.1.0';
-        $this->setTestFileContent($initialValue);
-        $this->commandTester->run($input);
-        $this->assertContentEqualTo('version=0.1.0');
-        $this->statusQuo();
+    public function testDecreaseMinorAndPatchVersion()
+    {
+        $this->runCommandTest(
+            [
+                'version=0.1.0' => 'version=0.1.0',
+                'version=0.1.1' => 'version=0.1.0',
+                'version=0.1.2' => 'version=0.1.1',
 
-        $initialValue = 'version=0.1.1';
-        $this->setTestFileContent($initialValue);
-        $this->commandTester->run($input);
-        $this->assertContentEqualTo('version=0.1.0');
-        $this->statusQuo();
+                'version=0.2.1' => 'version=0.1.0',
+                'version=0.2.2' => 'version=0.1.0',
 
-        $initialValue = 'version=1.1.1';
-        $this->setTestFileContent($initialValue);
-        $this->commandTester->run($input);
-        $this->assertContentEqualTo('version=0.1.0');
-        $this->statusQuo();
-
-        $initialValue = 'version=2.1.1';
-        $this->setTestFileContent($initialValue);
-        $this->commandTester->run($input);
-        $this->assertContentEqualTo('version=1.0.0');
-        $this->statusQuo();
+                'version=1.1.0' => 'version=1.0.0',
+                'version=1.1.1' => 'version=1.0.0',
+                'version=1.2.1' => 'version=1.1.0',
+            ],
+            [
+                '--minor' => true,
+                '--patch' => true,
+                '--down' => true,
+            ]
+        );
     }
 
     public function testAlphaRelease()
     {
-        $input = [
-            'command' => $this->commandName,
-            '--alpha' => true,
-        ];
-
-        $initialValue = 'version=0.1.0';
-        $this->setTestFileContent($initialValue);
-        $this->commandTester->run($input);
-        $this->assertContentEqualTo('version=0.1.0-alpha');
-        $this->statusQuo();
-
-        $initialValue = 'version=0.1.0-alpha';
-        $this->setTestFileContent($initialValue);
-        $this->commandTester->run($input);
-        $this->assertContentEqualTo('version=0.1.0-alpha.1');
-        $this->statusQuo();
-
-        $initialValue = 'version=0.1.0-alpha.1';
-        $this->setTestFileContent($initialValue);
-        $this->commandTester->run($input);
-        $this->assertContentEqualTo('version=0.1.0-alpha.2');
-        $this->statusQuo();
+        $this->runCommandTest(
+            [
+                'version=0.1.0' => 'version=0.1.0-alpha',
+                'version=0.1.0-alpha' => 'version=0.1.0-alpha.1',
+                'version=0.1.0-alpha.1' => 'version=0.1.0-alpha.2',
+            ],
+            [
+                '--alpha' => true,
+            ]
+        );
     }
 
     public function testDecreaseAlphaRelease()
     {
-        $input = [
-            'command' => $this->commandName,
-            '--alpha' => true,
-            '--down' => true,
-        ];
-
-        $initialValue = 'version=0.1.0-alpha';
-        $this->setTestFileContent($initialValue);
-        $this->commandTester->run($input);
-        $this->assertContentEqualTo('version=0.1.0');
-        $this->statusQuo();
-
-        $initialValue = 'version=0.1.0-alpha.1';
-        $this->setTestFileContent($initialValue);
-        $this->commandTester->run($input);
-        $this->assertContentEqualTo('version=0.1.0-alpha');
-        $this->statusQuo();
+        $this->runCommandTest(
+            [
+                'version=0.1.0-alpha' => 'version=0.1.0',
+                'version=0.1.0-alpha.1' => 'version=0.1.0-alpha',
+            ],
+            [
+                '--alpha' => true,
+                '--down' => true,
+            ]
+        );
     }
 
     public function testBetaRelease()
     {
-        $input = [
-            'command' => $this->commandName,
-            '--beta' => true,
-        ];
-
-        $initialValue = 'version=0.1.0';
-        $this->setTestFileContent($initialValue);
-        $this->commandTester->run($input);
-        $this->assertContentEqualTo('version=0.1.0-beta');
-        $this->statusQuo();
-
-        $initialValue = 'version=0.1.0-alpha';
-        $this->setTestFileContent($initialValue);
-        $this->commandTester->run($input);
-        $this->assertContentEqualTo('version=0.1.0-beta');
-        $this->statusQuo();
-
-        $initialValue = 'version=0.1.0-beta';
-        $this->setTestFileContent($initialValue);
-        $this->commandTester->run($input);
-        $this->assertContentEqualTo('version=0.1.0-beta.1');
-        $this->statusQuo();
-
-        $initialValue = 'version=0.1.0-beta.1';
-        $this->setTestFileContent($initialValue);
-        $this->commandTester->run($input);
-        $this->assertContentEqualTo('version=0.1.0-beta.2');
-        $this->statusQuo();
+        $this->runCommandTest(
+            [
+                'version=0.1.0' => 'version=0.1.0-beta',
+                'version=0.1.0-alpha' => 'version=0.1.0-beta',
+                'version=0.1.0-beta' => 'version=0.1.0-beta.1',
+                'version=0.1.0-beta.1' => 'version=0.1.0-beta.2',
+            ],
+            [
+                '--beta' => true,
+            ]
+        );
     }
 
     public function testDecreaseBetaRelease()
     {
-        $input = [
-            'command' => $this->commandName,
-            '--beta' => true,
-            '--down' => true,
-        ];
-
-        $initialValue = 'version=0.1.0-beta';
-        $this->setTestFileContent($initialValue);
-        $this->commandTester->run($input);
-        $this->assertContentEqualTo('version=0.1.0');
-        $this->statusQuo();
-
-        $initialValue = 'version=0.1.0-beta.1';
-        $this->setTestFileContent($initialValue);
-        $this->commandTester->run($input);
-        $this->assertContentEqualTo('version=0.1.0-beta');
-        $this->statusQuo();
+        $this->runCommandTest(
+            [
+                'version=0.1.0-beta' => 'version=0.1.0',
+                'version=0.1.0-beta.1' => 'version=0.1.0-beta',
+                'version=0.1.0-beta.2' => 'version=0.1.0-beta.1',
+            ],
+            [
+                '--beta' => true,
+                '--down' => true,
+            ]
+        );
     }
 
     public function testAlphaAndBetaRelease()
     {
-        $input = [
-            'command' => $this->commandName,
-            '--alpha' => true,
-            '--beta' => true,
-        ];
-
-        $initialValue = 'version=0.1.0';
-        $this->setTestFileContent($initialValue);
-        $this->commandTester->run($input);
-        $this->assertContentEqualTo('version=0.1.0-beta');
-        $this->statusQuo();
-
-        $initialValue = 'version=0.1.0-alpha';
-        $this->setTestFileContent($initialValue);
-        $this->commandTester->run($input);
-        $this->assertContentEqualTo('version=0.1.0-beta');
-        $this->statusQuo();
-
-        $initialValue = 'version=0.1.0-beta';
-        $this->setTestFileContent($initialValue);
-        $this->commandTester->run($input);
-        $this->assertContentEqualTo('version=0.1.0-beta.1');
-        $this->statusQuo();
-
-        $initialValue = 'version=0.1.0-beta.1';
-        $this->setTestFileContent($initialValue);
-        $this->commandTester->run($input);
-        $this->assertContentEqualTo('version=0.1.0-beta.2');
-        $this->statusQuo();
+        $this->runCommandTest(
+            [
+                'version=0.1.0' => 'version=0.1.0-beta',
+                'version=0.1.0-alpha' => 'version=0.1.0-beta',
+                'version=0.1.0-beta' => 'version=0.1.0-beta.1',
+                'version=0.1.0-beta.1' => 'version=0.1.0-beta.2',
+            ],
+            [
+                '--alpha' => true,
+                '--beta' => true,
+            ]
+        );
     }
 
     public function testDecreaseAlphaAndBetaRelease()
     {
-        $input = [
-            'command' => $this->commandName,
-            '--alpha' => true,
-            '--beta' => true,
-            '--down' => true,
-        ];
-
-        $initialValue = 'version=0.1.0';
-        $this->setTestFileContent($initialValue);
-        $this->commandTester->run($input);
-        $this->assertContentEqualTo('version=0.1.0');
-        $this->statusQuo();
-
-        $initialValue = 'version=0.1.0-alpha';
-        $this->setTestFileContent($initialValue);
-        $this->commandTester->run($input);
-        $this->assertContentEqualTo('version=0.1.0');
-        $this->statusQuo();
-
-        $initialValue = 'version=0.1.0-beta';
-        $this->setTestFileContent($initialValue);
-        $this->commandTester->run($input);
-        $this->assertContentEqualTo('version=0.1.0');
-        $this->statusQuo();
-
-        $initialValue = 'version=0.1.0-beta.1';
-        $this->setTestFileContent($initialValue);
-        $this->commandTester->run($input);
-        $this->assertContentEqualTo('version=0.1.0-beta');
-        $this->statusQuo();
+        $this->runCommandTest(
+            [
+                'version=0.1.0' => 'version=0.1.0',
+                'version=0.1.0-alpha' => 'version=0.1.0',
+                'version=0.1.0-beta' => 'version=0.1.0',
+                'version=0.1.0-beta.1' => 'version=0.1.0-beta',
+            ],
+            [
+                '--alpha' => true,
+                '--beta' => true,
+                '--down' => true,
+            ]
+        );
     }
 
     public function testReleaseCandidate()
     {
-        $input = [
-            'command' => $this->commandName,
-            '--rc' => true,
-        ];
-
-        $initialValue = 'version=0.1.0';
-        $this->setTestFileContent($initialValue);
-        $this->commandTester->run($input);
-        $this->assertContentEqualTo('version=0.1.0-rc');
-        $this->statusQuo();
-
-        $initialValue = 'version=0.1.0-alpha';
-        $this->setTestFileContent($initialValue);
-        $this->commandTester->run($input);
-        $this->assertContentEqualTo('version=0.1.0-rc');
-        $this->statusQuo();
-
-        $initialValue = 'version=0.1.0-beta';
-        $this->setTestFileContent($initialValue);
-        $this->commandTester->run($input);
-        $this->assertContentEqualTo('version=0.1.0-rc');
-        $this->statusQuo();
-
-        $initialValue = 'version=0.1.0-rc';
-        $this->setTestFileContent($initialValue);
-        $this->commandTester->run($input);
-        $this->assertContentEqualTo('version=0.1.0-rc.1');
-        $this->statusQuo();
-
-        $initialValue = 'version=0.1.0-rc.1';
-        $this->setTestFileContent($initialValue);
-        $this->commandTester->run($input);
-        $this->assertContentEqualTo('version=0.1.0-rc.2');
-        $this->statusQuo();
+        $this->runCommandTest(
+            [
+                'version=0.1.0' => 'version=0.1.0-rc',
+                'version=0.1.0-alpha' => 'version=0.1.0-rc',
+                'version=0.1.0-beta' => 'version=0.1.0-rc',
+                'version=0.1.0-rc' => 'version=0.1.0-rc.1',
+                'version=0.1.0-rc.1' => 'version=0.1.0-rc.2',
+            ],
+            [
+                '--rc' => true,
+            ]
+        );
     }
 
     public function testDecreaseReleaseCandidate()
     {
-        $input = [
-            'command' => $this->commandName,
-            '--rc' => true,
-            '--down' => true,
-        ];
-
-        $initialValue = 'version=0.1.0-rc';
-        $this->setTestFileContent($initialValue);
-        $this->commandTester->run($input);
-        $this->assertContentEqualTo('version=0.1.0');
-        $this->statusQuo();
-
-        $initialValue = 'version=0.1.0-rc.1';
-        $this->setTestFileContent($initialValue);
-        $this->commandTester->run($input);
-        $this->assertContentEqualTo('version=0.1.0-rc');
-        $this->statusQuo();
+        $this->runCommandTest(
+            [
+                'version=0.1.0-rc' => 'version=0.1.0',
+                'version=0.1.0-rc.1' => 'version=0.1.0-rc',
+                'version=0.1.0-rc.2' => 'version=0.1.0-rc.1',
+            ],
+            [
+                '--rc' => true,
+                '--down' => true,
+            ]
+        );
     }
 
     public function testAlphaBetaAndReleaseCandidate()
     {
-        $input = [
-            'command' => $this->commandName,
-            '--alpha' => true,
-            '--beta' => true,
-            '--rc' => true,
-        ];
-
-        $initialValue = 'version=0.1.0';
-        $this->setTestFileContent($initialValue);
-        $this->commandTester->run($input);
-        $this->assertContentEqualTo('version=0.1.0-rc');
-        $this->statusQuo();
-
-        $initialValue = 'version=0.1.0-alpha';
-        $this->setTestFileContent($initialValue);
-        $this->commandTester->run($input);
-        $this->assertContentEqualTo('version=0.1.0-rc');
-        $this->statusQuo();
-
-        $initialValue = 'version=0.1.0-beta';
-        $this->setTestFileContent($initialValue);
-        $this->commandTester->run($input);
-        $this->assertContentEqualTo('version=0.1.0-rc');
-        $this->statusQuo();
-
-        $initialValue = 'version=0.1.0-rc';
-        $this->setTestFileContent($initialValue);
-        $this->commandTester->run($input);
-        $this->assertContentEqualTo('version=0.1.0-rc.1');
-        $this->statusQuo();
-
-        $initialValue = 'version=0.1.0-rc.1';
-        $this->setTestFileContent($initialValue);
-        $this->commandTester->run($input);
-        $this->assertContentEqualTo('version=0.1.0-rc.2');
-        $this->statusQuo();
+        $this->runCommandTest(
+            [
+                'version=0.1.0' => 'version=0.1.0-rc',
+                'version=0.1.0-alpha' => 'version=0.1.0-rc',
+                'version=0.1.0-beta' => 'version=0.1.0-rc',
+                'version=0.1.0-rc' => 'version=0.1.0-rc.1',
+                'version=0.1.0-rc.1' => 'version=0.1.0-rc.2',
+            ],
+            [
+                '--alpha' => true,
+                '--beta' => true,
+                '--rc' => true,
+            ]
+        );
     }
 
     public function testMeta()
     {
         $date = date('c');
-        $input = [
-            'command' => $this->commandName,
-            '--meta' => date('c'),
-        ];
 
-        $initialValue = 'version=0.1.0';
-        $this->setTestFileContent($initialValue);
-        $this->commandTester->run($input);
-        $this->assertContentEqualTo('version=0.1.0+'.$date);
-        $this->statusQuo();
+        $this->runCommandTest(
+            [
+                'version=0.1.0' => 'version=0.1.0+'.$date,
+            ],
+            [
+                '--meta' => $date,
+            ]
+        );
     }
 
     public function testDate()
     {
         $date = date('U');
-        $input = [
-            'command' => $this->commandName,
-            '--date' => 'U',
-        ];
 
-        $initialValue = 'version=0.1.0';
-        $this->setTestFileContent($initialValue);
-        $this->commandTester->run($input);
-        $this->assertContentEqualTo('version=0.1.0+'.$date);
-        $this->statusQuo();
+        $this->runCommandTest(
+            [
+                'version=0.1.0' => 'version=0.1.0+'.$date,
+            ],
+            [
+                '--meta' => $date,
+            ]
+        );
     }
 
     public function testMetaAndDate()
     {
         $date = date('U');
         $meta = sha1($date);
-        $input = [
-            'command' => $this->commandName,
-            '--date' => 'U',
-            '--meta' => $meta,
-        ];
 
-        $initialValue = 'version=0.1.0';
-        $this->setTestFileContent($initialValue);
-        $this->commandTester->run($input);
-        $this->assertContentEqualTo('version=0.1.0+'.$date.'+'.$meta);
-        $this->statusQuo();
+        $this->runCommandTest(
+            [
+                'version=0.1.0' => 'version=0.1.0+'.$date.'+'.$meta,
+            ],
+            [
+                '--date' => 'U',
+                '--meta' => $meta,
+            ]
+        );
     }
 
     public function testVersionAndMeta()
@@ -624,34 +466,37 @@ class CommandTest extends FunctionalTestCase
 
         $initialValue = 'version=0.1.0';
         $this->setTestFileContent($initialValue);
-        $this->commandTester->run([
-            'command' => $this->commandName,
-            '--alpha' => true,
-            '--date' => 'U',
-            '--meta' => $meta,
-        ]);
+        $this->runCommand(
+            [
+                '--alpha' => true,
+                '--date' => 'U',
+                '--meta' => $meta,
+            ]
+        );
         $this->assertContentEqualTo('version=0.1.0-alpha+'.$date.'+'.$meta);
         $this->statusQuo();
 
         $initialValue = 'version=0.1.0';
         $this->setTestFileContent($initialValue);
-        $this->commandTester->run([
-            'command' => $this->commandName,
-            '--beta' => true,
-            '--date' => 'U',
-            '--meta' => $meta,
-        ]);
+        $this->runCommand(
+            [
+                '--beta' => true,
+                '--date' => 'U',
+                '--meta' => $meta,
+            ]
+        );
         $this->assertContentEqualTo('version=0.1.0-beta+'.$date.'+'.$meta);
         $this->statusQuo();
 
         $initialValue = 'version=0.1.0';
         $this->setTestFileContent($initialValue);
-        $this->commandTester->run([
-            'command' => $this->commandName,
-            '--rc' => true,
-            '--date' => 'U',
-            '--meta' => $meta,
-        ]);
+        $this->runCommand(
+            [
+                '--rc' => true,
+                '--date' => 'U',
+                '--meta' => $meta,
+            ]
+        );
         $this->assertContentEqualTo('version=0.1.0-rc+'.$date.'+'.$meta);
         $this->statusQuo();
     }
@@ -663,37 +508,40 @@ class CommandTest extends FunctionalTestCase
 
         $initialValue = 'version=0.1.0-alpha.1';
         $this->setTestFileContent($initialValue);
-        $this->commandTester->run([
-            'command' => $this->commandName,
-            '--alpha' => true,
-            '--date' => 'U',
-            '--meta' => $meta,
-            '--down' => $meta,
-        ]);
+        $this->runCommand(
+            [
+                '--alpha' => true,
+                '--date' => 'U',
+                '--meta' => $meta,
+                '--down' => $meta,
+            ]
+        );
         $this->assertContentEqualTo('version=0.1.0-alpha+'.$date.'+'.$meta);
         $this->statusQuo();
 
         $initialValue = 'version=0.1.0-beta.1';
         $this->setTestFileContent($initialValue);
-        $this->commandTester->run([
-            'command' => $this->commandName,
-            '--beta' => true,
-            '--date' => 'U',
-            '--meta' => $meta,
-            '--down' => $meta,
-        ]);
+        $this->runCommand(
+            [
+                '--beta' => true,
+                '--date' => 'U',
+                '--meta' => $meta,
+                '--down' => $meta,
+            ]
+        );
         $this->assertContentEqualTo('version=0.1.0-beta+'.$date.'+'.$meta);
         $this->statusQuo();
 
         $initialValue = 'version=0.1.0-rc.1';
         $this->setTestFileContent($initialValue);
-        $this->commandTester->run([
-            'command' => $this->commandName,
-            '--rc' => true,
-            '--date' => 'U',
-            '--meta' => $meta,
-            '--down' => $meta,
-        ]);
+        $this->runCommand(
+            [
+                '--rc' => true,
+                '--date' => 'U',
+                '--meta' => $meta,
+                '--down' => $meta,
+            ]
+        );
         $this->assertContentEqualTo('version=0.1.0-rc+'.$date.'+'.$meta);
         $this->statusQuo();
     }
@@ -702,10 +550,11 @@ class CommandTest extends FunctionalTestCase
     {
         $initialValue = 'version=0.1.0-alpha+1545264473+c00a683dd4ecfa0fac525675a25c559bf0cda444';
         $this->setTestFileContent($initialValue);
-        $this->commandTester->run([
-            'command' => $this->commandName,
-            '--release' => true,
-        ]);
+        $this->runCommand(
+            [
+                '--release' => true,
+            ]
+        );
         $this->assertContentEqualTo('version=0.1.0');
         $this->statusQuo();
     }

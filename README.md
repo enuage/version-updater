@@ -59,6 +59,8 @@ class AppKernel extends Kernel
 Usage
 =====
 
+## Option 1: Updating files via command line
+
 ### Step 1: Define files and regular expression for version updating
 
 Use `\V` for define the version in regular expression. It will be replaced with the SemVer regular expression
@@ -101,3 +103,41 @@ Available options
 `--date <none|PHP date format>`: Add date metadata to the version. By default date format is equal to `c`
 
 `--meta <data>`: Add metadata to the version
+
+## Option 2: Updating version via service
+
+Example:
+
+```php
+/** @var Container $container */
+use Enuage\VersionUpdaterBundle\DTO\VersionOptions;use Symfony\Component\DependencyInjection\Container;$service = $container->get('enuage.version.service');
+
+$version = '0.1.0-alpha.2';
+
+$options = new VersionOptions();
+$options->increasePreRelease();
+
+$service->update($version, $options); // Result: "0.1.0-alpha.3"
+```
+
+Available methods
+-----------------
+
+- `addDateMeta(format = null)`: Enable date meta in provided format or ['c'][1] by default
+- `addMeta(value = null)`: Add custom meta to the tag
+- `increaseMajor()`: Enable major version increase
+- `decreaseMajor()`: Disable major version increase
+- `increaseMinor()`: Enable minor version increase
+- `decreaseMinor()`: Disable minor version increase
+- `increasePatch()`: Enable patch version increase
+- `decreasePatch()`: Disable patch version increase
+- `updateAlpha()`: Enable pre-release version `alpha` modifications
+- `updateBeta()`: Enable pre-release version `beta` modifications
+- `updateReleaseCandidate()`: Enable pre-release version `rc` modifications
+- `increasePreRelease()`: Increase pre-release version  (e.g: `0.1.0-alpha.2` -> `0.1.0-alpha.3`)
+- `decreasePreRelease()`: Decrease pre-release version (e.g: `0.1.0-alpha.2` -> `0.1.0-alpha.1`)
+- `setVersion()`: Set custom version value
+- `downgrade()`: Downgrade the version, including pre-release
+- `release()`: Disable all pre-release postfixes
+
+[1]: https://www.php.net/manual/en/function.date.php
