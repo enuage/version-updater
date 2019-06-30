@@ -67,7 +67,7 @@ class VersionMutator
         }
 
         if (!$this->options->isRelease()) {
-            $this->updatePreRelease($this->options->getPreReleaseTypes());
+            $this->updatePreRelease($this->options->getPreReleaseModifiers());
         } else {
             $this->version->clearPreRelease();
         }
@@ -82,8 +82,8 @@ class VersionMutator
      */
     private function updateMainVersion(string $type)
     {
-        $modifier = ($mainType = $this->options->getMainType($type)) ? $mainType->getModifier() : 0;
-        $value = $this->version->getMainVersion($type) + $modifier;
+        $mainModifier = $this->options->getMainModifier($type);
+        $value = $this->version->getMainVersion($type) + ($mainModifier ? $mainModifier->getValue() : 0);
 
         if ($value < 0) {
             $value = 0;
@@ -97,9 +97,9 @@ class VersionMutator
     }
 
     /**
-     * @param VersionModifierCollection $types
+     * @param VersionModifierCollection $modifiers
      */
-    private function updatePreRelease(VersionModifierCollection $types)
+    private function updatePreRelease(VersionModifierCollection $modifiers)
     {
         $definedType = $this->version->getPreRelease();
 
@@ -110,7 +110,7 @@ class VersionMutator
         $isVersionDefined = null !== $version && is_numeric($version);
 
         /** @var VersionModifier $modifier */
-        foreach ($types as $type => $modifier) {
+        foreach ($modifiers as $type => $modifier) {
             $isApplicable = $definedType === $type;
 
             if ($modifier->isEnabled()) {
@@ -123,7 +123,7 @@ class VersionMutator
                 }
 
                 if ($isApplicable && $isVersionDefined) {
-                    $this->version->setPreReleaseVersion($type, $version + $modifier->update()->getModifier());
+                    $this->version->setPreReleaseVersion($type, $version + $modifier->update()->getValue());
                 }
             }
         }
@@ -132,7 +132,7 @@ class VersionMutator
         if (null !== $definedType && null !== $version && $definedType === $this->version->getPreRelease()) {
             $this->version->enablePreRelease($definedType);
 
-            $version = ($version ?? 0) + $modifier->getModifier();
+            $version = ($version ?? 0) + $modifier->getValue();
 
             /** @var VersionComponent $preRelease */
             $preRelease = $this->version->getPreReleaseComponent($definedType);

@@ -108,7 +108,7 @@ class VersionModifier
     /**
      * @return int
      */
-    public function getModifier(): int
+    public function getValue(): int
     {
         return $this->modifier;
     }

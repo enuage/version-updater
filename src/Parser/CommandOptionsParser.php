@@ -42,8 +42,8 @@ final class CommandOptionsParser
 
         $options->downgrade($input->hasParameterOption('--down'));
 
-        $options->getMainTypes()->downgradeAll($options->isDowngrade());
-        $options->getPreReleaseTypes()->downgradeAll($options->isDowngrade());
+        $options->getMainModifiers()->downgradeAll($options->isDowngrade());
+        $options->getPreReleaseModifiers()->downgradeAll($options->isDowngrade());
 
         if ($input->hasParameterOption('--release')) {
             $options->release();
@@ -51,13 +51,13 @@ final class CommandOptionsParser
 
         foreach (Version::MAIN_VERSIONS as $type) {
             if ($input->hasParameterOption('--'.$type)) {
-                $options->getMainTypes()->get($type)->update();
+                $options->getMainModifiers()->get($type)->update();
             }
         }
 
         foreach (Version::PRE_RELEASE_VERSIONS as $type) {
             if ($input->hasParameterOption('--'.$type)) {
-                $options->getPreReleaseTypes()->get($type)->enable();
+                $options->getPreReleaseModifiers()->get($type)->enable();
             }
         }
 
