@@ -25,14 +25,17 @@ use Enuage\VersionUpdaterBundle\ValueObject\VersionComponent;
  */
 class VersionComponentsCollection extends ArrayCollection
 {
+    const DISABLE_ALL = false;
+    const ENABLE_ALL = true;
+
     /**
      * {@inheritDoc}
      */
-    public function __construct(array $types = [])
+    public function __construct(array $types = [], bool $enableAll = self::ENABLE_ALL)
     {
         $elements = [];
         foreach ($types as $type) {
-            $elements[$type] = new VersionComponent();
+            $elements[$type] = new VersionComponent(true === $enableAll);
         }
 
         parent::__construct($elements);

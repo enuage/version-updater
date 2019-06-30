@@ -97,7 +97,7 @@ class VersionParser extends AbstractParser
         }
 
         if ($this->matches->containsKey('preRelease')) {
-            $version->setPreRelease($this->matches->get('preRelease'));
+            $version->enablePreRelease($this->matches->get('preRelease'));
         }
 
         if ($this->matches->containsKey('preReleaseVersion')) {

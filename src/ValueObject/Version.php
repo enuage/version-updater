@@ -59,19 +59,9 @@ class Version
     private $mainComponents;
 
     /**
-     * @var bool
+     * @var VersionComponentsCollection
      */
-    private $alpha = false;
-
-    /**
-     * @var bool
-     */
-    private $beta = false;
-
-    /**
-     * @var bool
-     */
-    private $rc = false;
+    private $preReleaseComponents;
 
     /**
      * @var int|null
@@ -109,119 +99,28 @@ class Version
     public function __construct()
     {
         $this->mainComponents = new VersionComponentsCollection(self::MAIN_VERSIONS);
+        $this->preReleaseComponents = new VersionComponentsCollection(
+            self::PRE_RELEASE_VERSIONS,
+            VersionComponentsCollection::DISABLE_ALL
+        );
     }
 
     /**
      * @return null|string
      */
-    public function getPreRelease()
+    public function getPrefix()
     {
-        if ($this->isAlpha()) {
-            return self::ALPHA;
-        }
-
-        if ($this->isBeta()) {
-            return self::BETA;
-        }
-
-        if ($this->isReleaseCandidate()) {
-            return self::RELEASE_CANDIDATE;
-        }
-
-        return null;
+        return $this->prefix;
     }
 
     /**
-     * @return bool
-     */
-    public function isAlpha(): bool
-    {
-        return $this->alpha;
-    }
-
-    /**
-     * @param bool $isDefined
+     * @param string $value
      *
      * @return Version
      */
-    public function setAlpha(bool $isDefined): Version
+    public function setPrefix(string $value): Version
     {
-        $this->alpha = $isDefined;
-
-        return $this;
-    }
-
-    /**
-     * @return bool
-     */
-    public function isBeta(): bool
-    {
-        return $this->beta;
-    }
-
-    /**
-     * @param bool $isDefined
-     *
-     * @return Version
-     */
-    public function setBeta(bool $isDefined): Version
-    {
-        $this->beta = $isDefined;
-
-        return $this;
-    }
-
-    /**
-     * @return bool
-     */
-    public function isReleaseCandidate(): bool
-    {
-        return $this->rc;
-    }
-
-    /**
-     * @return Version
-     */
-    public function clearPreRelease(): Version
-    {
-        foreach (self::PRE_RELEASE_VERSIONS as $version) {
-            $this->{$version} = false;
-        }
-
-        return $this;
-    }
-
-    /**
-     * @param string $type
-     * @param bool $value
-     *
-     * @return Version
-     */
-    public function setPreRelease(string $type = null, bool $value = true): Version
-    {
-        switch ($type) {
-            case self::ALPHA:
-                $this->setAlpha($value);
-                break;
-            case self::BETA:
-                $this->setBeta($value);
-                break;
-            case self::RELEASE_CANDIDATE:
-                $this->setReleaseCandidate($value);
-                break;
-        }
-
-        return $this;
-    }
-
-    /**
-     * @param bool $isDefined
-     *
-     * @return Version
-     */
-    public function setReleaseCandidate(bool $isDefined): Version
-    {
-        $this->rc = $isDefined;
+        $this->prefix = $value;
 
         return $this;
     }
@@ -231,9 +130,22 @@ class Version
      *
      * @return null|int
      */
-    public function getVersion(string $type)
+    public function getMainVersion(string $type)
     {
         return $this->mainComponents->get($type)->getValue();
+    }
+
+    /**
+     * @param string $type
+     * @param int $value
+     *
+     * @return Version
+     */
+    public function setMainVersion(string $type, int $value): Version
+    {
+        $this->mainComponents->set($type, $value);
+
+        return $this;
     }
 
     /**
@@ -273,34 +185,52 @@ class Version
     }
 
     /**
-     * @param string $type
-     * @param int $value
-     *
+     * @return null|string
+     */
+    public function getPreRelease()
+    {
+        /** @var VersionComponent $component */
+        foreach ($this->preReleaseComponents->getIterator() as $type => $component) {
+            if ($component->isEnabled()) {
+                return $type;
+            }
+        }
+
+        return null;
+    }
+
+    /**
      * @return Version
      */
-    public function setMainVersion(string $type, int $value): Version
+    public function clearPreRelease(): Version
     {
-        $this->mainComponents->set($type, $value);
+        foreach (self::PRE_RELEASE_VERSIONS as $version) {
+            $this->preReleaseComponents->get($version)->setEnabled(false);
+        }
 
         return $this;
     }
 
     /**
-     * @return null|string
-     */
-    public function getPrefix()
-    {
-        return $this->prefix;
-    }
-
-    /**
-     * @param string $value
+     * @param string $type
      *
      * @return Version
      */
-    public function setPrefix(string $value): Version
+    public function enablePreRelease(string $type): Version
     {
-        $this->prefix = $value;
+        $this->preReleaseComponents->get($type)->setEnabled(true);
+
+        return $this;
+    }
+
+    /**
+     * @param string $type
+     *
+     * @return Version
+     */
+    public function disablePreRelease(string $type): Version
+    {
+        $this->preReleaseComponents->get($type)->setEnabled(false);
 
         return $this;
     }

@@ -88,7 +88,7 @@ class VersionMutator
      */
     private function updateMainVersion(string $key)
     {
-        $value = $this->version->getVersion($key) + $this->options->getMainTypes()->get($key)->getModifier();
+        $value = $this->version->getMainVersion($key) + $this->options->getMainTypes()->get($key)->getModifier();
 
         if ($value < 0) {
             $value = 0;
@@ -121,7 +121,7 @@ class VersionMutator
                 $this->version
                     ->clearPreRelease()
                     ->clearPreReleaseVersion()
-                    ->setPreRelease($type);
+                    ->enablePreRelease($type);
 
                 if (!$isApplicable && $this->options->isDowngrade()) {
                     $this->clearPreRelease();
@@ -130,7 +130,7 @@ class VersionMutator
                 if ($isApplicable && !$isVersionDefined) {
                     if ($this->options->isDowngrade()) {
                         $this->version
-                            ->setPreRelease($type, false)
+                            ->disablePreRelease($type)
                             ->clearPreReleaseVersion();
                     } else {
                         $this->updatePreReleaseVersion(1);
@@ -152,7 +152,7 @@ class VersionMutator
             $modifier = new VersionModifier(true);
             $modifier->setDowngrade($isDowngrade);
 
-            $this->version->setPreRelease($definedType);
+            $this->version->enablePreRelease($definedType);
             $this->updatePreReleaseVersion($version ?? 0, $modifier->update()->getModifier());
 
             if ((null === $version || $version <= 0) && $isDowngrade) {

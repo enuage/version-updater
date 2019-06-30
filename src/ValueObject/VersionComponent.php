@@ -28,6 +28,21 @@ class VersionComponent
     private $value = 0;
 
     /**
+     * @var bool
+     */
+    private $enabled;
+
+    /**
+     * VersionComponent constructor.
+     *
+     * @param bool $enabled
+     */
+    public function __construct(bool $enabled = false)
+    {
+        $this->enabled = $enabled;
+    }
+
+    /**
      * @return int
      */
     public function getValue(): int
@@ -41,5 +56,21 @@ class VersionComponent
     public function setValue(int $value)
     {
         $this->value = $value;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isEnabled(): bool
+    {
+        return $this->enabled;
+    }
+
+    /**
+     * @param bool $enabled
+     */
+    public function setEnabled(bool $enabled)
+    {
+        $this->enabled = $enabled;
     }
 }
