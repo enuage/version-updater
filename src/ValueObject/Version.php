@@ -131,6 +131,14 @@ class Version
     }
 
     /**
+     * @return int
+     */
+    public function getMajor(): int
+    {
+        return $this->mainComponents->get(self::MAJOR)->getValue();
+    }
+
+    /**
      * @param int $value
      *
      * @return Version
@@ -143,6 +151,14 @@ class Version
     }
 
     /**
+     * @return int
+     */
+    public function getMinor(): int
+    {
+        return $this->mainComponents->get(self::MINOR)->getValue();
+    }
+
+    /**
      * @param int $value
      *
      * @return Version
@@ -152,6 +168,14 @@ class Version
         $this->mainComponents->set(self::MINOR, $value);
 
         return $this;
+    }
+
+    /**
+     * @return int
+     */
+    public function getPatch(): int
+    {
+        return $this->mainComponents->get(self::PATCH)->getValue();
     }
 
     /**
