@@ -67,10 +67,10 @@ Use `\V` for define the version in regular expression. It will be replaced with 
 
 **New in version 1.2.0**: you can easily define property of the json
 file which should be updated - just add file path and path to the
-property delimited by slash under `json` configuration in following format:
-`path-to/file: property/path`
+property delimited by slash under `json` configuration in following
+format: `path-to/file: property/path`
 
-Exapmple:
+Example:
 
 ```yml
 enuage_version_updater:
