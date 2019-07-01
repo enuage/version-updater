@@ -31,7 +31,7 @@ class Configuration implements ConfigurationInterface
         $treeBuilder = new TreeBuilder();
         $rootNode = $treeBuilder->root('enuage_version_updater');
         $rootNode->append($this->getFilesNode());
-        $rootNode->children()->booleanNode('composer')->defaultFalse()->end();
+        $rootNode->append($this->getJsonNode());
 
         return $treeBuilder;
     }
@@ -42,6 +42,17 @@ class Configuration implements ConfigurationInterface
     private function getFilesNode(): ArrayNodeDefinition
     {
         $node = new ArrayNodeDefinition('files');
+        $node->arrayPrototype()->scalarPrototype()->end();
+
+        return $node;
+    }
+
+    /**
+     * @return ArrayNodeDefinition
+     */
+    private function getJsonNode(): ArrayNodeDefinition
+    {
+        $node = new ArrayNodeDefinition('json');
         $node->arrayPrototype()->scalarPrototype()->end();
 
         return $node;

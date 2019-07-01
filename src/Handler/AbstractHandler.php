@@ -1,0 +1,60 @@
+<?php
+/**
+ * AbstractHandler
+ *
+ * Created at 2019-06-30 11:39 PM
+ *
+ * @author Serghei Niculaev <spam312sn@gmail.com>
+ * @license GNU GPLv3 <https://www.gnu.org/licenses/gpl-3.0.en.html>
+ *
+ * This file is a part of éNuage version updater command
+ *
+ * For the full copyright and license information, please view the LICENSE.md
+ * file that was distributed with this source code.
+ */
+
+namespace Enuage\VersionUpdaterBundle\Handler;
+
+use Enuage\VersionUpdaterBundle\Formatter\FormatterInterface;
+use Enuage\VersionUpdaterBundle\Parser\FileParser;
+
+/**
+ * Class AbstractHandler
+ *
+ * @author Serghei Niculaev <spam312sn@gmail.com>
+ */
+abstract class AbstractHandler
+{
+    /**
+     * @var string
+     */
+    protected $pattern;
+
+    /**
+     * @param FileParser $parser
+     * @param FormatterInterface $formatter
+     *
+     * @return string
+     */
+    abstract public function handle(FileParser $parser, FormatterInterface $formatter): string;
+
+    /**
+     * @param FileParser $parser
+     *
+     * @return string
+     */
+    abstract public function getFileContent(FileParser $parser): string;
+
+    /**
+     * @return string
+     */
+    abstract public function getPattern(): string;
+
+    /**
+     * @param string $pattern
+     */
+    public function setPattern(string $pattern)
+    {
+        $this->pattern = $pattern;
+    }
+}

@@ -39,12 +39,17 @@ class FilesFinder
     private $rootDirectory;
 
     /**
-     * FilesFinder constructor.
-     *
-     * @param array $files
+     * @var string
      */
-    public function __construct(array $files)
+    private $type;
+
+    /**
+     * @param array $files
+     * @param string|null $type
+     */
+    public function setFiles(array $files, string $type = null)
     {
+        $this->type = $type;
         $this->files = FilesArrayNormalizer::normalize($files);
     }
 
@@ -54,6 +59,10 @@ class FilesFinder
     public function iterate(Closure $closure)
     {
         foreach ($this->files as $filePath => $pattern) {
+            if ($type = $this->type) {
+                $filePath .= '.'.$type;
+            }
+
             $file = $this->getFile($filePath);
 
             $closure($file, $pattern);
