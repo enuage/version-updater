@@ -15,6 +15,7 @@ namespace Enuage\VersionUpdaterBundle\Tests;
 use Enuage\VersionUpdaterBundle\Command\UpdateVersionCommand;
 use Symfony\Bundle\FrameworkBundle\Console\Application;
 use Symfony\Component\Console\Tester\ApplicationTester;
+use Symfony\Component\Yaml\Yaml;
 
 /**
  * Class CommandTest
@@ -76,6 +77,7 @@ class CommandTest extends FunctionalTestCase
             'file.txt' => $data,
             'composer.json' => json_encode(['version' => $universalData], JSON_PRETTY_PRINT).PHP_EOL,
             'doc/api.json' => json_encode(['info' => ['version' => $universalData]], JSON_PRETTY_PRINT).PHP_EOL,
+            'doc/api.yaml' => Yaml::dump(['info' => ['version' => $universalData]], 2, 2),
         ];
 
         foreach ($files as $file => $content) {
@@ -106,6 +108,10 @@ class CommandTest extends FunctionalTestCase
 
             if (strpos('doc/api.json', $file) !== false) {
                 $expected = json_encode(['info' => ['version' => $universalData]], JSON_PRETTY_PRINT).PHP_EOL;
+            }
+
+            if (strpos('doc/api.yaml', $file) !== false) {
+                $expected = Yaml::dump(['info' => ['version' => $universalData]], 2, 2);
             }
 
             $this->assertEquals($expected, file_get_contents(__DIR__.'/support/'.$file));
@@ -588,6 +594,7 @@ class CommandTest extends FunctionalTestCase
             'file.txt' => '',
             'composer.json' => json_encode(['version' => 'v0.1.0'], JSON_PRETTY_PRINT).PHP_EOL,
             'doc/api.json' => json_encode(['info' => ['version' => '0.1.0']], JSON_PRETTY_PRINT).PHP_EOL,
+            'doc/api.yaml' => Yaml::dump(['info' => ['version' => '0.1.0']], 2, 2),
         ];
 
         $this->statusQuo();

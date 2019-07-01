@@ -91,8 +91,8 @@ class UpdateVersionCommand extends ContainerAwareCommand
         $finder->setFiles($this->getContainer()->getParameter('enuage_version_updater.json'), 'json');
         $this->updateFiles($finder, new JsonHandler());
 
-//        $finder->setFiles($this->getContainer()->getParameter('enuage_version_updater.json'), 'yaml');
-//        $this->updateFiles($finder, new YamlHandler());
+        $finder->setFiles($this->getContainer()->getParameter('enuage_version_updater.yaml'), 'yaml');
+        $this->updateFiles($finder, new YamlHandler());
     }
 
     /**
