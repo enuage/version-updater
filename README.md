@@ -70,6 +70,11 @@ file which should be updated - just add file path and path to the
 property delimited by slash under `json` configuration in following
 format: `path-to/file: property/path`
 
+**New in version 1.3.0**: you can easily define property of the yaml
+file which should be updated - just add file path and path to the
+property delimited by slash under `yaml` configuration in following
+format: `path-to/file: property/path`
+
 Example:
 
 ```yml
@@ -78,8 +83,10 @@ enuage_version_updater:
         - '.env': '/^(API_VERSION=)\V/m'
         - 'README.md': '/^(Version:\s)\V/m'
     json:
-        - composer: version
-        - doc/api: info/version
+        - composer: version                 # File: <project>/composer.json
+        - doc/api: info/version             # File <project>/doc/api.json
+    yaml:
+        - doc/api: info/version             # File <project>/doc/api.yaml
 ```
 
 ### Step 2: Use the command for version updating
