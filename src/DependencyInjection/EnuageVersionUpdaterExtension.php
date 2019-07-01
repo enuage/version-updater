@@ -39,6 +39,6 @@ class EnuageVersionUpdaterExtension extends Extension
         $loader->load('services.yml');
 
         $container->setParameter('enuage_version_updater.files', $config['files']);
-        $container->setParameter('enuage_version_updater.composer', $config['composer'] ?? false);
+        $container->setParameter('enuage_version_updater.json', $config['json']);
     }
 }

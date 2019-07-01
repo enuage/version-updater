@@ -25,6 +25,11 @@ use Symfony\Component\Console\Tester\ApplicationTester;
 class CommandTest extends FunctionalTestCase
 {
     /**
+     * @var array
+     */
+    private $files;
+
+    /**
      * @var ApplicationTester $commandTester
      */
     private $commandTester;
@@ -65,15 +70,17 @@ class CommandTest extends FunctionalTestCase
      */
     private function setTestFileContent(string $data)
     {
-        file_put_contents($this->getTestFilePath(), $data);
-    }
+        $universalData = str_replace('version=', '', $data);
 
-    /**
-     * @return string
-     */
-    private function getTestFilePath(): string
-    {
-        return __DIR__.'/support/file.txt';
+        $files = [
+            'file.txt' => $data,
+            'composer.json' => json_encode(['version' => $universalData], JSON_PRETTY_PRINT).PHP_EOL,
+            'doc/api.json' => json_encode(['info' => ['version' => $universalData]], JSON_PRETTY_PRINT).PHP_EOL,
+        ];
+
+        foreach ($files as $file => $content) {
+            file_put_contents(__DIR__.'/support/'.$file, $content);
+        }
     }
 
     /**
@@ -90,7 +97,19 @@ class CommandTest extends FunctionalTestCase
      */
     private function assertContentEqualTo(string $expected)
     {
-        $this->assertEquals($expected, file_get_contents($this->getTestFilePath()));
+        $universalData = str_replace('version=', '', $expected);
+
+        foreach ($this->files as $file => $content) {
+            if (strpos('composer.json', $file) !== false) {
+                $expected = json_encode(['version' => $universalData], JSON_PRETTY_PRINT).PHP_EOL;
+            }
+
+            if (strpos('doc/api.json', $file) !== false) {
+                $expected = json_encode(['info' => ['version' => $universalData]], JSON_PRETTY_PRINT).PHP_EOL;
+            }
+
+            $this->assertEquals($expected, file_get_contents(__DIR__.'/support/'.$file));
+        }
     }
 
     /**
@@ -98,7 +117,9 @@ class CommandTest extends FunctionalTestCase
      */
     private function statusQuo()
     {
-        $this->setTestFileContent('');
+        foreach ($this->files as $file => $content) {
+            file_put_contents(__DIR__.'/support/'.$file, $content);
+        }
     }
 
     public function testWithPrefix()
@@ -562,6 +583,14 @@ class CommandTest extends FunctionalTestCase
     protected function setUp()
     {
         parent::setUp();
+
+        $this->files = [
+            'file.txt' => '',
+            'composer.json' => json_encode(['version' => 'v0.1.0'], JSON_PRETTY_PRINT).PHP_EOL,
+            'doc/api.json' => json_encode(['info' => ['version' => '0.1.0']], JSON_PRETTY_PRINT).PHP_EOL,
+        ];
+
+        $this->statusQuo();
 
         $application = new Application($this->getKernel());
         $command = new UpdateVersionCommand();

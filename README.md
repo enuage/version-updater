@@ -65,14 +65,21 @@ Usage
 
 Use `\V` for define the version in regular expression. It will be replaced with the SemVer regular expression
 
-Exapmple:
+**New in version 1.2.0**: you can easily define property of the json
+file which should be updated - just add file path and path to the
+property delimited by slash under `json` configuration in following
+format: `path-to/file: property/path`
+
+Example:
 
 ```yml
 enuage_version_updater:
     files:
         - '.env': '/^(API_VERSION=)\V/m'
         - 'README.md': '/^(Version:\s)\V/m'
-        - 'composer.json': '/^(\s*\"version\":\s*\")\V(\"\,?)/m'
+    json:
+        - composer: version
+        - doc/api: info/version
 ```
 
 ### Step 2: Use the command for version updating

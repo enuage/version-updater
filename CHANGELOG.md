@@ -1,5 +1,11 @@
 # Version updater command changelog
 
+### v1.2.0
+
+##### 2019-06-30 05:48
+
+- [#1][1]: added handler for JSON files version updating by pattern
+
 ### v1.1.0
 
 ##### 2019-06-30 22:22
@@ -60,3 +66,5 @@ files
 ##### 2018-12-02 21:14:
 
 - Moved version updater command from API project to separated bundle
+
+[1]: https://gitlab.com/enuage/bundles/version-updater/issues/1
