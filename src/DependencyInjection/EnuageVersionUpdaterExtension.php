@@ -25,6 +25,12 @@ use Symfony\Component\HttpKernel\DependencyInjection\Extension;
  */
 class EnuageVersionUpdaterExtension extends Extension
 {
+    const MAIN_TYPES = [
+        'files',
+        'json',
+        'yaml',
+    ];
+
     /**
      * {@inheritdoc}
      *
@@ -38,7 +44,8 @@ class EnuageVersionUpdaterExtension extends Extension
         $loader = new Loader\YamlFileLoader($container, new FileLocator(__DIR__.'/../Resources/config'));
         $loader->load('services.yml');
 
-        $container->setParameter('enuage_version_updater.files', $config['files']);
-        $container->setParameter('enuage_version_updater.json', $config['json']);
+        foreach (self::MAIN_TYPES as $type) {
+            $container->setParameter('enuage_version_updater.'.$type, $config[$type]);
+        }
     }
 }

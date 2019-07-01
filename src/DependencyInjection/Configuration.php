@@ -30,29 +30,21 @@ class Configuration implements ConfigurationInterface
     {
         $treeBuilder = new TreeBuilder();
         $rootNode = $treeBuilder->root('enuage_version_updater');
-        $rootNode->append($this->getFilesNode());
-        $rootNode->append($this->getJsonNode());
+        $rootNode->append($this->getFilesNode('files'));
+        $rootNode->append($this->getFilesNode('json'));
+        $rootNode->append($this->getFilesNode('yaml'));
 
         return $treeBuilder;
     }
 
     /**
+     * @param string $title
+     *
      * @return ArrayNodeDefinition
      */
-    private function getFilesNode(): ArrayNodeDefinition
+    private function getFilesNode(string $title): ArrayNodeDefinition
     {
-        $node = new ArrayNodeDefinition('files');
-        $node->arrayPrototype()->scalarPrototype()->end();
-
-        return $node;
-    }
-
-    /**
-     * @return ArrayNodeDefinition
-     */
-    private function getJsonNode(): ArrayNodeDefinition
-    {
-        $node = new ArrayNodeDefinition('json');
+        $node = new ArrayNodeDefinition($title);
         $node->arrayPrototype()->scalarPrototype()->end();
 
         return $node;

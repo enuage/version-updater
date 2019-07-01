@@ -1,5 +1,11 @@
 # Version updater command changelog
 
+### v1.3.0
+
+##### 2019-06-30 09:51
+
+- [#2][2]: added handler for YAML files version updating by pattern
+
 ### v1.2.0
 
 ##### 2019-06-30 05:48
@@ -68,3 +74,4 @@ files
 - Moved version updater command from API project to separated bundle
 
 [1]: https://gitlab.com/enuage/bundles/version-updater/issues/1
+[2]: https://gitlab.com/enuage/bundles/version-updater/issues/2

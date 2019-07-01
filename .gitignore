@@ -6,3 +6,4 @@ var/
 tests/support/file.txt
 tests/support/composer.json
 tests/support/doc/api.json
+tests/support/doc/api.yaml

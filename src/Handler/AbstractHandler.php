@@ -16,6 +16,7 @@
 namespace Enuage\VersionUpdaterBundle\Handler;
 
 use Enuage\VersionUpdaterBundle\Formatter\FormatterInterface;
+use Enuage\VersionUpdaterBundle\Parser\AbstractParser;
 use Enuage\VersionUpdaterBundle\Parser\FileParser;
 
 /**
@@ -48,7 +49,10 @@ abstract class AbstractHandler
     /**
      * @return string
      */
-    abstract public function getPattern(): string;
+    public function getPattern(): string
+    {
+        return sprintf('/%s/', AbstractParser::VERSION_PATTERN);
+    }
 
     /**
      * @param string $pattern
