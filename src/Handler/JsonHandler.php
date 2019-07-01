@@ -15,9 +15,7 @@
 
 namespace Enuage\VersionUpdaterBundle\Handler;
 
-use Closure;
 use Enuage\VersionUpdaterBundle\Formatter\FormatterInterface;
-use Enuage\VersionUpdaterBundle\Parser\AbstractParser;
 use Enuage\VersionUpdaterBundle\Parser\FileParser;
 
 /**
@@ -62,32 +60,6 @@ class JsonHandler extends AbstractHandler
     }
 
     /**
-     * @param array $content
-     * @param array $properties
-     * @param Closure $closure
-     */
-    private function accessProperty(array &$content, array $properties, Closure $closure)
-    {
-        if (JSON_ERROR_NONE === json_last_error()) {
-            foreach ($properties as $index => $property) {
-                if (array_key_exists($property, $content)) {
-                    $propertyValue = &$content[$property];
-
-                    if (is_array($propertyValue)) {
-                        unset($properties[$index]);
-
-                        $this->accessProperty($propertyValue, $properties, $closure);
-                    }
-
-                    if (is_string($propertyValue)) {
-                        $closure($propertyValue);
-                    }
-                }
-            }
-        }
-    }
-
-    /**
      * @return array
      */
     private function getProperties(): array
@@ -114,13 +86,5 @@ class JsonHandler extends AbstractHandler
         );
 
         return $value;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public function getPattern(): string
-    {
-        return sprintf('/%s/', AbstractParser::VERSION_PATTERN);
     }
 }

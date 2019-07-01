@@ -40,12 +40,4 @@ class YamlHandler extends AbstractHandler
     {
         // TODO: Implement getFileContent() method.
     }
-
-    /**
-     * {@inheritDoc}
-     */
-    public function getPattern(): string
-    {
-        // TODO: Implement getPattern() method.
-    }
 }

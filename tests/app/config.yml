@@ -9,3 +9,5 @@ enuage_version_updater:
   json:
     - support/composer: version
     - support/doc/api: info/version
+  yaml:
+    - support/doc/api: info/version
