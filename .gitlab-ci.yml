@@ -32,7 +32,7 @@ test:coverage:
         expire_in: 2 day
     script:
         - composer install --dev -q
-        - php vendor/bin/phpunit --coverage-html=tests/output
+        - php vendor/bin/phpunit --coverage-html=tests/output --coverage-text --colors=never
     when: manual
     only:
         - merge_requests
