@@ -15,7 +15,6 @@
 
 namespace Enuage\VersionUpdaterBundle\Handler;
 
-use Closure;
 use Enuage\VersionUpdaterBundle\Formatter\FormatterInterface;
 use Enuage\VersionUpdaterBundle\Parser\AbstractParser;
 use Enuage\VersionUpdaterBundle\Parser\FileParser;
@@ -61,29 +60,5 @@ abstract class AbstractHandler
     public function setPattern(string $pattern)
     {
         $this->pattern = $pattern;
-    }
-
-    /**
-     * @param array $content
-     * @param array $properties
-     * @param Closure $closure
-     */
-    protected function accessProperty(array &$content, array $properties, Closure $closure)
-    {
-        foreach ($properties as $index => $property) {
-            if (array_key_exists($property, $content)) {
-                $propertyValue = &$content[$property];
-
-                if (is_array($propertyValue)) {
-                    unset($properties[$index]);
-
-                    $this->accessProperty($propertyValue, $properties, $closure);
-                }
-
-                if (is_string($propertyValue)) {
-                    $closure($propertyValue);
-                }
-            }
-        }
     }
 }

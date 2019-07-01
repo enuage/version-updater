@@ -24,29 +24,17 @@ use Symfony\Component\Yaml\Yaml;
  *
  * @author Serghei Niculaev <spam312sn@gmail.com>
  */
-class YamlHandler extends AbstractHandler
+class YamlHandler extends FormatHandler
 {
-    /**
-     * @var FileParser
-     */
-    private $parser;
-
     /**
      * {@inheritDoc}
      */
     public function handle(FileParser $parser, FormatterInterface $formatter): string
     {
-        $this->parser = $parser;
+        $this->setParser($parser);
 
         $content = $this->decodeContent();
-
-        $this->accessProperty(
-            $content,
-            $this->getProperties(),
-            static function (&$property) use ($formatter) {
-                $property = $formatter->format();
-            }
-        );
+        $this->updateProperty($content, $formatter);
 
         return Yaml::dump($content, 2, 2);
     }
@@ -56,15 +44,7 @@ class YamlHandler extends AbstractHandler
      */
     private function decodeContent(): array
     {
-        return Yaml::parse($this->parser->getFile()->getContents());
-    }
-
-    /**
-     * @return array
-     */
-    private function getProperties(): array
-    {
-        return explode('/', $this->pattern);
+        return Yaml::parse($this->getParser()->getFile()->getContents());
     }
 
     /**
@@ -72,17 +52,10 @@ class YamlHandler extends AbstractHandler
      */
     public function getFileContent(FileParser $parser): string
     {
-        $this->parser = $parser;
+        $this->setParser($parser);
+
         $content = $this->decodeContent();
 
-        $this->accessProperty(
-            $content,
-            $this->getProperties(),
-            static function ($property) use (&$value) {
-                $value = $property;
-            }
-        );
-
-        return $value;
+        return $this->getValue($content);
     }
 }

@@ -23,32 +23,19 @@ use Enuage\VersionUpdaterBundle\Parser\FileParser;
  *
  * @author Serghei Niculaev <spam312sn@gmail.com>
  */
-class JsonHandler extends AbstractHandler
+class JsonHandler extends FormatHandler
 {
-    /**
-     * @var FileParser
-     */
-    private $parser;
-
     /**
      * {@inheritDoc}
      */
     public function handle(FileParser $parser, FormatterInterface $formatter): string
     {
-        $this->parser = $parser;
+        $this->setParser($parser);
+
         $content = $this->decodeContent();
+        $this->updateProperty($content, $formatter);
 
-        $this->accessProperty(
-            $content,
-            $this->getProperties(),
-            static function (&$property) use ($formatter) {
-                $property = $formatter->format();
-            }
-        );
-
-        $content = json_encode($content, JSON_PRETTY_PRINT).PHP_EOL;
-
-        return $content;
+        return json_encode($content, JSON_PRETTY_PRINT).PHP_EOL;
     }
 
     /**
@@ -56,35 +43,18 @@ class JsonHandler extends AbstractHandler
      */
     private function decodeContent()
     {
-        return json_decode($this->parser->getFile()->getContents(), true);
+        return json_decode($this->getParser()->getFile()->getContents(), true);
     }
 
     /**
-     * @return array
-     */
-    private function getProperties(): array
-    {
-        return explode('/', $this->pattern);
-    }
-
-    /**
-     * @param FileParser $parser
-     *
-     * @return string
+     * {@inheritDoc}
      */
     public function getFileContent(FileParser $parser): string
     {
-        $this->parser = $parser;
+        $this->setParser($parser);
+
         $content = $this->decodeContent();
 
-        $this->accessProperty(
-            $content,
-            $this->getProperties(),
-            static function ($property) use (&$value) {
-                $value = $property;
-            }
-        );
-
-        return $value;
+        return $this->getValue($content);
     }
 }
