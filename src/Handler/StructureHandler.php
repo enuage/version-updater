@@ -7,11 +7,11 @@ use Enuage\VersionUpdaterBundle\Formatter\FormatterInterface;
 use Enuage\VersionUpdaterBundle\Parser\FileParser;
 
 /**
- * Class FormatHandler
+ * Class StructureHandler
  *
  * @author Serghei Niculaev <s.niculaev@dynatech.lv>
  */
-abstract class FormatHandler extends AbstractHandler
+abstract class StructureHandler extends AbstractHandler
 {
     /**
      * @var FileParser
@@ -98,4 +98,21 @@ abstract class FormatHandler extends AbstractHandler
 
         return $value;
     }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function getFileContent(FileParser $parser): string
+    {
+        $this->setParser($parser);
+
+        $content = $this->decodeContent();
+
+        return $this->getValue($content);
+    }
+
+    /**
+     * @return array
+     */
+    abstract protected function decodeContent(): array;
 }

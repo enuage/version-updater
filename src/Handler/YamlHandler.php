@@ -24,7 +24,7 @@ use Symfony\Component\Yaml\Yaml;
  *
  * @author Serghei Niculaev <spam312sn@gmail.com>
  */
-class YamlHandler extends FormatHandler
+final class YamlHandler extends StructureHandler
 {
     /**
      * {@inheritDoc}
@@ -40,22 +40,10 @@ class YamlHandler extends FormatHandler
     }
 
     /**
-     * @return array
-     */
-    private function decodeContent(): array
-    {
-        return Yaml::parse($this->getParser()->getFile()->getContents());
-    }
-
-    /**
      * {@inheritDoc}
      */
-    public function getFileContent(FileParser $parser): string
+    protected function decodeContent(): array
     {
-        $this->setParser($parser);
-
-        $content = $this->decodeContent();
-
-        return $this->getValue($content);
+        return Yaml::parse($this->getParser()->getFile()->getContents());
     }
 }

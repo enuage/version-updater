@@ -23,7 +23,7 @@ use Enuage\VersionUpdaterBundle\Parser\FileParser;
  *
  * @author Serghei Niculaev <spam312sn@gmail.com>
  */
-class JsonHandler extends FormatHandler
+final class JsonHandler extends StructureHandler
 {
     /**
      * {@inheritDoc}
@@ -39,22 +39,10 @@ class JsonHandler extends FormatHandler
     }
 
     /**
-     * @return mixed
-     */
-    private function decodeContent()
-    {
-        return json_decode($this->getParser()->getFile()->getContents(), true);
-    }
-
-    /**
      * {@inheritDoc}
      */
-    public function getFileContent(FileParser $parser): string
+    protected function decodeContent(): array
     {
-        $this->setParser($parser);
-
-        $content = $this->decodeContent();
-
-        return $this->getValue($content);
+        return json_decode($this->getParser()->getFile()->getContents(), true);
     }
 }

@@ -23,7 +23,7 @@ use Enuage\VersionUpdaterBundle\Parser\FileParser;
  *
  * @author Serghei Niculaev <spam312sn@gmail.com>
  */
-class TextHandler extends AbstractHandler
+final class TextHandler extends AbstractHandler
 {
     /**
      * {@inheritDoc}
