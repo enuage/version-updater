@@ -1,8 +1,8 @@
 <?php
 /**
- * JsonHandler
+ * YamlHandler
  *
- * Created at 2019-06-30 11:46 PM
+ * Created at 2019-07-01 7:12 AM
  *
  * @author Serghei Niculaev <spam312sn@gmail.com>
  * @license GNU GPLv3 <https://www.gnu.org/licenses/gpl-3.0.en.html>
@@ -17,13 +17,14 @@ namespace Enuage\VersionUpdaterBundle\Handler;
 
 use Enuage\VersionUpdaterBundle\Formatter\FormatterInterface;
 use Enuage\VersionUpdaterBundle\Parser\FileParser;
+use Symfony\Component\Yaml\Yaml;
 
 /**
- * Class JsonHandler
+ * Class YamlHandler
  *
  * @author Serghei Niculaev <spam312sn@gmail.com>
  */
-class JsonHandler extends FormatHandler
+class YamlHandler extends FormatHandler
 {
     /**
      * {@inheritDoc}
@@ -35,15 +36,15 @@ class JsonHandler extends FormatHandler
         $content = $this->decodeContent();
         $this->updateProperty($content, $formatter);
 
-        return json_encode($content, JSON_PRETTY_PRINT).PHP_EOL;
+        return Yaml::dump($content, 2, 2);
     }
 
     /**
-     * @return mixed
+     * @return array
      */
-    private function decodeContent()
+    private function decodeContent(): array
     {
-        return json_decode($this->getParser()->getFile()->getContents(), true);
+        return Yaml::parse($this->getParser()->getFile()->getContents());
     }
 
     /**

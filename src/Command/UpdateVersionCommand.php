@@ -18,6 +18,7 @@ use Enuage\VersionUpdaterBundle\Formatter\FileFormatter;
 use Enuage\VersionUpdaterBundle\Handler\AbstractHandler;
 use Enuage\VersionUpdaterBundle\Handler\JsonHandler;
 use Enuage\VersionUpdaterBundle\Handler\TextHandler;
+use Enuage\VersionUpdaterBundle\Handler\YamlHandler;
 use Enuage\VersionUpdaterBundle\Mutator\VersionMutator;
 use Enuage\VersionUpdaterBundle\Parser\AbstractParser;
 use Enuage\VersionUpdaterBundle\Parser\CommandOptionsParser;
@@ -89,6 +90,9 @@ class UpdateVersionCommand extends ContainerAwareCommand
 
         $finder->setFiles($this->getContainer()->getParameter('enuage_version_updater.json'), 'json');
         $this->updateFiles($finder, new JsonHandler());
+
+        $finder->setFiles($this->getContainer()->getParameter('enuage_version_updater.yaml'), 'yaml');
+        $this->updateFiles($finder, new YamlHandler());
     }
 
     /**
