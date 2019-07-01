@@ -15,6 +15,9 @@
 
 namespace Enuage\VersionUpdaterBundle\Handler;
 
+use Enuage\VersionUpdaterBundle\Formatter\FormatterInterface;
+use Enuage\VersionUpdaterBundle\Parser\FileParser;
+
 /**
  * Class TextHandler
  *
@@ -22,5 +25,39 @@ namespace Enuage\VersionUpdaterBundle\Handler;
  */
 class TextHandler extends AbstractHandler
 {
-    // TODO
+    /**
+     * {@inheritDoc}
+     */
+    public function handle(FileParser $parser, FormatterInterface $formatter): string
+    {
+        $matches = $parser->getMatches();
+        $lastMatch = $matches->last();
+        $lastMatchValue = !is_numeric($lastMatch) && $matches->count() > 12 ? $lastMatch : '';
+
+        $file = $parser->getFile();
+
+        $content = preg_replace(
+            $this->getPattern(),
+            sprintf('${1}%s%s', $formatter->format(), $lastMatchValue),
+            $file->getContents()
+        );
+
+        return $content;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function getPattern(): string
+    {
+        return str_replace(FileParser::FILE_VERSION_PATTERN, FileParser::VERSION_PATTERN, $this->pattern);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function getFileContent(FileParser $parser): string
+    {
+        return $parser->getFile()->getContents();
+    }
 }

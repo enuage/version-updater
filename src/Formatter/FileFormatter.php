@@ -15,6 +15,7 @@
 
 namespace Enuage\VersionUpdaterBundle\Formatter;
 
+use Enuage\VersionUpdaterBundle\Handler\AbstractHandler;
 use Enuage\VersionUpdaterBundle\Parser\FileParser;
 use Exception;
 use Symfony\Component\Filesystem\Filesystem;
@@ -35,6 +36,11 @@ class FileFormatter implements FormatterInterface
      * @var Filesystem
      */
     private $fileSystem;
+
+    /**
+     * @var AbstractHandler
+     */
+    private $handler;
 
     /**
      * FileFormatter constructor.
@@ -58,21 +64,21 @@ class FileFormatter implements FormatterInterface
     public function format($versionFormatter = null): bool
     {
         $fileParser = $this->fileParser;
-
-        $matches = $fileParser->getMatches();
-        $lastMatch = $matches->last();
-        $lastMatchValue = !is_numeric($lastMatch) && $matches->count() > 12 ? $lastMatch : '';
-
         $file = $fileParser->getFile();
 
-        $content = preg_replace(
-            $fileParser->getPattern(),
-            sprintf('${1}%s%s', $versionFormatter->format(), $lastMatchValue),
-            $file->getContents()
+        $this->fileSystem->dumpFile(
+            $file->getRealPath(),
+            $this->handler->handle($fileParser, $versionFormatter)
         );
 
-        $this->fileSystem->dumpFile($file->getRealPath(), $content);
-
         return true;
+    }
+
+    /**
+     * @param AbstractHandler $handler
+     */
+    public function setHandler(AbstractHandler $handler)
+    {
+        $this->handler = $handler;
     }
 }

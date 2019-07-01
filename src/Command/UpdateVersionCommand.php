@@ -16,6 +16,7 @@ use Enuage\VersionUpdaterBundle\DTO\VersionOptions;
 use Enuage\VersionUpdaterBundle\Finder\FilesFinder;
 use Enuage\VersionUpdaterBundle\Formatter\FileFormatter;
 use Enuage\VersionUpdaterBundle\Handler\AbstractHandler;
+use Enuage\VersionUpdaterBundle\Handler\JsonHandler;
 use Enuage\VersionUpdaterBundle\Handler\TextHandler;
 use Enuage\VersionUpdaterBundle\Mutator\VersionMutator;
 use Enuage\VersionUpdaterBundle\Parser\AbstractParser;
@@ -86,9 +87,8 @@ class UpdateVersionCommand extends ContainerAwareCommand
         $finder->setFiles($this->getContainer()->getParameter('enuage_version_updater.files'));
         $this->updateFiles($finder, new TextHandler());
 
-// TODO
-//        $finder->setFiles($this->getContainer()->getParameter('enuage_version_updater.json'));
-//        $this->updateFiles($finder, new JsonHandler());
+        $finder->setFiles($this->getContainer()->getParameter('enuage_version_updater.json'), 'json');
+        $this->updateFiles($finder, new JsonHandler());
     }
 
     /**
@@ -100,12 +100,12 @@ class UpdateVersionCommand extends ContainerAwareCommand
         if ($finder->hasFiles()) {
             $finder->iterate(
                 function ($file, $pattern) use ($handler) {
-                    $fileParser = new FileParser($file, $pattern);
+                    $handler->setPattern($pattern);
+                    $fileParser = new FileParser($file, $handler);
                     $versionParser = new VersionParser($this->options->getVersion());
 
                     /** @var AbstractParser $parser */
                     $parser = $this->options->hasVersion() ? $versionParser : $fileParser;
-
                     $mutator = new VersionMutator($parser->parse(), $this->options);
 
                     if (!$this->options->hasVersion()) {
@@ -113,7 +113,7 @@ class UpdateVersionCommand extends ContainerAwareCommand
                     }
 
                     $fileFormatter = new FileFormatter($fileParser);
-                    // TODO set handler
+                    $fileFormatter->setHandler($handler);
                     $fileFormatter->format($mutator->getFormatter());
                 }
             );
