@@ -54,7 +54,7 @@ abstract class StructureHandler extends AbstractHandler
      * @param array $properties
      * @param Closure $closure
      */
-    protected function accessProperty(array &$content, array $properties, Closure $closure)
+    private function accessProperty(array &$content, array $properties, Closure $closure)
     {
         foreach ($properties as $index => $property) {
             if (array_key_exists($property, $content)) {
@@ -76,7 +76,7 @@ abstract class StructureHandler extends AbstractHandler
     /**
      * @return array
      */
-    protected function getProperties(): array
+    private function getProperties(): array
     {
         return explode('/', $this->pattern);
     }
@@ -86,7 +86,7 @@ abstract class StructureHandler extends AbstractHandler
      *
      * @return mixed
      */
-    protected function getValue(array $content)
+    private function getValue(array $content)
     {
         $this->accessProperty(
             $content,
