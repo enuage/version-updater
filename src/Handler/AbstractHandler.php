@@ -45,11 +45,11 @@ abstract class AbstractHandler
     abstract public function handle(FormatterInterface $formatter): string;
 
     /**
-     * @param FileParser $parser
-     *
      * @return string
      */
-    abstract public function getFileContent(): string;
+    public function getFileContent(): string {
+        return $this->getParser()->getFile()->getContents();
+    }
 
     /**
      * @return string

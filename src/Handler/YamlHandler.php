@@ -16,7 +16,6 @@
 namespace Enuage\VersionUpdaterBundle\Handler;
 
 use Enuage\VersionUpdaterBundle\Formatter\FormatterInterface;
-use Enuage\VersionUpdaterBundle\Parser\FileParser;
 use Symfony\Component\Yaml\Yaml;
 
 /**
@@ -31,17 +30,14 @@ final class YamlHandler extends StructureHandler
      */
     public function handle(FormatterInterface $formatter): string
     {
-        $content = $this->decodeContent();
-        $this->updateProperty($content, $formatter);
-
-        return Yaml::dump($content, 2, 2);
+        return Yaml::dump($this->updateProperty($formatter), 2, 2);
     }
 
     /**
      * {@inheritDoc}
      */
-    protected function decodeContent(): array
+    protected function decodeContent(string $content): array
     {
-        return Yaml::parse($this->getParser()->getFile()->getContents());
+        return Yaml::parse($content);
     }
 }

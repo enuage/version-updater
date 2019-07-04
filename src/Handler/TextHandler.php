@@ -37,7 +37,7 @@ final class TextHandler extends AbstractHandler
         $content = preg_replace(
             $this->getPattern(),
             sprintf('${1}%s%s', $formatter->format(), $lastMatchValue),
-            $this->getParser()->getFile()->getContents()
+            parent::getFileContent()
         );
 
         return $content;
@@ -49,13 +49,5 @@ final class TextHandler extends AbstractHandler
     public function getPattern(): string
     {
         return $this->pattern->replace(FileParser::FILE_VERSION_PATTERN, FileParser::VERSION_PATTERN);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public function getFileContent(): string
-    {
-        return $this->getParser()->getFile()->getContents();
     }
 }

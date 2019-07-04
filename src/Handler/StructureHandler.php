@@ -14,17 +14,22 @@ use Enuage\VersionUpdaterBundle\Formatter\FormatterInterface;
 abstract class StructureHandler extends AbstractHandler
 {
     /**
-     * @param array $content
      * @param FormatterInterface $formatter
+     *
+     * @return array
      */
-    protected function updateProperty(array &$content, FormatterInterface $formatter)
+    protected function updateProperty(FormatterInterface $formatter)
     {
+        $content = $this->decodeContent(parent::getFileContent());
+
         $this->accessProperty(
             $content,
             static function (&$property) use ($formatter) {
                 $property = $formatter->format();
             }
         );
+
+        return $content;
     }
 
     /**
@@ -77,13 +82,13 @@ abstract class StructureHandler extends AbstractHandler
      */
     public function getFileContent(): string
     {
-        $content = $this->decodeContent();
-
-        return $this->getValue($content);
+        return $this->getValue($this->decodeContent(parent::getFileContent()));
     }
 
     /**
+     * @param string $content
+     *
      * @return array
      */
-    abstract protected function decodeContent(): array;
+    abstract protected function decodeContent(string $content): array;
 }
