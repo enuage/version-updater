@@ -57,7 +57,7 @@ class FileParser extends AbstractParser
      */
     public function parse(): Version
     {
-        $versionParser = new VersionParser($this->handler->getFileContent($this));
+        $versionParser = new VersionParser($this->handler->setParser($this)->getFileContent());
         $versionParser->setPattern($this->handler->getPattern());
 
         $this->cloneMatches($versionParser->getMatches());

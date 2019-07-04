@@ -28,10 +28,8 @@ final class JsonHandler extends StructureHandler
     /**
      * {@inheritDoc}
      */
-    public function handle(FileParser $parser, FormatterInterface $formatter): string
+    public function handle(FormatterInterface $formatter): string
     {
-        $this->setParser($parser);
-
         $content = $this->decodeContent();
         $this->updateProperty($content, $formatter);
 

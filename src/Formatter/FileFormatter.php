@@ -68,7 +68,7 @@ class FileFormatter implements FormatterInterface
 
         $this->fileSystem->dumpFile(
             $file->getRealPath(),
-            $this->handler->handle($fileParser, $versionFormatter)
+            $this->handler->setParser($fileParser)->handle($versionFormatter)
         );
 
         return true;

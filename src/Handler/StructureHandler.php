@@ -3,8 +3,8 @@
 namespace Enuage\VersionUpdaterBundle\Handler;
 
 use Closure;
+use Enuage\VersionUpdaterBundle\Collection\ArrayCollection;
 use Enuage\VersionUpdaterBundle\Formatter\FormatterInterface;
-use Enuage\VersionUpdaterBundle\Parser\FileParser;
 
 /**
  * Class StructureHandler
@@ -14,27 +14,6 @@ use Enuage\VersionUpdaterBundle\Parser\FileParser;
 abstract class StructureHandler extends AbstractHandler
 {
     /**
-     * @var FileParser
-     */
-    private $parser;
-
-    /**
-     * @return FileParser
-     */
-    protected function getParser(): FileParser
-    {
-        return $this->parser;
-    }
-
-    /**
-     * @param FileParser $parser
-     */
-    protected function setParser(FileParser $parser)
-    {
-        $this->parser = $parser;
-    }
-
-    /**
      * @param array $content
      * @param FormatterInterface $formatter
      */
@@ -42,7 +21,6 @@ abstract class StructureHandler extends AbstractHandler
     {
         $this->accessProperty(
             $content,
-            $this->getProperties(),
             static function (&$property) use ($formatter) {
                 $property = $formatter->format();
             }
@@ -51,19 +29,23 @@ abstract class StructureHandler extends AbstractHandler
 
     /**
      * @param array $content
-     * @param array $properties
      * @param Closure $closure
+     * @param ArrayCollection $properties
      */
-    private function accessProperty(array &$content, array $properties, Closure $closure)
+    private function accessProperty(array &$content, Closure $closure, ArrayCollection $properties = null)
     {
-        foreach ($properties as $index => $property) {
+        if (null === $properties) {
+            $properties = $this->pattern->explode('/');
+        }
+
+        foreach ($properties->getIterator() as $index => $property) {
             if (array_key_exists($property, $content)) {
                 $propertyValue = &$content[$property];
 
                 if (is_array($propertyValue)) {
-                    unset($properties[$index]);
+                    $properties->remove($index);
 
-                    $this->accessProperty($propertyValue, $properties, $closure);
+                    $this->accessProperty($propertyValue, $closure, $properties);
                 }
 
                 if (is_string($propertyValue)) {
@@ -71,14 +53,6 @@ abstract class StructureHandler extends AbstractHandler
                 }
             }
         }
-    }
-
-    /**
-     * @return array
-     */
-    private function getProperties(): array
-    {
-        return explode('/', $this->pattern);
     }
 
     /**
@@ -90,7 +64,6 @@ abstract class StructureHandler extends AbstractHandler
     {
         $this->accessProperty(
             $content,
-            $this->getProperties(),
             static function ($property) use (&$value) {
                 $value = $property;
             }
@@ -102,10 +75,8 @@ abstract class StructureHandler extends AbstractHandler
     /**
      * {@inheritDoc}
      */
-    public function getFileContent(FileParser $parser): string
+    public function getFileContent(): string
     {
-        $this->setParser($parser);
-
         $content = $this->decodeContent();
 
         return $this->getValue($content);
