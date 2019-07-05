@@ -81,4 +81,18 @@ class VersionComponentsCollection extends ArrayCollection
             $type->setEnabled(false);
         }
     }
+
+    /**
+     * @return array
+     */
+    public function getValues(): array
+    {
+        $values = [];
+        /** @var VersionComponent $component */
+        foreach ($this->getIterator() as $key => $component) {
+            $values[$key] = $component->getValue();
+        }
+
+        return $values;
+    }
 }
