@@ -17,6 +17,8 @@ namespace Enuage\VersionUpdaterBundle\Finder;
 
 use Closure;
 use Enuage\VersionUpdaterBundle\Collection\ArrayCollection;
+use Enuage\VersionUpdaterBundle\Exception\FileNotFoundException;
+use Enuage\VersionUpdaterBundle\Helper\Type\StringType;
 use Enuage\VersionUpdaterBundle\Normalizer\FilesArrayNormalizer;
 use Symfony\Component\Finder\Finder;
 use Symfony\Component\Finder\SplFileInfo;
@@ -39,30 +41,38 @@ class FilesFinder
     private $rootDirectory;
 
     /**
-     * @var string
+     * @var ArrayCollection
      */
-    private $type;
+    private $extensions;
+
+    /**
+     * FilesFinder constructor.
+     */
+    public function __construct()
+    {
+        $this->extensions = new ArrayCollection();
+    }
 
     /**
      * @param array $files
-     * @param string|null $type
+     *
+     * @return FilesFinder
      */
-    public function setFiles(array $files, string $type = null)
+    public function setFiles(array $files): FilesFinder
     {
-        $this->type = $type;
         $this->files = FilesArrayNormalizer::normalize($files);
+
+        return $this;
     }
 
     /**
      * @param Closure $closure
+     *
+     * @throws FileNotFoundException
      */
     public function iterate(Closure $closure)
     {
         foreach ($this->files as $filePath => $pattern) {
-            if ($type = $this->type) {
-                $filePath .= '.'.$type;
-            }
-
             $file = $this->getFile($filePath);
 
             $closure($file, $pattern);
@@ -73,22 +83,59 @@ class FilesFinder
      * @param string $path
      *
      * @return SplFileInfo
+     *
+     * @throws FileNotFoundException
      */
     private function getFile(string $path): SplFileInfo
     {
-        $filePath = explode('/', $path);
+        $pathToFile = (new StringType($path))->explode(DIRECTORY_SEPARATOR);
 
-        $lastIndex = count($filePath) - 1;
-        $fileName = $filePath[$lastIndex];
-        unset($filePath[$lastIndex]);
+        $fileName = new StringType($pathToFile->last());
+        $pathToFile->remove($pathToFile->count() - 1);
 
-        $filePath = array_merge([$this->rootDirectory, '..'], $filePath);
-        $filePath = implode('/', $filePath).'/';
+        $absolutePath = new ArrayCollection([$this->rootDirectory, '..']);
+        $absolutePath->append($pathToFile);
+
+        $directory = $absolutePath->implode(DIRECTORY_SEPARATOR)->append(DIRECTORY_SEPARATOR);
+
+        return $this->findFile($directory, $fileName);
+    }
+
+    /**
+     * @param StringType $directory
+     * @param StringType $name
+     * @param string|null $fileExtension
+     *
+     * @return SplFileInfo
+     *
+     * @throws FileNotFoundException
+     */
+    private function findFile(StringType $directory, StringType $name, string $fileExtension = null): SplFileInfo
+    {
+        if (null !== $fileExtension) {
+            $name->reset()->append('.')->append($fileExtension);
+        }
 
         $finder = new Finder();
-        $finder->files()->in($filePath)->name($fileName);
+        $finder->files()->in($directory)->name($name);
 
-        return array_values(iterator_to_array($finder->getIterator()))[0];
+        $file = ArrayCollection::fromIterator($finder->getIterator())->first();
+
+        if (is_bool($file) && !$this->extensions->isEmpty()) {
+            $extension = $this->extensions->current();
+
+            if (null !== $fileExtension) {
+                $extension = $this->extensions->getNext($fileExtension);
+            }
+
+            if (null === $extension) {
+                throw new FileNotFoundException($directory, $name->getInitialValue(), $this->extensions);
+            }
+
+            return $this->findFile($directory, $name, $extension);
+        }
+
+        return $file;
     }
 
     /**
@@ -109,5 +156,17 @@ class FilesFinder
     public function hasFiles(): bool
     {
         return !$this->files->isEmpty();
+    }
+
+    /**
+     * @param array $extensions
+     *
+     * @return FilesFinder
+     */
+    public function setExtensions(array $extensions): FilesFinder
+    {
+        $this->extensions = new ArrayCollection($extensions);
+
+        return $this;
     }
 }

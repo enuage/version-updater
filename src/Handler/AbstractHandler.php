@@ -16,6 +16,7 @@
 namespace Enuage\VersionUpdaterBundle\Handler;
 
 use Enuage\VersionUpdaterBundle\Formatter\FormatterInterface;
+use Enuage\VersionUpdaterBundle\Helper\Type\StringType;
 use Enuage\VersionUpdaterBundle\Parser\AbstractParser;
 use Enuage\VersionUpdaterBundle\Parser\FileParser;
 
@@ -27,24 +28,28 @@ use Enuage\VersionUpdaterBundle\Parser\FileParser;
 abstract class AbstractHandler
 {
     /**
-     * @var string
+     * @var StringType
      */
     protected $pattern;
 
     /**
-     * @param FileParser $parser
+     * @var FileParser
+     */
+    private $parser;
+
+    /**
      * @param FormatterInterface $formatter
      *
      * @return string
      */
-    abstract public function handle(FileParser $parser, FormatterInterface $formatter): string;
+    abstract public function handle(FormatterInterface $formatter): string;
 
     /**
-     * @param FileParser $parser
-     *
      * @return string
      */
-    abstract public function getFileContent(FileParser $parser): string;
+    public function getFileContent(): string {
+        return $this->getParser()->getFile()->getContents();
+    }
 
     /**
      * @return string
@@ -59,6 +64,26 @@ abstract class AbstractHandler
      */
     public function setPattern(string $pattern)
     {
-        $this->pattern = $pattern;
+        $this->pattern = new StringType($pattern);
+    }
+
+    /**
+     * @param FileParser $parser
+     *
+     * @return AbstractHandler
+     */
+    public function setParser(FileParser $parser): AbstractHandler
+    {
+        $this->parser = $parser;
+
+        return $this;
+    }
+
+    /**
+     * @return FileParser
+     */
+    protected function getParser(): FileParser
+    {
+        return $this->parser;
     }
 }

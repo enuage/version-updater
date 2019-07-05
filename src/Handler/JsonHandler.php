@@ -16,45 +16,37 @@
 namespace Enuage\VersionUpdaterBundle\Handler;
 
 use Enuage\VersionUpdaterBundle\Formatter\FormatterInterface;
-use Enuage\VersionUpdaterBundle\Parser\FileParser;
 
 /**
  * Class JsonHandler
  *
  * @author Serghei Niculaev <spam312sn@gmail.com>
  */
-class JsonHandler extends FormatHandler
+final class JsonHandler extends StructureHandler
 {
     /**
      * {@inheritDoc}
      */
-    public function handle(FileParser $parser, FormatterInterface $formatter): string
+    public static function getExtensions(): array
     {
-        $this->setParser($parser);
-
-        $content = $this->decodeContent();
-        $this->updateProperty($content, $formatter);
-
-        return json_encode($content, JSON_PRETTY_PRINT).PHP_EOL;
-    }
-
-    /**
-     * @return mixed
-     */
-    private function decodeContent()
-    {
-        return json_decode($this->getParser()->getFile()->getContents(), true);
+        return [
+            'json',
+        ];
     }
 
     /**
      * {@inheritDoc}
      */
-    public function getFileContent(FileParser $parser): string
+    public function handle(FormatterInterface $formatter): string
     {
-        $this->setParser($parser);
+        return json_encode($this->updateProperty($formatter), JSON_PRETTY_PRINT).PHP_EOL;
+    }
 
-        $content = $this->decodeContent();
-
-        return $this->getValue($content);
+    /**
+     * {@inheritDoc}
+     */
+    protected function decodeContent(string $content): array
+    {
+        return json_decode($content, true);
     }
 }

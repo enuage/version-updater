@@ -23,23 +23,21 @@ use Enuage\VersionUpdaterBundle\Parser\FileParser;
  *
  * @author Serghei Niculaev <spam312sn@gmail.com>
  */
-class TextHandler extends AbstractHandler
+final class TextHandler extends AbstractHandler
 {
     /**
      * {@inheritDoc}
      */
-    public function handle(FileParser $parser, FormatterInterface $formatter): string
+    public function handle(FormatterInterface $formatter): string
     {
-        $matches = $parser->getMatches();
+        $matches = $this->getParser()->getMatches();
         $lastMatch = $matches->last();
         $lastMatchValue = !is_numeric($lastMatch) && $matches->count() > 12 ? $lastMatch : '';
-
-        $file = $parser->getFile();
 
         $content = preg_replace(
             $this->getPattern(),
             sprintf('${1}%s%s', $formatter->format(), $lastMatchValue),
-            $file->getContents()
+            parent::getFileContent()
         );
 
         return $content;
@@ -50,14 +48,6 @@ class TextHandler extends AbstractHandler
      */
     public function getPattern(): string
     {
-        return str_replace(FileParser::FILE_VERSION_PATTERN, FileParser::VERSION_PATTERN, $this->pattern);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public function getFileContent(FileParser $parser): string
-    {
-        return $parser->getFile()->getContents();
+        return $this->pattern->replace(FileParser::FILE_VERSION_PATTERN, FileParser::VERSION_PATTERN);
     }
 }

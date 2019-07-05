@@ -13,6 +13,7 @@
 namespace Enuage\VersionUpdaterBundle\Command;
 
 use Enuage\VersionUpdaterBundle\DTO\VersionOptions;
+use Enuage\VersionUpdaterBundle\Exception\FileNotFoundException;
 use Enuage\VersionUpdaterBundle\Finder\FilesFinder;
 use Enuage\VersionUpdaterBundle\Formatter\FileFormatter;
 use Enuage\VersionUpdaterBundle\Handler\AbstractHandler;
@@ -88,16 +89,20 @@ class UpdateVersionCommand extends ContainerAwareCommand
         $finder->setFiles($this->getContainer()->getParameter('enuage_version_updater.files'));
         $this->updateFiles($finder, new TextHandler());
 
-        $finder->setFiles($this->getContainer()->getParameter('enuage_version_updater.json'), 'json');
+        $finder->setFiles($this->getContainer()->getParameter('enuage_version_updater.json'));
+        $finder->setExtensions(JsonHandler::getExtensions());
         $this->updateFiles($finder, new JsonHandler());
 
-        $finder->setFiles($this->getContainer()->getParameter('enuage_version_updater.yaml'), 'yaml');
+        $finder->setFiles($this->getContainer()->getParameter('enuage_version_updater.yaml'));
+        $finder->setExtensions(YamlHandler::getExtensions());
         $this->updateFiles($finder, new YamlHandler());
     }
 
     /**
      * @param FilesFinder $finder
      * @param AbstractHandler $handler
+     *
+     * @throws FileNotFoundException
      */
     private function updateFiles(FilesFinder $finder, AbstractHandler $handler)
     {
