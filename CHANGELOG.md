@@ -1,5 +1,12 @@
 # Version updater command changelog
 
+### v1.3.1
+
+##### 2019-07-06 00:28
+
+- Fixed possible bug with `.yml` extension
+- Code improvements
+
 ### v1.3.0
 
 ##### 2019-06-30 09:51
