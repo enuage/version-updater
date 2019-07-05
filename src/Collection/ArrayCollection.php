@@ -16,6 +16,9 @@
 namespace Enuage\VersionUpdaterBundle\Collection;
 
 use Doctrine\Common\Collections\ArrayCollection as DoctrineArrayCollection;
+use Doctrine\Common\Collections\Collection;
+use Enuage\VersionUpdaterBundle\Helper\Type\StringType;
+use Iterator;
 
 /**
  * Class ArrayCollection
@@ -24,6 +27,16 @@ use Doctrine\Common\Collections\ArrayCollection as DoctrineArrayCollection;
  */
 class ArrayCollection extends DoctrineArrayCollection
 {
+    /**
+     * @param Iterator $iterator
+     *
+     * @return ArrayCollection
+     */
+    public static function fromIterator(Iterator $iterator): ArrayCollection
+    {
+        return new self(iterator_to_array($iterator));
+    }
+
     /**
      * @param string $key
      * @param null|mixed $default
@@ -39,5 +52,59 @@ class ArrayCollection extends DoctrineArrayCollection
         }
 
         return $value;
+    }
+
+    /**
+     * @param string $glue
+     *
+     * @return StringType
+     */
+    public function implode(string $glue): StringType
+    {
+        return new StringType(implode($glue, $this->toArray()));
+    }
+
+    /**
+     * @param $elements
+     *
+     * @return ArrayCollection
+     */
+    public function append($elements): ArrayCollection
+    {
+        if (is_array($elements)) {
+            array_map(
+                function ($element) {
+                    $this->add($element);
+                },
+                $elements
+            );
+        }
+
+        if ($elements instanceof Collection) {
+            $this->append($elements->toArray());
+        }
+
+        return $this;
+    }
+
+    /**
+     * @param $current
+     *
+     * @return null|mixed
+     */
+    public function getNext($current)
+    {
+        $iterator = $this->getIterator();
+        while ($iterator->valid()) {
+            if ($current === $iterator->current()) {
+                $iterator->next();
+
+                return $iterator->current();
+            }
+
+            $iterator->next();
+        }
+
+        return null;
     }
 }

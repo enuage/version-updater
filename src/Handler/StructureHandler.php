@@ -14,6 +14,36 @@ use Enuage\VersionUpdaterBundle\Formatter\FormatterInterface;
 abstract class StructureHandler extends AbstractHandler
 {
     /**
+     * @return array
+     */
+    abstract public static function getExtensions(): array;
+
+    /**
+     * {@inheritDoc}
+     */
+    public function getFileContent(): string
+    {
+        return $this->getValue($this->decodeContent(parent::getFileContent()));
+    }
+
+    /**
+     * @param array $content
+     *
+     * @return mixed
+     */
+    private function getValue(array $content)
+    {
+        $this->accessProperty(
+            $content,
+            static function ($property) use (&$value) {
+                $value = $property;
+            }
+        );
+
+        return $value;
+    }
+
+    /**
      * @param FormatterInterface $formatter
      *
      * @return array
@@ -31,6 +61,13 @@ abstract class StructureHandler extends AbstractHandler
 
         return $content;
     }
+
+    /**
+     * @param string $content
+     *
+     * @return array
+     */
+    abstract protected function decodeContent(string $content): array;
 
     /**
      * @param array $content
@@ -59,36 +96,4 @@ abstract class StructureHandler extends AbstractHandler
             }
         }
     }
-
-    /**
-     * @param array $content
-     *
-     * @return mixed
-     */
-    private function getValue(array $content)
-    {
-        $this->accessProperty(
-            $content,
-            static function ($property) use (&$value) {
-                $value = $property;
-            }
-        );
-
-        return $value;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public function getFileContent(): string
-    {
-        return $this->getValue($this->decodeContent(parent::getFileContent()));
-    }
-
-    /**
-     * @param string $content
-     *
-     * @return array
-     */
-    abstract protected function decodeContent(string $content): array;
 }

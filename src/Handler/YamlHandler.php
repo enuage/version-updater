@@ -28,6 +28,17 @@ final class YamlHandler extends StructureHandler
     /**
      * {@inheritDoc}
      */
+    public static function getExtensions(): array
+    {
+        return [
+            'yaml',
+            'yml',
+        ];
+    }
+
+    /**
+     * {@inheritDoc}
+     */
     public function handle(FormatterInterface $formatter): string
     {
         return Yaml::dump($this->updateProperty($formatter), 2, 2);

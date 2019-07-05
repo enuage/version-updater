@@ -1,4 +1,4 @@
-<?php
+<?php /** @noinspection PhpUnhandledExceptionInspection */
 /**
  * VersionMutatorTest
  *
@@ -20,7 +20,6 @@ use Enuage\VersionUpdaterBundle\DTO\VersionOptions;
 use Enuage\VersionUpdaterBundle\Formatter\VersionFormatter;
 use Enuage\VersionUpdaterBundle\Mutator\VersionMutator;
 use Enuage\VersionUpdaterBundle\Service\VersionService;
-use Exception;
 
 /**
  * Class VersionMutatorTest
@@ -34,9 +33,6 @@ class VersionMutatorTest extends FunctionalTestCase
      */
     private $service;
 
-    /**
-     * @throws Exception
-     */
     public function testUpdateMajorVersion()
     {
         $versionOptions = new VersionOptions();
@@ -63,9 +59,6 @@ class VersionMutatorTest extends FunctionalTestCase
         $this->assertEquals($expected, $versionFormatter->format());
     }
 
-    /**
-     * @throws Exception
-     */
     public function testUpdateMinorVersion()
     {
         $versionOptions = new VersionOptions();
@@ -76,9 +69,6 @@ class VersionMutatorTest extends FunctionalTestCase
         $this->assertVersions('1.0.0', $this->service->update('1', $versionOptions));
     }
 
-    /**
-     * @throws Exception
-     */
     public function testUpdatePatchVersion()
     {
         $versionOptions = new VersionOptions();
@@ -89,9 +79,6 @@ class VersionMutatorTest extends FunctionalTestCase
         $this->assertVersions('1.0.0', $this->service->update('1', $versionOptions));
     }
 
-    /**
-     * @throws Exception
-     */
     public function testUpdateAlpha()
     {
         $versionOptions = new VersionOptions();
@@ -112,9 +99,6 @@ class VersionMutatorTest extends FunctionalTestCase
         $this->assertVersions('1.0.0-alpha.1', $this->service->update('1-alpha.2', $versionOptions));
     }
 
-    /**
-     * @throws Exception
-     */
     public function testUpdateBeta()
     {
         $versionOptions = new VersionOptions();
@@ -135,9 +119,6 @@ class VersionMutatorTest extends FunctionalTestCase
         $this->assertVersions('1.0.0-beta.1', $this->service->update('1-beta.2', $versionOptions));
     }
 
-    /**
-     * @throws Exception
-     */
     public function testUpdateReleaseCandidate()
     {
         $versionOptions = new VersionOptions();
@@ -158,9 +139,6 @@ class VersionMutatorTest extends FunctionalTestCase
         $this->assertVersions('1.0.0-rc.1', $this->service->update('1-rc.2', $versionOptions));
     }
 
-    /**
-     * @throws Exception
-     */
     public function testIncreasePreReleaseVersion()
     {
         $versionOptions = new VersionOptions();
@@ -173,9 +151,6 @@ class VersionMutatorTest extends FunctionalTestCase
         $this->assertVersions('1.0.0-rc.1', $this->service->update('1.0.0-rc', $versionOptions));
     }
 
-    /**
-     * @throws Exception
-     */
     public function testDecreasePreReleaseVersion()
     {
         $versionOptions = new VersionOptions();
@@ -193,9 +168,6 @@ class VersionMutatorTest extends FunctionalTestCase
         $this->assertVersions('1.0.0', $this->service->update('1.0.0-rc', $versionOptions));
     }
 
-    /**
-     * @throws Exception
-     */
     public function testPreReleaseVersionModifications()
     {
         $versionOptions = new VersionOptions();
@@ -205,9 +177,6 @@ class VersionMutatorTest extends FunctionalTestCase
         $this->assertVersions('1.0.0-alpha.2', $this->service->update('1.0.0-alpha.2', $versionOptions));
     }
 
-    /**
-     * @throws Exception
-     */
     public function testRelease()
     {
         $versionOptions = new VersionOptions();
@@ -222,9 +191,6 @@ class VersionMutatorTest extends FunctionalTestCase
         $this->assertVersions('1.0.0', $this->service->update('1.0.0-rc.1', $versionOptions));
     }
 
-    /**
-     * @throws Exception
-     */
     public function testVersionMultipleModifications()
     {
         $versionOptions = new VersionOptions();
@@ -268,9 +234,6 @@ class VersionMutatorTest extends FunctionalTestCase
         $this->assertVersions('1.0.0-beta', $this->service->update('1.0.0-alpha', $versionOptions));
     }
 
-    /**
-     * @throws Exception
-     */
     public function testAddMeta()
     {
         $date = new DateTime();

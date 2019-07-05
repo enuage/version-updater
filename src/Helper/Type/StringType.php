@@ -12,18 +12,32 @@ use Enuage\VersionUpdaterBundle\Collection\ArrayCollection;
 class StringType
 {
     /**
-     * @var string|null
+     * @var string
      */
     private $value;
+
+    /**
+     * @var string
+     */
+    private $initialValue;
 
     /**
      * StringType constructor.
      *
      * @param string $value
      */
-    public function __construct(string $value)
+    public function __construct(string $value = '')
     {
         $this->value = $value;
+        $this->initialValue = $value;
+    }
+
+    /**
+     * @return null|string
+     */
+    public function __toString(): string
+    {
+        return $this->value;
     }
 
     /**
@@ -53,5 +67,35 @@ class StringType
     public function replace($search, $replace)
     {
         return str_replace($search, $replace, $this->value);
+    }
+
+    /**
+     * @param string $string
+     *
+     * @return StringType
+     */
+    public function append(string $string): StringType
+    {
+        $this->value .= $string;
+
+        return $this;
+    }
+
+    /**
+     * @return StringType
+     */
+    public function reset(): StringType
+    {
+        $this->value = $this->initialValue;
+
+        return $this;
+    }
+
+    /**
+     * @return string
+     */
+    public function getInitialValue(): string
+    {
+        return $this->initialValue;
     }
 }

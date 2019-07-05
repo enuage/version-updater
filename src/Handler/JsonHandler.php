@@ -27,6 +27,16 @@ final class JsonHandler extends StructureHandler
     /**
      * {@inheritDoc}
      */
+    public static function getExtensions(): array
+    {
+        return [
+            'json',
+        ];
+    }
+
+    /**
+     * {@inheritDoc}
+     */
     public function handle(FormatterInterface $formatter): string
     {
         return json_encode($this->updateProperty($formatter), JSON_PRETTY_PRINT).PHP_EOL;
