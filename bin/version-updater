@@ -1,0 +1,41 @@
+#!/usr/bin/env php
+<?php declare(strict_types = 1);
+
+use Enuage\VersionUpdaterBundle\Command\UpdateVersionCommand;
+use Enuage\VersionUpdaterBundle\Console\ConsoleKernel;
+use Symfony\Bundle\FrameworkBundle\Console\Application;
+use Symfony\Component\Yaml\Yaml;
+
+gc_disable();
+
+$prodAutoload = getcwd().'/vendor/autoload.php';
+if (is_file($prodAutoload)) {
+    /** @noinspection PhpIncludeInspection */
+    require_once $prodAutoload;
+}
+
+$devAutoload = __DIR__.'/../vendor/autoload.php';
+if (is_file($devAutoload)) {
+    /** @noinspection PhpIncludeInspection */
+    require_once $devAutoload;
+}
+
+$composer = json_decode(file_get_contents(__DIR__.'/../composer.json'));
+
+$kernel = new ConsoleKernel('prod', false);
+$application = new Application($kernel);
+$command = new UpdateVersionCommand();
+
+$configurationFile = $kernel->getProjectDir().'/.enuage';
+if (is_file($configurationFile)) {
+    $command->setConfigurations(Yaml::parse(file_get_contents($configurationFile)));
+}
+
+$application->setName('éNuage version updater command');
+$application->setVersion($composer->version);
+
+$application->add($command);
+$application->setDefaultCommand(UpdateVersionCommand::COMMAND_NAME, true);
+
+/** @noinspection PhpUnhandledExceptionInspection */
+$application->run();

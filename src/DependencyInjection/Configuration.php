@@ -28,8 +28,8 @@ class Configuration implements ConfigurationInterface
      */
     public function getConfigTreeBuilder(): TreeBuilder
     {
-        $treeBuilder = new TreeBuilder();
-        $rootNode = $treeBuilder->root('enuage_version_updater');
+        $treeBuilder = new TreeBuilder('enuage_version_updater');
+        $rootNode = $treeBuilder->getRootNode();
         $rootNode->append($this->getFilesNode('files'));
         $rootNode->append($this->getFilesNode('json'));
         $rootNode->append($this->getFilesNode('yaml'));

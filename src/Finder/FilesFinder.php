@@ -93,7 +93,7 @@ class FilesFinder
         $fileName = new StringType($pathToFile->last());
         $pathToFile->removeElement($pathToFile->last());
 
-        $absolutePath = new ArrayCollection([$this->rootDirectory, '..']);
+        $absolutePath = new ArrayCollection([$this->rootDirectory]);
         $absolutePath->append($pathToFile);
 
         $directory = $absolutePath->implode(DIRECTORY_SEPARATOR)->append(DIRECTORY_SEPARATOR);
@@ -117,7 +117,10 @@ class FilesFinder
         }
 
         $finder = new Finder();
-        $finder->files()->in($directory)->name($name);
+        $finder->files();
+        $finder->in($directory);
+        $finder->notPath('vendor');
+        $finder->name($name);
 
         $file = ArrayCollection::fromIterator($finder->getIterator())->first();
 
@@ -134,6 +137,7 @@ class FilesFinder
 
             return $this->findFile($directory, $name, $extension);
         }
+
 
         return $file;
     }

@@ -5,9 +5,9 @@ framework:
     storage_id: session.storage.mock_file
 enuage_version_updater:
   files:
-    - support/file.txt: /^(version=)\V/m
+    - tests/support/file.txt: /^(version=)\V/m
   json:
-    - support/composer: version
-    - support/doc/api: info/version
+    - tests/support/composer: version
+    - tests/support/doc/api: info/version
   yaml:
-    - support/doc/api: info/version
+    - tests/support/doc/api: info/version

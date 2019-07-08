@@ -12,12 +12,14 @@
 
 namespace Enuage\VersionUpdaterBundle\Command;
 
+use Enuage\VersionUpdaterBundle\Collection\ArrayCollection;
 use Enuage\VersionUpdaterBundle\DTO\VersionOptions;
 use Enuage\VersionUpdaterBundle\Exception\FileNotFoundException;
 use Enuage\VersionUpdaterBundle\Finder\FilesFinder;
 use Enuage\VersionUpdaterBundle\Formatter\FileFormatter;
 use Enuage\VersionUpdaterBundle\Handler\AbstractHandler;
 use Enuage\VersionUpdaterBundle\Handler\JsonHandler;
+use Enuage\VersionUpdaterBundle\Handler\StructureHandler;
 use Enuage\VersionUpdaterBundle\Handler\TextHandler;
 use Enuage\VersionUpdaterBundle\Handler\YamlHandler;
 use Enuage\VersionUpdaterBundle\Mutator\VersionMutator;
@@ -39,17 +41,54 @@ use Symfony\Component\Console\Output\OutputInterface;
  */
 class UpdateVersionCommand extends ContainerAwareCommand
 {
+    const COMMAND_NAME = 'enuage:version:update';
+
+    const HANDLERS = [
+        'files' => TextHandler::class,
+        'json' => JsonHandler::class,
+        'yaml' => YamlHandler::class,
+    ];
+
     /**
      * @var VersionOptions
      */
     private $options;
 
     /**
+     * @var ArrayCollection
+     */
+    private $configurations;
+
+    /**
+     * UpdateVersionCommand constructor.
+     *
+     * @param string $name
+     */
+    public function __construct(string $name = self::COMMAND_NAME)
+    {
+        parent::__construct($name);
+
+        $this->configurations = new ArrayCollection();
+    }
+
+    /**
+     * @param array $configurations
+     *
+     * @return UpdateVersionCommand
+     */
+    public function setConfigurations(array $configurations): UpdateVersionCommand
+    {
+        $this->configurations = new ArrayCollection($configurations);
+
+        return $this;
+    }
+
+    /**
      * {@inheritdoc}
      */
     protected function configure()
     {
-        $this->setName('enuage:version:update');
+        $this->setName(self::COMMAND_NAME);
         $this->setDescription('Update the version in project files');
         $this->addArgument('version', InputArgument::OPTIONAL, 'New version tag');
         $this->addOption('major', null, InputOption::VALUE_NONE, 'Update major version');
@@ -84,18 +123,27 @@ class UpdateVersionCommand extends ContainerAwareCommand
         $this->options = CommandOptionsParser::parse($input);
 
         $finder = new FilesFinder();
-        $finder->setRootDirectory($this->getContainer()->getParameter('kernel.root_dir'));
+        $finder->setRootDirectory($this->getContainer()->getParameter('kernel.project_dir'));
 
-        $finder->setFiles($this->getContainer()->getParameter('enuage_version_updater.files'));
-        $this->updateFiles($finder, new TextHandler());
+        foreach (self::HANDLERS as $type => $handler) {
+            $files = $this->configurations->get($type);
 
-        $finder->setFiles($this->getContainer()->getParameter('enuage_version_updater.json'));
-        $finder->setExtensions(JsonHandler::getExtensions());
-        $this->updateFiles($finder, new JsonHandler());
+            $parameter = 'enuage_version_updater.'.$type;
+            if ($this->getContainer()->hasParameter($parameter)) {
+                $files = $this->getContainer()->getParameter($parameter);
+            }
 
-        $finder->setFiles($this->getContainer()->getParameter('enuage_version_updater.yaml'));
-        $finder->setExtensions(YamlHandler::getExtensions());
-        $this->updateFiles($finder, new YamlHandler());
+            if ($files) {
+                $finder->setFiles($files);
+
+                $handler = new $handler();
+                if ($handler instanceof StructureHandler) {
+                    $finder->setExtensions($handler::getExtensions());
+                }
+
+                $this->updateFiles($finder, $handler);
+            }
+        }
     }
 
     /**
