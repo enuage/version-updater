@@ -21,6 +21,8 @@ use Enuage\VersionUpdaterBundle\ValueObject\VersionModifier;
  * Class VersionModifierCollection
  *
  * @author Serghei Niculaev <spam312sn@gmail.com>
+ *
+ * @method VersionModifier get($key, $default = null)
  */
 class VersionModifierCollection extends ArrayCollection
 {
@@ -48,16 +50,6 @@ class VersionModifierCollection extends ArrayCollection
     public function enable(string $type)
     {
         $this->get($type)->enable();
-    }
-
-    /**
-     * @param $key
-     *
-     * @return VersionModifier
-     */
-    public function get($key): VersionModifier
-    {
-        return parent::get($key);
     }
 
     /**

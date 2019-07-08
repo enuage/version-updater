@@ -41,17 +41,22 @@ class ArrayCollection extends DoctrineArrayCollection
      * @param string $key
      * @param null|mixed $default
      *
-     * @return mixed
+     * @return mixed|null
      */
     public function getValue(string $key, $default = null)
     {
-        $value = $this->get($key);
+        return $this->containsKey($key) ? $this->get($key) : $default;
+    }
 
-        if (!$value) {
-            $value = $default;
-        }
-
-        return $value;
+    /**
+     * @param string $key
+     * @param null $default
+     *
+     * @return int
+     */
+    public function getIntValue(string $key, $default = null): int
+    {
+        return (int) $this->getValue($key, $default);
     }
 
     /**
@@ -94,17 +99,21 @@ class ArrayCollection extends DoctrineArrayCollection
      */
     public function getNext($current)
     {
+        $result = null;
         $iterator = $this->getIterator();
+
         while ($iterator->valid()) {
             if ($current === $iterator->current()) {
                 $iterator->next();
 
-                return $iterator->current();
+                $result = $iterator->current();
+
+                break;
             }
 
             $iterator->next();
         }
 
-        return null;
+        return $result;
     }
 }

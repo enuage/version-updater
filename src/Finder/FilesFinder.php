@@ -91,7 +91,7 @@ class FilesFinder
         $pathToFile = (new StringType($path))->explode(DIRECTORY_SEPARATOR);
 
         $fileName = new StringType($pathToFile->last());
-        $pathToFile->remove($pathToFile->count() - 1);
+        $pathToFile->removeElement($pathToFile->last());
 
         $absolutePath = new ArrayCollection([$this->rootDirectory, '..']);
         $absolutePath->append($pathToFile);
