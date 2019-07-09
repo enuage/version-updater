@@ -54,6 +54,20 @@ class FilesFinder
     }
 
     /**
+     * @param string $path
+     *
+     * @return SplFileInfo
+     *
+     * @throws FileNotFoundException
+     */
+    public static function getFileFromPath(string $path)
+    {
+        $self = new self();
+
+        return $self->getFile($path);
+    }
+
+    /**
      * @param array $files
      *
      * @return FilesFinder
@@ -86,7 +100,7 @@ class FilesFinder
      *
      * @throws FileNotFoundException
      */
-    private function getFile(string $path): SplFileInfo
+    public function getFile(string $path): SplFileInfo
     {
         $pathToFile = (new StringType($path))->explode(DIRECTORY_SEPARATOR);
 
@@ -97,6 +111,10 @@ class FilesFinder
         $absolutePath->append($pathToFile);
 
         $directory = $absolutePath->implode(DIRECTORY_SEPARATOR)->append(DIRECTORY_SEPARATOR);
+
+        if ($directory->isEqualTo(DIRECTORY_SEPARATOR)) {
+            $directory = new StringType('.');
+        }
 
         return $this->findFile($directory, $fileName);
     }
@@ -122,6 +140,7 @@ class FilesFinder
         $finder->notPath('vendor');
         $finder->depth(0); // Restrict recursive search
         $finder->name($name);
+        $finder->ignoreDotFiles(false);
 
         $file = ArrayCollection::fromIterator($finder->getIterator())->first();
 

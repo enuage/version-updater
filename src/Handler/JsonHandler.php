@@ -48,7 +48,7 @@ final class JsonHandler extends StructureHandler
     /**
      * {@inheritDoc}
      */
-    protected function decodeContent(string $content): array
+    public function decodeContent(string $content): array
     {
         return json_decode($content, true);
     }

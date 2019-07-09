@@ -98,4 +98,14 @@ class StringType
     {
         return $this->initialValue;
     }
+
+    /**
+     * @param string $value
+     *
+     * @return bool
+     */
+    public function isEqualTo(string $value): bool
+    {
+        return $value === $this->value;
+    }
 }

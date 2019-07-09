@@ -28,7 +28,7 @@ $application = new Application($kernel);
 $configurations = null;
 $configurationFile = $kernel->getProjectDir().'/.enuage';
 if (is_file($configurationFile)) {
-    $configurations = ConfigurationParser::parseFile(file_get_contents($configurationFile));
+    $configurations = ConfigurationParser::parseFile('.enuage');
 }
 
 $command = new UpdateVersionCommand($configurations);

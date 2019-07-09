@@ -3,7 +3,9 @@
 namespace Enuage\VersionUpdaterBundle\Parser;
 
 use Enuage\VersionUpdaterBundle\Collection\ArrayCollection;
-use Symfony\Component\Yaml\Yaml;
+use Enuage\VersionUpdaterBundle\Exception\FileNotFoundException;
+use Enuage\VersionUpdaterBundle\Finder\FilesFinder;
+use Enuage\VersionUpdaterBundle\Handler\YamlHandler;
 
 /**
  * Class ConfigurationParser
@@ -38,13 +40,17 @@ class ConfigurationParser
     }
 
     /**
-     * @param string $content
+     * @param string $path
      *
      * @return ConfigurationParser
+     *
+     * @throws FileNotFoundException
      */
-    public static function parseFile(string $content)
+    public static function parseFile(string $path)
     {
-        return new self(Yaml::parse($content));
+        $fileParser = new FileParser(FilesFinder::getFileFromPath($path), new YamlHandler());
+
+        return new self($fileParser->decodeContent());
     }
 
     /**
