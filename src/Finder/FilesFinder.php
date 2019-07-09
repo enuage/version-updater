@@ -120,6 +120,7 @@ class FilesFinder
         $finder->files();
         $finder->in($directory);
         $finder->notPath('vendor');
+        $finder->depth(0); // Restrict recursive search
         $finder->name($name);
 
         $file = ArrayCollection::fromIterator($finder->getIterator())->first();

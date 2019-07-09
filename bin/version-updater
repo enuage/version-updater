@@ -3,8 +3,8 @@
 
 use Enuage\VersionUpdaterBundle\Command\UpdateVersionCommand;
 use Enuage\VersionUpdaterBundle\Console\ConsoleKernel;
+use Enuage\VersionUpdaterBundle\Parser\ConfigurationParser;
 use Symfony\Bundle\FrameworkBundle\Console\Application;
-use Symfony\Component\Yaml\Yaml;
 
 gc_disable();
 
@@ -24,12 +24,14 @@ $composer = json_decode(file_get_contents(__DIR__.'/../composer.json'));
 
 $kernel = new ConsoleKernel('prod', false);
 $application = new Application($kernel);
-$command = new UpdateVersionCommand();
 
+$configurations = null;
 $configurationFile = $kernel->getProjectDir().'/.enuage';
 if (is_file($configurationFile)) {
-    $command->setConfigurations(Yaml::parse(file_get_contents($configurationFile)));
+    $configurations = ConfigurationParser::parseFile(file_get_contents($configurationFile));
 }
+
+$command = new UpdateVersionCommand($configurations);
 
 $application->setName('éNuage version updater command');
 $application->setVersion($composer->version);

@@ -23,12 +23,14 @@ use Symfony\Component\Config\Definition\ConfigurationInterface;
  */
 class Configuration implements ConfigurationInterface
 {
+    const CONFIG_ROOT = 'enuage_version_updater';
+
     /**
      * {@inheritdoc}
      */
     public function getConfigTreeBuilder(): TreeBuilder
     {
-        $treeBuilder = new TreeBuilder('enuage_version_updater');
+        $treeBuilder = new TreeBuilder(self::CONFIG_ROOT);
         $rootNode = $treeBuilder->getRootNode();
         $rootNode->append($this->getFilesNode('files'));
         $rootNode->append($this->getFilesNode('json'));

@@ -44,8 +44,10 @@ class EnuageVersionUpdaterExtension extends Extension
         $loader = new Loader\YamlFileLoader($container, new FileLocator(__DIR__.'/../Resources/config'));
         $loader->load('services.yml');
 
+        $container->setParameter(Configuration::CONFIG_ROOT, $config);
+
         foreach (self::MAIN_TYPES as $type) {
-            $container->setParameter('enuage_version_updater.'.$type, $config[$type]);
+            $container->setParameter(Configuration::CONFIG_ROOT.'.'.$type, $config[$type]);
         }
     }
 }

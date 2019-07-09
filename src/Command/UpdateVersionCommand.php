@@ -13,6 +13,7 @@
 namespace Enuage\VersionUpdaterBundle\Command;
 
 use Enuage\VersionUpdaterBundle\Collection\ArrayCollection;
+use Enuage\VersionUpdaterBundle\DependencyInjection\Configuration;
 use Enuage\VersionUpdaterBundle\DTO\VersionOptions;
 use Enuage\VersionUpdaterBundle\Exception\FileNotFoundException;
 use Enuage\VersionUpdaterBundle\Finder\FilesFinder;
@@ -25,6 +26,7 @@ use Enuage\VersionUpdaterBundle\Handler\YamlHandler;
 use Enuage\VersionUpdaterBundle\Mutator\VersionMutator;
 use Enuage\VersionUpdaterBundle\Parser\AbstractParser;
 use Enuage\VersionUpdaterBundle\Parser\CommandOptionsParser;
+use Enuage\VersionUpdaterBundle\Parser\ConfigurationParser;
 use Enuage\VersionUpdaterBundle\Parser\FileParser;
 use Enuage\VersionUpdaterBundle\Parser\VersionParser;
 use Exception;
@@ -62,13 +64,13 @@ class UpdateVersionCommand extends ContainerAwareCommand
     /**
      * UpdateVersionCommand constructor.
      *
-     * @param string $name
+     * @param ConfigurationParser $configurations
      */
-    public function __construct(string $name = self::COMMAND_NAME)
+    public function __construct(ConfigurationParser $configurations = null)
     {
-        parent::__construct($name);
+        parent::__construct(self::COMMAND_NAME);
 
-        $this->configurations = new ArrayCollection();
+        $this->configurations = $configurations ?: new ConfigurationParser();
     }
 
     /**
@@ -125,15 +127,14 @@ class UpdateVersionCommand extends ContainerAwareCommand
         $finder = new FilesFinder();
         $finder->setRootDirectory($this->getContainer()->getParameter('kernel.project_dir'));
 
-        foreach (self::HANDLERS as $type => $handler) {
-            $files = $this->configurations->get($type);
-
-            $parameter = 'enuage_version_updater.'.$type;
-            if ($this->getContainer()->hasParameter($parameter)) {
-                $files = $this->getContainer()->getParameter($parameter);
+        if ($this->getContainer()->hasParameter(Configuration::CONFIG_ROOT)) {
+            if ($configuration = $this->getContainer()->getParameter(Configuration::CONFIG_ROOT)) {
+                $this->configurations = ConfigurationParser::parseConfiguration($configuration);
             }
+        }
 
-            if ($files) {
+        foreach (self::HANDLERS as $type => $handler) {
+            if ($files = $this->configurations->getFiles($type)) {
                 $finder->setFiles($files);
 
                 $handler = new $handler();
