@@ -26,9 +26,10 @@ $kernel = new ConsoleKernel('prod', false);
 $application = new Application($kernel);
 
 $configurations = null;
-$configurationFile = $kernel->getProjectDir().'/.enuage';
-if (is_file($configurationFile)) {
-    $configurations = ConfigurationParser::parseFile('.enuage');
+$configurationFile = '.enuage';
+$configurationFilePath = $kernel->getProjectDir().DIRECTORY_SEPARATOR.$configurationFile;
+if (is_file($configurationFilePath)) {
+    $configurations = ConfigurationParser::parseFile($configurationFile);
 }
 
 $command = new UpdateVersionCommand($configurations);
