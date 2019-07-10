@@ -17,7 +17,9 @@ namespace Enuage\VersionUpdaterBundle\Finder;
 
 use Closure;
 use Enuage\VersionUpdaterBundle\Collection\ArrayCollection;
+use Enuage\VersionUpdaterBundle\DependencyInjection\Configuration;
 use Enuage\VersionUpdaterBundle\Exception\FileNotFoundException;
+use Enuage\VersionUpdaterBundle\Exception\InvalidFileException;
 use Enuage\VersionUpdaterBundle\Helper\Type\StringType;
 use Enuage\VersionUpdaterBundle\Normalizer\FilesArrayNormalizer;
 use Symfony\Component\Finder\Finder;
@@ -54,20 +56,6 @@ class FilesFinder
     }
 
     /**
-     * @param string $path
-     *
-     * @return SplFileInfo
-     *
-     * @throws FileNotFoundException
-     */
-    public static function getFileFromPath(string $path)
-    {
-        $self = new self();
-
-        return $self->getFile($path);
-    }
-
-    /**
      * @param array $files
      *
      * @return FilesFinder
@@ -83,6 +71,7 @@ class FilesFinder
      * @param Closure $closure
      *
      * @throws FileNotFoundException
+     * @throws InvalidFileException
      */
     public function iterate(Closure $closure)
     {
@@ -95,22 +84,41 @@ class FilesFinder
 
     /**
      * @param string $path
+     * @param bool $isConfiguration
      *
      * @return SplFileInfo
      *
      * @throws FileNotFoundException
+     * @throws InvalidFileException
      */
-    public function getFile(string $path): SplFileInfo
+    public function getFile(string $path, bool $isConfiguration = false): SplFileInfo
     {
-        $pathToFile = (new StringType($path))->explode(DIRECTORY_SEPARATOR);
-
-        $fileName = new StringType($pathToFile->last());
-        $pathToFile->removeElement($pathToFile->last());
+        $pathToFile = new StringType($path);
 
         $absolutePath = new ArrayCollection([$this->rootDirectory]);
         $absolutePath->append($pathToFile);
 
-        $directory = $absolutePath->implode(DIRECTORY_SEPARATOR)->append(DIRECTORY_SEPARATOR);
+        $isPathFromRoot = $this->isFromRoot($pathToFile);
+        $pathToFile = $pathToFile->explode(DIRECTORY_SEPARATOR, StringType::REMOVE_EMPTY_ELEMENTS);
+
+        if ($isPathFromRoot) {
+            $absolutePath = $pathToFile;
+        }
+
+        $fileName = new StringType($isConfiguration ? Configuration::CONFIG_FILE : $pathToFile->last());
+        if (!$isConfiguration || ($isConfiguration && Configuration::CONFIG_FILE === $pathToFile->last())) {
+            $pathToFile->removeElement($pathToFile->last());
+        }
+
+        $directory = ($isPathFromRoot ? $absolutePath : $pathToFile)->implode(DIRECTORY_SEPARATOR);
+
+        if (!$directory->endsWith(DIRECTORY_SEPARATOR)) {
+            $directory->append(DIRECTORY_SEPARATOR);
+        }
+
+        if ($isPathFromRoot && !$directory->startsWith(DIRECTORY_SEPARATOR)) {
+            $directory->prepend(DIRECTORY_SEPARATOR);
+        }
 
         if ($directory->isEqualTo(DIRECTORY_SEPARATOR)) {
             $directory = new StringType('.');
@@ -127,11 +135,20 @@ class FilesFinder
      * @return SplFileInfo
      *
      * @throws FileNotFoundException
+     * @throws InvalidFileException
      */
     private function findFile(StringType $directory, StringType $name, string $fileExtension = null): SplFileInfo
     {
+        if ($name->isEmpty()) {
+            throw new InvalidFileException($directory, $name);
+        }
+
         if (null !== $fileExtension) {
             $name->reset()->append('.')->append($fileExtension);
+        }
+
+        if (!$directory->startsWith('.')) {
+            $directory = preg_quote($directory, null);
         }
 
         $finder = new Finder();
@@ -158,6 +175,9 @@ class FilesFinder
             return $this->findFile($directory, $name, $extension);
         }
 
+        if (!$finder->hasResults()) {
+            throw new FileNotFoundException($directory, $name->getInitialValue(), $this->extensions);
+        }
 
         return $file;
     }
@@ -192,5 +212,15 @@ class FilesFinder
         $this->extensions = new ArrayCollection($extensions);
 
         return $this;
+    }
+
+    /**
+     * @param StringType $path
+     *
+     * @return bool
+     */
+    private function isFromRoot(StringType $path): bool
+    {
+        return $path->startsWith(DIRECTORY_SEPARATOR) || $path->startsWith('~/');
     }
 }

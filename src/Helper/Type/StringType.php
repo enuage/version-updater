@@ -11,6 +11,9 @@ use Enuage\VersionUpdaterBundle\Collection\ArrayCollection;
  */
 class StringType
 {
+    const REMOVE_EMPTY_ELEMENTS = 1;
+    const EMPTY_VALUE = '';
+
     /**
      * @var string
      */
@@ -26,7 +29,7 @@ class StringType
      *
      * @param string $value
      */
-    public function __construct(string $value = '')
+    public function __construct(string $value = self::EMPTY_VALUE)
     {
         $this->value = $value;
         $this->initialValue = $value;
@@ -42,15 +45,24 @@ class StringType
 
     /**
      * @param string $delimiter
+     * @param int $mode
      *
      * @return ArrayCollection
      *
      * @see  explode()
      * @link https://php.net/manual/en/function.explode.php
      */
-    public function explode(string $delimiter): ArrayCollection
+    public function explode(string $delimiter, int $mode = 0): ArrayCollection
     {
         $result = $this->value ? explode($delimiter, $this->value) : [];
+
+        if (self::REMOVE_EMPTY_ELEMENTS === $mode) {
+            foreach ($result as $key => $element) {
+                if (empty($element)) {
+                    unset($result[$key]);
+                }
+            }
+        }
 
         return new ArrayCollection($result);
     }
@@ -107,5 +119,45 @@ class StringType
     public function isEqualTo(string $value): bool
     {
         return $value === $this->value;
+    }
+
+    /**
+     * @param string $value
+     *
+     * @return bool
+     */
+    public function startsWith(string $value): bool
+    {
+        return 0 === substr_compare($this->value, $value, 0, strlen($value));
+    }
+
+    /**
+     * @param string $value
+     *
+     * @return bool
+     */
+    public function endsWith(string $value): bool
+    {
+        return 0 === substr_compare($this->value, $value, -strlen($value));
+    }
+
+    /**
+     * @param string $value
+     *
+     * @return StringType
+     */
+    public function prepend(string $value): StringType
+    {
+        $this->value = $value.$this->value;
+
+        return $this;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isEmpty(): bool
+    {
+        return self::EMPTY_VALUE === $this->value;
     }
 }

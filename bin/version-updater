@@ -3,6 +3,7 @@
 
 use Enuage\VersionUpdaterBundle\Command\UpdateVersionCommand;
 use Enuage\VersionUpdaterBundle\Console\ConsoleKernel;
+use Enuage\VersionUpdaterBundle\DependencyInjection\Configuration;
 use Enuage\VersionUpdaterBundle\Parser\ConfigurationParser;
 use Symfony\Bundle\FrameworkBundle\Console\Application;
 
@@ -26,10 +27,9 @@ $kernel = new ConsoleKernel('prod', false);
 $application = new Application($kernel);
 
 $configurations = null;
-$configurationFile = '.enuage';
-$configurationFilePath = $kernel->getProjectDir().DIRECTORY_SEPARATOR.$configurationFile;
+$configurationFilePath = $kernel->getProjectDir().DIRECTORY_SEPARATOR.Configuration::CONFIG_FILE;
 if (is_file($configurationFilePath)) {
-    $configurations = ConfigurationParser::parseFile($configurationFile);
+    $configurations = ConfigurationParser::parseFile(Configuration::CONFIG_FILE);
 }
 
 $command = new UpdateVersionCommand($configurations);

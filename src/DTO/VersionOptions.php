@@ -22,6 +22,8 @@ use Enuage\VersionUpdaterBundle\ValueObject\MetaComponent;
 use Enuage\VersionUpdaterBundle\ValueObject\Version;
 use Enuage\VersionUpdaterBundle\ValueObject\VersionModifier;
 use Exception;
+use Symfony\Component\Console\Helper\Table;
+use Symfony\Component\Console\Output\OutputInterface;
 
 /**
  * Class VersionOptions
@@ -363,5 +365,52 @@ class VersionOptions
         foreach ($this->getPreReleaseModifiers()->getIterator() as $type) {
             $type->disable();
         }
+    }
+
+    /**
+     * @param OutputInterface $output
+     *
+     * @return Table
+     */
+    public function consoleDebug(OutputInterface $output): Table
+    {
+        $table = new Table($output);
+        $table->addRow(['Set version', $this->getVersion() ?? 'N\\A']);
+        foreach (Version::MAIN_VERSIONS as $version) {
+            $table->addRow(
+                ['Update '.$version, $this->addBooleanDebugCell($this->isMainVersionUpdated($version))]
+            );
+        }
+
+        $table->addRow(['Downgrade', $this->addBooleanDebugCell($this->isDowngrade())]);
+
+        foreach (Version::PRE_RELEASE_VERSIONS as $version) {
+            $table->addRow(
+                [
+                    'Update '.$version,
+                    $this->addBooleanDebugCell($this->getPreReleaseModifiers()->get($version)->isEnabled()),
+                ]
+            );
+        }
+
+        $table->addRow(['Is release', $this->addBooleanDebugCell($this->isRelease())]);
+
+        foreach ([Version::META_DATE, Version::META] as $meta) {
+            $table->addRow(
+                ['Add '.$meta, $this->addBooleanDebugCell($this->getMetaComponents()->containsKey($meta))]
+            );
+        }
+
+        return $table;
+    }
+
+    /**
+     * @param bool $status
+     *
+     * @return string
+     */
+    private function addBooleanDebugCell(bool $status): string
+    {
+        return $status ? 'Yes' : 'No';
     }
 }

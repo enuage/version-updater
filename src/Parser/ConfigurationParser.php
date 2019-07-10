@@ -4,6 +4,7 @@ namespace Enuage\VersionUpdaterBundle\Parser;
 
 use Enuage\VersionUpdaterBundle\Collection\ArrayCollection;
 use Enuage\VersionUpdaterBundle\Exception\FileNotFoundException;
+use Enuage\VersionUpdaterBundle\Exception\InvalidFileException;
 use Enuage\VersionUpdaterBundle\Finder\FilesFinder;
 use Enuage\VersionUpdaterBundle\Handler\YamlHandler;
 
@@ -34,21 +35,27 @@ class ConfigurationParser
      *
      * @return ConfigurationParser
      */
-    public static function parseConfiguration(array $parameters)
+    public static function parseConfiguration(array $parameters): ConfigurationParser
     {
         return new self($parameters);
     }
 
     /**
      * @param string $path
+     * @param FilesFinder|null $finder
      *
      * @return ConfigurationParser
      *
      * @throws FileNotFoundException
+     * @throws InvalidFileException
      */
-    public static function parseFile(string $path)
+    public static function parseFile(string $path, FilesFinder $finder = null): ConfigurationParser
     {
-        $fileParser = new FileParser(FilesFinder::getFileFromPath($path), new YamlHandler());
+        if(null === $finder) {
+            $finder = new FilesFinder();
+        }
+
+        $fileParser = new FileParser($finder->getFile($path, true), new YamlHandler());
 
         return new self($fileParser->decodeContent());
     }

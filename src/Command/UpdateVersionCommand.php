@@ -16,6 +16,7 @@ use Enuage\VersionUpdaterBundle\Collection\ArrayCollection;
 use Enuage\VersionUpdaterBundle\DependencyInjection\Configuration;
 use Enuage\VersionUpdaterBundle\DTO\VersionOptions;
 use Enuage\VersionUpdaterBundle\Exception\FileNotFoundException;
+use Enuage\VersionUpdaterBundle\Exception\InvalidFileException;
 use Enuage\VersionUpdaterBundle\Finder\FilesFinder;
 use Enuage\VersionUpdaterBundle\Formatter\FileFormatter;
 use Enuage\VersionUpdaterBundle\Handler\AbstractHandler;
@@ -60,6 +61,16 @@ class UpdateVersionCommand extends ContainerAwareCommand
      * @var ArrayCollection
      */
     private $configurations;
+
+    /**
+     * @var string
+     */
+    private $version;
+
+    /**
+     * @var OutputInterface
+     */
+    private $output;
 
     /**
      * UpdateVersionCommand constructor.
@@ -113,16 +124,32 @@ class UpdateVersionCommand extends ContainerAwareCommand
         // Metadata
         $this->addOption('date', null, InputOption::VALUE_OPTIONAL, 'Add date metadata to the version');
         $this->addOption('meta', null, InputOption::VALUE_OPTIONAL, 'Add metadata to the version');
+
+        $this->addOption(
+            'config',
+            null,
+            InputOption::VALUE_OPTIONAL,
+            'Path to configuration file or to the directory with ".enuage" file',
+            Configuration::CONFIG_FILE
+        );
     }
 
     /**
      * {@inheritdoc}
      *
      * @throws Exception
+     * @throws FileNotFoundException
+     * @throws InvalidFileException
      */
     protected function execute(InputInterface $input, OutputInterface $output)
     {
+        $output->writeln('<info>Started files updating.</info>');
+
         $this->options = CommandOptionsParser::parse($input);
+
+        if ($output->isVerbose()) {
+            $this->options->consoleDebug($output)->render();
+        }
 
         $finder = new FilesFinder();
         $finder->setRootDirectory($this->getContainer()->getParameter('kernel.project_dir'));
@@ -133,6 +160,11 @@ class UpdateVersionCommand extends ContainerAwareCommand
             }
         }
 
+        if ($input->hasOption('config')) {
+            $this->configurations = ConfigurationParser::parseFile($input->getOption('config'), $finder);
+        }
+
+        $this->output = $output;
         foreach (self::HANDLERS as $type => $handler) {
             if ($files = $this->configurations->getFiles($type)) {
                 $finder->setFiles($files);
@@ -145,6 +177,8 @@ class UpdateVersionCommand extends ContainerAwareCommand
                 $this->updateFiles($finder, $handler);
             }
         }
+
+        $output->writeln(sprintf('<info>Version updated to "%s".</info>', $this->version));
     }
 
     /**
@@ -152,6 +186,7 @@ class UpdateVersionCommand extends ContainerAwareCommand
      * @param AbstractHandler $handler
      *
      * @throws FileNotFoundException
+     * @throws InvalidFileException
      */
     private function updateFiles(FilesFinder $finder, AbstractHandler $handler)
     {
@@ -172,7 +207,9 @@ class UpdateVersionCommand extends ContainerAwareCommand
 
                     $fileFormatter = new FileFormatter($fileParser);
                     $fileFormatter->setHandler($handler);
-                    $fileFormatter->format($mutator->getFormatter());
+                    $this->version = $fileFormatter->format($mutator->getFormatter());
+
+                    $this->output->writeln(sprintf('<comment>Updated file "%s"</comment>', $file));
                 }
             );
         }
