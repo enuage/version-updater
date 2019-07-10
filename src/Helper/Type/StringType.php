@@ -160,4 +160,15 @@ class StringType
     {
         return self::EMPTY_VALUE === $this->value;
     }
+
+    /**
+     * @return StringType
+     */
+    public function regexPrepare(): StringType
+    {
+        /** @noinspection PregQuoteUsageInspection */
+        $this->value = preg_quote($this->value);
+
+        return $this;
+    }
 }

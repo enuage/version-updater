@@ -148,7 +148,7 @@ class FilesFinder
         }
 
         if (!$directory->startsWith('.')) {
-            $directory = preg_quote($directory, null);
+            $directory->regexPrepare();
         }
 
         $finder = new Finder();

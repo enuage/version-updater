@@ -126,11 +126,10 @@ class UpdateVersionCommand extends ContainerAwareCommand
         $this->addOption('meta', null, InputOption::VALUE_OPTIONAL, 'Add metadata to the version');
 
         $this->addOption(
-            'config',
+            'config-file',
             null,
             InputOption::VALUE_OPTIONAL,
-            'Path to configuration file or to the directory with ".enuage" file',
-            Configuration::CONFIG_FILE
+            'Path to configuration file or to the directory with ".enuage" file'
         );
     }
 
