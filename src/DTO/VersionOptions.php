@@ -18,6 +18,7 @@ namespace Enuage\VersionUpdaterBundle\DTO;
 use DateTime;
 use Enuage\VersionUpdaterBundle\Collection\ArrayCollection;
 use Enuage\VersionUpdaterBundle\Collection\VersionModifierCollection;
+use Enuage\VersionUpdaterBundle\Helper\Type\BooleanType;
 use Enuage\VersionUpdaterBundle\ValueObject\MetaComponent;
 use Enuage\VersionUpdaterBundle\ValueObject\Version;
 use Enuage\VersionUpdaterBundle\ValueObject\VersionModifier;
@@ -378,39 +379,29 @@ class VersionOptions
         $table->addRow(['Set version', $this->getVersion() ?? 'N\\A']);
         foreach (Version::MAIN_VERSIONS as $version) {
             $table->addRow(
-                ['Update '.$version, $this->addBooleanDebugCell($this->isMainVersionUpdated($version))]
+                ['Update '.$version, BooleanType::toShortStatement($this->isMainVersionUpdated($version))]
             );
         }
 
-        $table->addRow(['Downgrade', $this->addBooleanDebugCell($this->isDowngrade())]);
+        $table->addRow(['Downgrade', BooleanType::toShortStatement($this->isDowngrade())]);
 
         foreach (Version::PRE_RELEASE_VERSIONS as $version) {
             $table->addRow(
                 [
                     'Update '.$version,
-                    $this->addBooleanDebugCell($this->getPreReleaseModifiers()->get($version)->isEnabled()),
+                    BooleanType::toShortStatement($this->getPreReleaseModifiers()->get($version)->isEnabled()),
                 ]
             );
         }
 
-        $table->addRow(['Is release', $this->addBooleanDebugCell($this->isRelease())]);
+        $table->addRow(['Is release', BooleanType::toShortStatement($this->isRelease())]);
 
         foreach ([Version::META_DATE, Version::META] as $meta) {
             $table->addRow(
-                ['Add '.$meta, $this->addBooleanDebugCell($this->getMetaComponents()->containsKey($meta))]
+                ['Add '.$meta, BooleanType::toShortStatement($this->getMetaComponents()->containsKey($meta))]
             );
         }
 
         return $table;
-    }
-
-    /**
-     * @param bool $status
-     *
-     * @return string
-     */
-    private function addBooleanDebugCell(bool $status): string
-    {
-        return $status ? 'Yes' : 'No';
     }
 }
