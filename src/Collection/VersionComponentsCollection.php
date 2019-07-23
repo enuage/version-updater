@@ -22,6 +22,8 @@ use Enuage\VersionUpdaterBundle\ValueObject\VersionComponent;
  * Class VersionComponentsCollection
  *
  * @author Serghei Niculaev <spam312sn@gmail.com>
+ *
+ * @method VersionComponent get($key, $default = null)
  */
 class VersionComponentsCollection extends ArrayCollection
 {
@@ -64,21 +66,25 @@ class VersionComponentsCollection extends ArrayCollection
         $this->get($type)->setValue($value);
     }
 
-    /**
-     * @param $type
-     *
-     * @return VersionComponent
-     */
-    public function get($type): VersionComponent
-    {
-        return parent::get($type);
-    }
-
     public function disableAll()
     {
         /** @var VersionComponent $type */
         foreach ($this->getIterator() as $type) {
             $type->setEnabled(false);
         }
+    }
+
+    /**
+     * @return array
+     */
+    public function getValues(): array
+    {
+        $values = [];
+        /** @var VersionComponent $component */
+        foreach ($this->getIterator() as $key => $component) {
+            $values[$key] = $component->getValue();
+        }
+
+        return $values;
     }
 }

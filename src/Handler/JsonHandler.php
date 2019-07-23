@@ -39,13 +39,16 @@ final class JsonHandler extends StructureHandler
      */
     public function handle(FormatterInterface $formatter): string
     {
-        return json_encode($this->updateProperty($formatter), JSON_PRETTY_PRINT).PHP_EOL;
+        $content = json_encode($this->updateProperty($formatter), JSON_PRETTY_PRINT).PHP_EOL;
+        $content = str_replace('\/', '/', $content);
+
+        return $content;
     }
 
     /**
      * {@inheritDoc}
      */
-    protected function decodeContent(string $content): array
+    public function decodeContent(string $content): array
     {
         return json_decode($content, true);
     }

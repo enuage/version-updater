@@ -15,10 +15,10 @@
 
 namespace Enuage\VersionUpdaterBundle\Formatter;
 
+use Enuage\VersionUpdaterBundle\Helper\Type\StringType;
 use Enuage\VersionUpdaterBundle\Mutator\VersionMutator;
 use Enuage\VersionUpdaterBundle\ValueObject\MetaComponent;
 use Enuage\VersionUpdaterBundle\ValueObject\Version;
-use Enuage\VersionUpdaterBundle\ValueObject\VersionComponent;
 
 /**
  * Class VersionFormatter
@@ -39,22 +39,16 @@ class VersionFormatter implements FormatterInterface
      */
     public function format($subject = null): string
     {
-        $result = $this->version->getPrefix() ?? '';
+        $result = new StringType($this->version->getPrefix() ?? '');
 
-        $mainVersionValues = [];
-        /** @var VersionComponent $component */
-        foreach ($this->version->getMainComponents()->getIterator() as $component) {
-            $mainVersionValues[] = $component->getValue();
-        }
-
-        $result .= implode('.', $mainVersionValues);
+        $result->append(implode('.', $this->version->getMainComponents()->getValues()));
 
         if ($preRelease = $this->version->getPreRelease()) {
-            $result .= '-'.$preRelease;
+            $result->append('-')->append($preRelease);
 
             $preReleaseVersion = $this->version->getPreReleaseComponent($preRelease);
             if ($preReleaseVersion->getValue() > 0) {
-                $result .= '.'.$preReleaseVersion->getValue();
+                $result->append('.')->append($preReleaseVersion->getValue());
             }
         }
 
@@ -62,13 +56,15 @@ class VersionFormatter implements FormatterInterface
         if (!$metaComponents->isEmpty()) {
             /** @var MetaComponent $component */
             foreach ($metaComponents->getIterator() as $component) {
-                $value = $component->getValue();
-                $format = $component->getFormat();
-                if (null !== $format && MetaComponent::TYPE_DATETIME === $component->getType()) {
-                    $value = $value->format($format) ?? 'c';
+                $metaValue = $component->getValue();
+                $metaFormat = $component->getFormat();
+                if (null !== $metaFormat && MetaComponent::TYPE_DATETIME === $component->getType()) {
+                    $metaValue = $metaValue->format($metaFormat) ?? 'c';
                 }
 
-                $result .= '+'.$value;
+                if (is_string($metaValue)) {
+                    $result->append('+')->append($metaValue);
+                }
             }
         }
 

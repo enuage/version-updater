@@ -75,15 +75,15 @@ class VersionParser extends AbstractParser
         }
 
         if ($this->matches->containsKey('majorVersion')) {
-            $version->setMajor($this->matches->getValue('majorVersion', 0));
+            $version->setMajor($this->matches->getIntValue('majorVersion', 0));
         }
 
         if ($this->matches->containsKey('minorVersion')) {
-            $version->setMinor($this->matches->getValue('minorVersion', 0));
+            $version->setMinor($this->matches->getIntValue('minorVersion', 0));
         }
 
         if ($this->matches->containsKey('patchVersion')) {
-            $version->setPatch($this->matches->getValue('patchVersion', 0));
+            $version->setPatch($this->matches->getIntValue('patchVersion', 0));
         }
 
         if ($this->matches->containsKey('preRelease')) {
@@ -92,7 +92,7 @@ class VersionParser extends AbstractParser
 
             if ($this->matches->containsKey('preReleaseVersion')) {
                 $version->getPreReleaseComponent($type)->setValue(
-                    $this->matches->getValue('preReleaseVersion', 0)
+                    $this->matches->getIntValue('preReleaseVersion', 0)
                 );
             }
         }

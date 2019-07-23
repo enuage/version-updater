@@ -67,7 +67,7 @@ abstract class StructureHandler extends AbstractHandler
      *
      * @return array
      */
-    abstract protected function decodeContent(string $content): array;
+    abstract public function decodeContent(string $content): array;
 
     /**
      * @param array $content

@@ -1,42 +1,42 @@
 {
-  "name": "enuage/version-updater",
-  "description": "The tool for version updating",
-  "version": "1.3.1",
-  "keywords": [
-    "enuage"
-  ],
-  "type": "symfony-bundle",
-  "license": "GPL-3.0-or-later",
-  "authors": [
-    {
-      "role": "Maintainer",
-      "name": "Serghei Niculaev",
-      "email": "spam312sn@gmail.com",
-      "homepage": "https://spam312sn.github.io"
+    "name": "enuage/version-updater",
+    "description": "The tool for version updating",
+    "version": "1.3.1",
+    "keywords": [
+        "enuage"
+    ],
+    "type": "symfony-bundle",
+    "license": "GPL-3.0-or-later",
+    "authors": [
+        {
+            "role": "Maintainer",
+            "name": "Serghei Niculaev",
+            "email": "spam312sn@gmail.com",
+            "homepage": "https://spam312sn.github.io"
+        }
+    ],
+    "require": {
+        "php": ">=7.0",
+        "symfony/framework-bundle": "^2.7 || ^3.0 || ^4.0",
+        "symfony/console": "^2.7 || ^3.0 || ^4.0",
+        "symfony/config": "^2.7 || ^3.0 || ^4.0",
+        "symfony/dependency-injection": "^2.7 || ^3.0 || ^4.0",
+        "symfony/http-kernel": "^2.7 || ^3.0 || ^4.0",
+        "doctrine/collections": "^1.6",
+        "ext-json": "*",
+        "symfony/yaml": "^3.4"
+    },
+    "autoload": {
+        "psr-4": {
+            "Enuage\\VersionUpdaterBundle\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Enuage\\VersionUpdaterBundle\\Tests\\": "tests/"
+        }
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^7.5"
     }
-  ],
-  "require": {
-    "php": ">=7.0",
-    "symfony/framework-bundle": "^2.7 || ^3.0 || ^4.0",
-    "symfony/console": "^2.7 || ^3.0 || ^4.0",
-    "symfony/config": "^2.7 || ^3.0 || ^4.0",
-    "symfony/dependency-injection": "^2.7 || ^3.0 || ^4.0",
-    "symfony/http-kernel": "^2.7 || ^3.0 || ^4.0",
-    "doctrine/collections": "^1.6",
-    "ext-json": "*",
-    "symfony/yaml": "^3.4"
-  },
-  "autoload": {
-    "psr-4": {
-      "Enuage\\VersionUpdaterBundle\\": "src/"
-    }
-  },
-  "autoload-dev": {
-    "psr-4": {
-      "Enuage\\VersionUpdaterBundle\\Tests\\": "tests/"
-    }
-  },
-  "require-dev": {
-    "phpunit/phpunit": "^7.5"
-  }
 }
