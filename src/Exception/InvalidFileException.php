@@ -38,7 +38,7 @@ class InvalidFileException extends Exception implements EnuageExceptionInterface
                 $directory,
                 $fileName
             ),
-            404
+            400
         );
     }
 }
