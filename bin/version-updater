@@ -27,7 +27,7 @@ $kernel = new ConsoleKernel('prod', false);
 $application = new Application($kernel);
 
 $configurations = null;
-$configurationFilePath = $kernel->getProjectDir().DIRECTORY_SEPARATOR.Configuration::CONFIG_FILE;
+$configurationFilePath = getcwd().DIRECTORY_SEPARATOR.Configuration::CONFIG_FILE;
 if (is_file($configurationFilePath)) {
     $configurations = ConfigurationParser::parseFile(Configuration::CONFIG_FILE);
 }

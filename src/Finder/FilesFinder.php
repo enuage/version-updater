@@ -52,6 +52,7 @@ class FilesFinder
      */
     public function __construct()
     {
+        $this->rootDirectory = getcwd();
         $this->extensions = new ArrayCollection();
     }
 
@@ -153,7 +154,7 @@ class FilesFinder
 
         $finder = new Finder();
         $finder->files();
-        $finder->in($directory);
+        $finder->in($directory->getValue());
         $finder->notPath('vendor');
         $finder->depth(0); // Restrict recursive search
         $finder->name($name);

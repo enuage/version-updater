@@ -166,9 +166,16 @@ class StringType
      */
     public function regexPrepare(): StringType
     {
-        /** @noinspection PregQuoteUsageInspection */
-        $this->value = preg_quote($this->value);
+        $this->value = preg_quote($this->value, '/');
 
         return $this;
+    }
+
+    /**
+     * @return string
+     */
+    public function getValue(): string
+    {
+        return $this->value;
     }
 }

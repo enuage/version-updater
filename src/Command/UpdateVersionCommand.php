@@ -154,34 +154,36 @@ class UpdateVersionCommand extends ContainerAwareCommand
 
         $io->title('Started files updating');
 
-        $finder = new FilesFinder();
-        $finder->setRootDirectory($this->getContainer()->getParameter('kernel.project_dir'));
-
-        if ($this->getContainer()->hasParameter(Configuration::CONFIG_ROOT)) {
-            if ($configuration = $this->getContainer()->getParameter(Configuration::CONFIG_ROOT)) {
-                $this->configurations = ConfigurationParser::parseConfiguration($configuration);
-            }
-        }
-
-        if ($input->hasOption('config')) {
-            $this->configurations = ConfigurationParser::parseFile($input->getOption('config'), $finder);
-        }
-
-        $this->io = $io;
-        foreach (self::HANDLERS as $type => $handler) {
-            if ($files = $this->configurations->getFiles($type)) {
-                $finder->setFiles($files);
-
-                $handler = new $handler();
-                if ($handler instanceof StructureHandler) {
-                    $finder->setExtensions($handler::getExtensions());
+        try {
+            if ($this->getContainer()->hasParameter(Configuration::CONFIG_ROOT)) {
+                if ($configuration = $this->getContainer()->getParameter(Configuration::CONFIG_ROOT)) {
+                    $this->configurations = ConfigurationParser::parseConfiguration($configuration);
                 }
-
-                $this->updateFiles($finder, $handler);
             }
+
+            $finder = new FilesFinder();
+            $configFile = $input->getOption('config-file');
+            if (null !== $configFile) {
+                $this->configurations = ConfigurationParser::parseFile($configFile, $finder);
+            }
+
+            $this->io = $io;
+            foreach (self::HANDLERS as $type => $handler) {
+                if ($files = $this->configurations->getFiles($type)) {
+                    $finder->setFiles($files);
+
+                    $handler = new $handler();
+                    if ($handler instanceof StructureHandler) {
+                        $finder->setExtensions($handler::getExtensions());
+                    }
+
+                    $this->updateFiles($finder, $handler);
+                }
+            }
+        } catch (Exception $exception) {
+            $io->error($exception->getMessage());
         }
 
-        $io->newLine(1);
         $io->success(sprintf('Version updated to "%s"', $this->version));
     }
 
@@ -213,7 +215,7 @@ class UpdateVersionCommand extends ContainerAwareCommand
                     $fileFormatter->setHandler($handler);
                     $this->version = $fileFormatter->format($mutator->getFormatter());
 
-                    $this->io->text(sprintf('✔ Updated file "%s"', $file));
+                    $this->io->writeln(sprintf('✔ Updated file "%s"', $file));
                 }
             );
         }
