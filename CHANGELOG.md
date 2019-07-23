@@ -1,5 +1,19 @@
 # Version updater command changelog
 
+### v1.4.0
+
+- Added executable file for using command from `vendor/bin` directory
+- Updated files finder
+- Updated command
+    - improved output
+    - add debug verbosity
+- Improved and cleaned code
+- Add configurations parser
+- Update handlers and files formatter
+- Update helpers
+    - StringType improvements
+    - Added BooleanType
+
 ### v1.3.1
 
 ##### 2019-07-06 00:28
