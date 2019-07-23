@@ -36,6 +36,7 @@ use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
+use Symfony\Component\Console\Style\SymfonyStyle;
 
 /**
  * Class UpdateVersionCommand
@@ -68,9 +69,9 @@ class UpdateVersionCommand extends ContainerAwareCommand
     private $version;
 
     /**
-     * @var OutputInterface
+     * @var SymfonyStyle
      */
-    private $output;
+    private $io;
 
     /**
      * UpdateVersionCommand constructor.
@@ -142,13 +143,16 @@ class UpdateVersionCommand extends ContainerAwareCommand
      */
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        $output->writeln('<info>Started files updating.</info>');
+        $io = new SymfonyStyle($input, $output);
 
         $this->options = CommandOptionsParser::parse($input);
 
-        if ($output->isVerbose()) {
-            $this->options->consoleDebug($output)->render();
+        if ($io->isVerbose()) {
+            $io->section('Configurations:');
+            $this->options->consoleDebug($io);
         }
+
+        $io->title('Started files updating');
 
         $finder = new FilesFinder();
         $finder->setRootDirectory($this->getContainer()->getParameter('kernel.project_dir'));
@@ -163,7 +167,7 @@ class UpdateVersionCommand extends ContainerAwareCommand
             $this->configurations = ConfigurationParser::parseFile($input->getOption('config'), $finder);
         }
 
-        $this->output = $output;
+        $this->io = $io;
         foreach (self::HANDLERS as $type => $handler) {
             if ($files = $this->configurations->getFiles($type)) {
                 $finder->setFiles($files);
@@ -177,7 +181,8 @@ class UpdateVersionCommand extends ContainerAwareCommand
             }
         }
 
-        $output->writeln(sprintf('<info>Version updated to "%s".</info>', $this->version));
+        $io->newLine(1);
+        $io->success(sprintf('Version updated to "%s"', $this->version));
     }
 
     /**
@@ -208,7 +213,7 @@ class UpdateVersionCommand extends ContainerAwareCommand
                     $fileFormatter->setHandler($handler);
                     $this->version = $fileFormatter->format($mutator->getFormatter());
 
-                    $this->output->writeln(sprintf('<comment>Updated file "%s"</comment>', $file));
+                    $this->io->text(sprintf('✔ Updated file "%s"', $file));
                 }
             );
         }

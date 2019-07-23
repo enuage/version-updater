@@ -23,8 +23,7 @@ use Enuage\VersionUpdaterBundle\ValueObject\MetaComponent;
 use Enuage\VersionUpdaterBundle\ValueObject\Version;
 use Enuage\VersionUpdaterBundle\ValueObject\VersionModifier;
 use Exception;
-use Symfony\Component\Console\Helper\Table;
-use Symfony\Component\Console\Output\OutputInterface;
+use Symfony\Component\Console\Style\SymfonyStyle;
 
 /**
  * Class VersionOptions
@@ -369,39 +368,31 @@ class VersionOptions
     }
 
     /**
-     * @param OutputInterface $output
+     * @param SymfonyStyle $io
      *
-     * @return Table
+     * @return void
      */
-    public function consoleDebug(OutputInterface $output): Table
+    public function consoleDebug(SymfonyStyle $io)
     {
-        $table = new Table($output);
-        $table->addRow(['Set version', $this->getVersion() ?? 'N\\A']);
+        $rows[] = ['Set version', $this->getVersion() ?? 'N\\A'];
         foreach (Version::MAIN_VERSIONS as $version) {
-            $table->addRow(
-                ['Update '.$version, BooleanType::toShortStatement($this->isMainVersionUpdated($version))]
-            );
+            $rows[] = ['Update '.$version, BooleanType::toShortStatement($this->isMainVersionUpdated($version))];
         }
-
-        $table->addRow(['Downgrade', BooleanType::toShortStatement($this->isDowngrade())]);
 
         foreach (Version::PRE_RELEASE_VERSIONS as $version) {
-            $table->addRow(
-                [
-                    'Update '.$version,
-                    BooleanType::toShortStatement($this->getPreReleaseModifiers()->get($version)->isEnabled()),
-                ]
-            );
+            $rows[] = [
+                'Update '.$version,
+                BooleanType::toShortStatement($this->getPreReleaseModifiers()->get($version)->isEnabled()),
+            ];
         }
 
-        $table->addRow(['Is release', BooleanType::toShortStatement($this->isRelease())]);
+        $rows[] = ['Downgrade', BooleanType::toShortStatement($this->isDowngrade())];
+        $rows[] = ['Is release', BooleanType::toShortStatement($this->isRelease())];
 
         foreach ([Version::META_DATE, Version::META] as $meta) {
-            $table->addRow(
-                ['Add '.$meta, BooleanType::toShortStatement($this->getMetaComponents()->containsKey($meta))]
-            );
+            $rows[] = ['Add '.$meta, BooleanType::toShortStatement($this->getMetaComponents()->containsKey($meta))];
         }
 
-        return $table;
+        $io->table(['Option', 'Value'], $rows);
     }
 }
