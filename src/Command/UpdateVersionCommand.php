@@ -129,7 +129,7 @@ class UpdateVersionCommand extends ContainerAwareCommand
             'config-file',
             null,
             InputOption::VALUE_OPTIONAL,
-            'Path to configuration file or to the directory with ".enuage" file'
+            'Path to configuration file or to the directory with ".enuage" file. Please check documentation: https://gitlab.com/enuage/bundles/version-updater/wikis/Configuration'
         );
     }
 
