@@ -16,6 +16,7 @@
 namespace Enuage\VersionUpdaterBundle\Parser;
 
 use Enuage\VersionUpdaterBundle\Handler\AbstractHandler;
+use Enuage\VersionUpdaterBundle\Handler\StructureHandler;
 use Enuage\VersionUpdaterBundle\ValueObject\Version;
 use Symfony\Component\Finder\SplFileInfo;
 
@@ -57,12 +58,32 @@ class FileParser extends AbstractParser
      */
     public function parse(): Version
     {
-        $versionParser = new VersionParser($this->handler->setParser($this)->getFileContent());
+        $versionParser = new VersionParser($this->getFileContent());
         $versionParser->setPattern($this->handler->getPattern());
 
         $this->cloneMatches($versionParser->getMatches());
 
         return $versionParser->parse();
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getFileContent()
+    {
+        return $this->handler->setParser($this)->getFileContent();
+    }
+
+    /**
+     * @return array|string
+     */
+    public function decodeContent()
+    {
+        if ($this->handler instanceof StructureHandler) {
+            return $this->handler->decodeContent($this->getFile()->getContents());
+        }
+
+        return $this->getFileContent();
     }
 
     /**

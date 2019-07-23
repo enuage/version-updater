@@ -12,17 +12,22 @@
 
 namespace Enuage\VersionUpdaterBundle\Command;
 
+use Enuage\VersionUpdaterBundle\Collection\ArrayCollection;
+use Enuage\VersionUpdaterBundle\DependencyInjection\Configuration;
 use Enuage\VersionUpdaterBundle\DTO\VersionOptions;
 use Enuage\VersionUpdaterBundle\Exception\FileNotFoundException;
+use Enuage\VersionUpdaterBundle\Exception\InvalidFileException;
 use Enuage\VersionUpdaterBundle\Finder\FilesFinder;
 use Enuage\VersionUpdaterBundle\Formatter\FileFormatter;
 use Enuage\VersionUpdaterBundle\Handler\AbstractHandler;
 use Enuage\VersionUpdaterBundle\Handler\JsonHandler;
+use Enuage\VersionUpdaterBundle\Handler\StructureHandler;
 use Enuage\VersionUpdaterBundle\Handler\TextHandler;
 use Enuage\VersionUpdaterBundle\Handler\YamlHandler;
 use Enuage\VersionUpdaterBundle\Mutator\VersionMutator;
 use Enuage\VersionUpdaterBundle\Parser\AbstractParser;
 use Enuage\VersionUpdaterBundle\Parser\CommandOptionsParser;
+use Enuage\VersionUpdaterBundle\Parser\ConfigurationParser;
 use Enuage\VersionUpdaterBundle\Parser\FileParser;
 use Enuage\VersionUpdaterBundle\Parser\VersionParser;
 use Exception;
@@ -31,6 +36,7 @@ use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
+use Symfony\Component\Console\Style\SymfonyStyle;
 
 /**
  * Class UpdateVersionCommand
@@ -39,17 +45,64 @@ use Symfony\Component\Console\Output\OutputInterface;
  */
 class UpdateVersionCommand extends ContainerAwareCommand
 {
+    const COMMAND_NAME = 'enuage:version:update';
+
+    const HANDLERS = [
+        'files' => TextHandler::class,
+        'json' => JsonHandler::class,
+        'yaml' => YamlHandler::class,
+    ];
+
     /**
      * @var VersionOptions
      */
     private $options;
 
     /**
+     * @var ArrayCollection
+     */
+    private $configurations;
+
+    /**
+     * @var string
+     */
+    private $version;
+
+    /**
+     * @var SymfonyStyle
+     */
+    private $io;
+
+    /**
+     * UpdateVersionCommand constructor.
+     *
+     * @param ConfigurationParser $configurations
+     */
+    public function __construct(ConfigurationParser $configurations = null)
+    {
+        parent::__construct(self::COMMAND_NAME);
+
+        $this->configurations = $configurations ?: new ConfigurationParser();
+    }
+
+    /**
+     * @param array $configurations
+     *
+     * @return UpdateVersionCommand
+     */
+    public function setConfigurations(array $configurations): UpdateVersionCommand
+    {
+        $this->configurations = new ArrayCollection($configurations);
+
+        return $this;
+    }
+
+    /**
      * {@inheritdoc}
      */
     protected function configure()
     {
-        $this->setName('enuage:version:update');
+        $this->setName(self::COMMAND_NAME);
         $this->setDescription('Update the version in project files');
         $this->addArgument('version', InputArgument::OPTIONAL, 'New version tag');
         $this->addOption('major', null, InputOption::VALUE_NONE, 'Update major version');
@@ -72,30 +125,66 @@ class UpdateVersionCommand extends ContainerAwareCommand
         // Metadata
         $this->addOption('date', null, InputOption::VALUE_OPTIONAL, 'Add date metadata to the version');
         $this->addOption('meta', null, InputOption::VALUE_OPTIONAL, 'Add metadata to the version');
+
+        $this->addOption(
+            'config-file',
+            null,
+            InputOption::VALUE_OPTIONAL,
+            'Path to configuration file or to the directory with ".enuage" file. Please check documentation: https://gitlab.com/enuage/bundles/version-updater/wikis/Configuration'
+        );
     }
 
     /**
      * {@inheritdoc}
      *
      * @throws Exception
+     * @throws FileNotFoundException
+     * @throws InvalidFileException
      */
     protected function execute(InputInterface $input, OutputInterface $output)
     {
+        $io = new SymfonyStyle($input, $output);
+
         $this->options = CommandOptionsParser::parse($input);
 
-        $finder = new FilesFinder();
-        $finder->setRootDirectory($this->getContainer()->getParameter('kernel.root_dir'));
+        if ($io->isVerbose()) {
+            $io->section('Configurations:');
+            $this->options->consoleDebug($io);
+        }
 
-        $finder->setFiles($this->getContainer()->getParameter('enuage_version_updater.files'));
-        $this->updateFiles($finder, new TextHandler());
+        $io->title('Started files updating');
 
-        $finder->setFiles($this->getContainer()->getParameter('enuage_version_updater.json'));
-        $finder->setExtensions(JsonHandler::getExtensions());
-        $this->updateFiles($finder, new JsonHandler());
+        try {
+            if ($this->getContainer()->hasParameter(Configuration::CONFIG_ROOT)) {
+                if ($configuration = $this->getContainer()->getParameter(Configuration::CONFIG_ROOT)) {
+                    $this->configurations = ConfigurationParser::parseConfiguration($configuration);
+                }
+            }
 
-        $finder->setFiles($this->getContainer()->getParameter('enuage_version_updater.yaml'));
-        $finder->setExtensions(YamlHandler::getExtensions());
-        $this->updateFiles($finder, new YamlHandler());
+            $finder = new FilesFinder();
+            $configFile = $input->getOption('config-file');
+            if (null !== $configFile) {
+                $this->configurations = ConfigurationParser::parseFile($configFile, $finder);
+            }
+
+            $this->io = $io;
+            foreach (self::HANDLERS as $type => $handler) {
+                if ($files = $this->configurations->getFiles($type)) {
+                    $finder->setFiles($files);
+
+                    $handler = new $handler();
+                    if ($handler instanceof StructureHandler) {
+                        $finder->setExtensions($handler::getExtensions());
+                    }
+
+                    $this->updateFiles($finder, $handler);
+                }
+            }
+        } catch (Exception $exception) {
+            $io->error($exception->getMessage());
+        }
+
+        $io->success(sprintf('Version updated to "%s"', $this->version));
     }
 
     /**
@@ -103,6 +192,7 @@ class UpdateVersionCommand extends ContainerAwareCommand
      * @param AbstractHandler $handler
      *
      * @throws FileNotFoundException
+     * @throws InvalidFileException
      */
     private function updateFiles(FilesFinder $finder, AbstractHandler $handler)
     {
@@ -123,7 +213,9 @@ class UpdateVersionCommand extends ContainerAwareCommand
 
                     $fileFormatter = new FileFormatter($fileParser);
                     $fileFormatter->setHandler($handler);
-                    $fileFormatter->format($mutator->getFormatter());
+                    $this->version = $fileFormatter->format($mutator->getFormatter());
+
+                    $this->io->writeln(sprintf('✔ Updated file "%s"', $file));
                 }
             );
         }

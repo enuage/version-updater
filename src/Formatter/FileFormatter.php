@@ -57,11 +57,11 @@ class FileFormatter implements FormatterInterface
     /**
      * @param FormatterInterface|VersionFormatter $versionFormatter
      *
-     * @return bool
+     * @return string
      *
      * @throws Exception
      */
-    public function format($versionFormatter = null): bool
+    public function format($versionFormatter = null): string
     {
         $fileParser = $this->fileParser;
         $file = $fileParser->getFile();
@@ -71,7 +71,7 @@ class FileFormatter implements FormatterInterface
             $this->handler->setParser($fileParser)->handle($versionFormatter)
         );
 
-        return true;
+        return $versionFormatter->format();
     }
 
     /**

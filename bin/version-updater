@@ -1,0 +1,44 @@
+#!/usr/bin/env php
+<?php declare(strict_types = 1);
+
+use Enuage\VersionUpdaterBundle\Command\UpdateVersionCommand;
+use Enuage\VersionUpdaterBundle\Console\ConsoleKernel;
+use Enuage\VersionUpdaterBundle\DependencyInjection\Configuration;
+use Enuage\VersionUpdaterBundle\Parser\ConfigurationParser;
+use Symfony\Bundle\FrameworkBundle\Console\Application;
+
+gc_disable();
+
+$prodAutoload = getcwd().'/vendor/autoload.php';
+if (is_file($prodAutoload)) {
+    /** @noinspection PhpIncludeInspection */
+    require_once $prodAutoload;
+}
+
+$devAutoload = __DIR__.'/../vendor/autoload.php';
+if (is_file($devAutoload)) {
+    /** @noinspection PhpIncludeInspection */
+    require_once $devAutoload;
+}
+
+$composer = json_decode(file_get_contents(__DIR__.'/../composer.json'));
+
+$kernel = new ConsoleKernel('prod', false);
+$application = new Application($kernel);
+
+$configurations = null;
+$configurationFilePath = getcwd().DIRECTORY_SEPARATOR.Configuration::CONFIG_FILE;
+if (is_file($configurationFilePath)) {
+    $configurations = ConfigurationParser::parseFile(Configuration::CONFIG_FILE);
+}
+
+$command = new UpdateVersionCommand($configurations);
+
+$application->setName('éNuage version updater command');
+$application->setVersion($composer->version);
+
+$application->add($command);
+$application->setDefaultCommand(UpdateVersionCommand::COMMAND_NAME, true);
+
+/** @noinspection PhpUnhandledExceptionInspection */
+$application->run();

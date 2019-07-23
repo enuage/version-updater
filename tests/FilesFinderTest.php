@@ -35,7 +35,7 @@ class FilesFinderTest extends FunctionalTestCase
         $finder->setRootDirectory($this->getRootDir());
         $finder->setFiles(
             [
-                ['support/file.txt' => '/^(version=)\V/m'],
+                ['tests/support/file.txt' => '/^(version=)\V/m'],
             ]
         );
 
@@ -54,7 +54,7 @@ class FilesFinderTest extends FunctionalTestCase
      */
     private function getRootDir()
     {
-        return $this->getKernel()->getContainer()->getParameter('kernel.root_dir');
+        return $this->getKernel()->getContainer()->getParameter('kernel.project_dir');
     }
 
     public function testFindJsonFiles()
@@ -64,8 +64,8 @@ class FilesFinderTest extends FunctionalTestCase
         $finder->setExtensions(JsonHandler::getExtensions());
         $finder->setFiles(
             [
-                ['support/composer' => 'version'],
-                ['support/doc/api' => 'info/version'],
+                ['tests/support/composer' => 'version'],
+                ['tests/support/doc/api' => 'info/version'],
             ]
         );
 
@@ -86,7 +86,7 @@ class FilesFinderTest extends FunctionalTestCase
         $finder->setExtensions(YamlHandler::getExtensions());
         $finder->setFiles(
             [
-                ['support/doc/api' => 'info/version'],
+                ['tests/support/doc/api' => 'info/version'],
             ]
         );
 
@@ -107,7 +107,7 @@ class FilesFinderTest extends FunctionalTestCase
         $finder->setExtensions(YamlHandler::getExtensions());
         $finder->setFiles(
             [
-                ['support/undefined' => 'version'],
+                ['tests/support/undefined' => 'version'],
             ]
         );
 

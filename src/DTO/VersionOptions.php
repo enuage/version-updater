@@ -18,10 +18,12 @@ namespace Enuage\VersionUpdaterBundle\DTO;
 use DateTime;
 use Enuage\VersionUpdaterBundle\Collection\ArrayCollection;
 use Enuage\VersionUpdaterBundle\Collection\VersionModifierCollection;
+use Enuage\VersionUpdaterBundle\Helper\Type\BooleanType;
 use Enuage\VersionUpdaterBundle\ValueObject\MetaComponent;
 use Enuage\VersionUpdaterBundle\ValueObject\Version;
 use Enuage\VersionUpdaterBundle\ValueObject\VersionModifier;
 use Exception;
+use Symfony\Component\Console\Style\SymfonyStyle;
 
 /**
  * Class VersionOptions
@@ -363,5 +365,34 @@ class VersionOptions
         foreach ($this->getPreReleaseModifiers()->getIterator() as $type) {
             $type->disable();
         }
+    }
+
+    /**
+     * @param SymfonyStyle $io
+     *
+     * @return void
+     */
+    public function consoleDebug(SymfonyStyle $io)
+    {
+        $rows[] = ['Set version', $this->getVersion() ?? 'N\\A'];
+        foreach (Version::MAIN_VERSIONS as $version) {
+            $rows[] = ['Update '.$version, BooleanType::toShortStatement($this->isMainVersionUpdated($version))];
+        }
+
+        foreach (Version::PRE_RELEASE_VERSIONS as $version) {
+            $rows[] = [
+                'Update '.$version,
+                BooleanType::toShortStatement($this->getPreReleaseModifiers()->get($version)->isEnabled()),
+            ];
+        }
+
+        $rows[] = ['Downgrade', BooleanType::toShortStatement($this->isDowngrade())];
+        $rows[] = ['Is release', BooleanType::toShortStatement($this->isRelease())];
+
+        foreach ([Version::META_DATE, Version::META] as $meta) {
+            $rows[] = ['Add '.$meta, BooleanType::toShortStatement($this->getMetaComponents()->containsKey($meta))];
+        }
+
+        $io->table(['Option', 'Value'], $rows);
     }
 }
