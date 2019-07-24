@@ -1,5 +1,10 @@
 # Version updater command changelog
 
+### v1.5.0
+
+- [#7][3]: Added Git tag updating and parsing latest version from remote
+repository
+
 ### v1.4.1
 
 - Added feature for disabling colors in output
