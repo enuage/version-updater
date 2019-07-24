@@ -45,9 +45,11 @@ test:coverage:
         - echo "$SSH_PRIVATE_KEY" | tr -d '\r' | ssh-add - > /dev/null
         - mkdir -p ~/.ssh
         - chmod 700 ~/.ssh
-        - git remote set-url --push origin git@gitlab.com:enuage/bundles/version-updater.git
+        - git remote set-url origin git@gitlab.com:enuage/bundles/version-updater.git
         - git config --global user.email "spam312sn@gmail.com"
         - git config --global user.name "Serghei Niculaev"
+        - git checkout --track origin/master
+        - git fetch && git pull
 
 version:major:
     <<: *setup_git
