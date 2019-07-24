@@ -105,3 +105,4 @@ files
 
 [1]: https://gitlab.com/enuage/bundles/version-updater/issues/1
 [2]: https://gitlab.com/enuage/bundles/version-updater/issues/2
+[3]: https://gitlab.com/enuage/bundles/version-updater/issues/7
