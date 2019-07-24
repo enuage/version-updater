@@ -38,7 +38,7 @@ class GitCommand
         $options[] = '-m';
         $options[] = '"'.$message.'"';
 
-        self::run(implode(' ', $options));
+        self::run('commit '.implode(' ', $options));
     }
 
     /**
