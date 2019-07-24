@@ -1,5 +1,9 @@
 # Version updater command changelog
 
+### v1.4.1
+
+- Added feature for disabling colors in output
+
 ### v1.4.0
 
 - Added executable file for using command from `vendor/bin` directory

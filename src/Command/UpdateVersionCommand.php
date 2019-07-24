@@ -74,6 +74,11 @@ class UpdateVersionCommand extends ContainerAwareCommand
     private $io;
 
     /**
+     * @var boolean
+     */
+    private $colors = true;
+
+    /**
      * UpdateVersionCommand constructor.
      *
      * @param ConfigurationParser $configurations
@@ -132,6 +137,8 @@ class UpdateVersionCommand extends ContainerAwareCommand
             InputOption::VALUE_OPTIONAL,
             'Path to configuration file or to the directory with ".enuage" file. Please check documentation: https://gitlab.com/enuage/bundles/version-updater/wikis/Configuration'
         );
+
+        $this->addOption('colors', null, InputOption::VALUE_OPTIONAL, 'Enable/disable output colors.', true);
     }
 
     /**
@@ -147,12 +154,16 @@ class UpdateVersionCommand extends ContainerAwareCommand
 
         $this->options = CommandOptionsParser::parse($input);
 
+        $this->colors = filter_var($input->getOption('colors'), FILTER_VALIDATE_BOOLEAN);
+
         if ($io->isVerbose()) {
-            $io->section('Configurations:');
+            $configurationsMessage = 'Configurations:';
+            $this->colors ? $io->section($configurationsMessage) : $io->writeln($configurationsMessage);
             $this->options->consoleDebug($io);
         }
 
-        $io->title('Started files updating');
+        $processStartMessage = 'Started files updating';
+        $this->colors ? $io->title($processStartMessage) : $io->writeln($processStartMessage);
 
         try {
             if ($this->getContainer()->hasParameter(Configuration::CONFIG_ROOT)) {
@@ -184,7 +195,8 @@ class UpdateVersionCommand extends ContainerAwareCommand
             $io->error($exception->getMessage());
         }
 
-        $io->success(sprintf('Version updated to "%s"', $this->version));
+        $successMessage = sprintf('Version updated to "%s"', $this->version);
+        $this->colors ? $io->success($successMessage) : $io->writeln($successMessage);
     }
 
     /**
@@ -215,7 +227,8 @@ class UpdateVersionCommand extends ContainerAwareCommand
                     $fileFormatter->setHandler($handler);
                     $this->version = $fileFormatter->format($mutator->getFormatter());
 
-                    $this->io->writeln(sprintf('✔ Updated file "%s"', $file));
+                    $updatedMessage = sprintf('Updated file "%s"', $file);
+                    $this->colors ? $this->io->writeln('✔ '.$updatedMessage) : $this->io->writeln($updatedMessage);
                 }
             );
         }

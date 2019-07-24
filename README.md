@@ -118,6 +118,10 @@ Available options
 
 `--meta <data>`: Add metadata to the version
 
+`--config-file <string>`: Path to configurations file or to directory with `.enuage` configuration file
+
+`--colors <boolean>`: Enable/disable colors in output. Default - `true`
+
 ## Option 2: Updating version via service
 
 Example:
