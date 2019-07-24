@@ -138,6 +138,10 @@ class StringType
      */
     public function endsWith(string $value): bool
     {
+        if ('' === $this->value) {
+            return false;
+        }
+
         return 0 === substr_compare($this->value, $value, -strlen($value));
     }
 
