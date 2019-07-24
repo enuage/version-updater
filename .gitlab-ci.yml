@@ -38,7 +38,19 @@ test:coverage:
     only:
         - merge_requests
 
+.setup_git: &setup_git
+    before_script:
+        - which ssh-agent || ( apt-get update -y && apt-get install openssh-client -y )
+        - eval $(ssh-agent -s)
+        - echo "$SSH_PRIVATE_KEY" | tr -d '\r' | ssh-add - > /dev/null
+        - mkdir -p ~/.ssh
+        - chmod 700 ~/.ssh
+        - git remote set-url --push origin git@gitlab.com:enuage/bundles/version-updater.git
+        - git config --global user.email "spam312sn@gmail.com"
+        - git config --global user.name "Serghei Niculaev"
+
 version:major:
+    <<: *setup_git
     image: spam312sn/symfony:php7.2-xdebug
     stage: version
     script:
@@ -49,6 +61,7 @@ version:major:
         - master
 
 version:minor:
+    <<: *setup_git
     image: spam312sn/symfony:php7.2-xdebug
     stage: version
     script:
@@ -59,6 +72,7 @@ version:minor:
         - master
 
 version:patch:
+    <<: *setup_git
     image: spam312sn/symfony:php7.2-xdebug
     stage: version
     script:
