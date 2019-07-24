@@ -2,6 +2,7 @@
 
 namespace Enuage\VersionUpdaterBundle\Parser;
 
+use Enuage\VersionUpdaterBundle\Command\GitCommand;
 use Enuage\VersionUpdaterBundle\Exception\VersionFinderException;
 
 /**
@@ -26,8 +27,8 @@ class GitParser
      */
     public function getLatestTag(): string
     {
-        exec('git tag 2>&1', $output, $exitCode);
+        $tags = GitCommand::run('tag');
 
-        return end($output);
+        return end($tags);
     }
 }

@@ -1,2 +1,6 @@
 json:
   - composer: version
+git:
+  source: true
+  push: true
+  prefix: v

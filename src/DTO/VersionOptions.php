@@ -68,6 +68,11 @@ class VersionOptions
     private $metaComponents;
 
     /**
+     * @var string
+     */
+    private $gitVersion;
+
+    /**
      * VersionOptions constructor.
      */
     public function __construct()
@@ -393,6 +398,24 @@ class VersionOptions
             $rows[] = ['Add '.$meta, BooleanType::toShortStatement($this->getMetaComponents()->containsKey($meta))];
         }
 
+        $rows[] = ['Git version', $this->getGitVersion() ?? 'N\\A'];
+
         $io->table(['Option', 'Value'], $rows);
+    }
+
+    /**
+     * @param string $gitVersion
+     */
+    public function setGitVersion(string $gitVersion): void
+    {
+        $this->gitVersion = $gitVersion;
+    }
+
+    /**
+     * @return string|null
+     */
+    public function getGitVersion()
+    {
+        return $this->gitVersion;
     }
 }

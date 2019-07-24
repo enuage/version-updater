@@ -77,4 +77,28 @@ class ConfigurationParser
     {
         return $this->configurations->containsKey('git');
     }
+
+    /**
+     * @return bool
+     */
+    public function isGitPushEnabled(): bool
+    {
+        if ($this->isGitEnabled()) {
+            $gitConfiguration = $this->getGitConfiguration();
+
+            if (array_key_exists('push', $gitConfiguration)) {
+                return filter_var($gitConfiguration['push'], FILTER_VALIDATE_BOOLEAN);
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * @return array
+     */
+    private function getGitConfiguration(): array
+    {
+        return $this->configurations->getValue('git') ?: [];
+    }
 }

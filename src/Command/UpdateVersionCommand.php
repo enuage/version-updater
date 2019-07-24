@@ -17,6 +17,7 @@ use Enuage\VersionUpdaterBundle\DependencyInjection\Configuration;
 use Enuage\VersionUpdaterBundle\DTO\VersionOptions;
 use Enuage\VersionUpdaterBundle\Exception\FileNotFoundException;
 use Enuage\VersionUpdaterBundle\Exception\InvalidFileException;
+use Enuage\VersionUpdaterBundle\Exception\VersionFinderException;
 use Enuage\VersionUpdaterBundle\Finder\FilesFinder;
 use Enuage\VersionUpdaterBundle\Finder\VersionFinder;
 use Enuage\VersionUpdaterBundle\Formatter\FileFormatter;
@@ -84,6 +85,11 @@ class UpdateVersionCommand extends ContainerAwareCommand
     private $service;
 
     /**
+     * @var string
+     */
+    private $version;
+
+    /**
      * UpdateVersionCommand constructor.
      *
      * @param ConfigurationParser $configurations
@@ -145,15 +151,14 @@ class UpdateVersionCommand extends ContainerAwareCommand
         );
 
         $this->addOption('colors', null, InputOption::VALUE_OPTIONAL, 'Enable/disable output colors.', true);
-        $this->addOption('show-current', null, InputOption::VALUE_OPTIONAL, 'Show current version from source');
+        $this->addOption('show-current', null, InputOption::VALUE_OPTIONAL, 'Show current version from source.');
+        $this->addOption('exclude-git', null, InputOption::VALUE_NONE, 'Disable updating Git repository.');
     }
 
     /**
      * {@inheritdoc}
      *
      * @throws Exception
-     * @throws FileNotFoundException
-     * @throws InvalidFileException
      */
     protected function execute(InputInterface $input, OutputInterface $output)
     {
@@ -161,6 +166,9 @@ class UpdateVersionCommand extends ContainerAwareCommand
         $this->io = $io;
 
         $this->options = CommandOptionsParser::parse($input);
+        if ($this->configurations->isGitEnabled()) {
+            $this->options->setGitVersion($this->service->getVersionFromGit());
+        }
 
         $this->colors = filter_var($input->getOption('colors'), FILTER_VALIDATE_BOOLEAN);
 
@@ -169,8 +177,12 @@ class UpdateVersionCommand extends ContainerAwareCommand
         }
 
         if ($io->isVerbose()) {
+            $debugMessage = 'Debug mode enabled.';
+            $this->colors
+                ? $this->io->block($debugMessage, 'DEBUG', 'fg=black;bg=yellow', ' ', true)
+                : $this->io->writeln($debugMessage);
             $configurationsMessage = 'Configurations:';
-            $this->colors ? $io->section($configurationsMessage) : $io->writeln($configurationsMessage);
+            $this->colors ? $io->title($configurationsMessage) : $io->writeln($configurationsMessage);
             $this->options->consoleDebug($io);
         }
 
@@ -202,6 +214,10 @@ class UpdateVersionCommand extends ContainerAwareCommand
                     $this->updateFiles($finder, $handler);
                 }
             }
+
+            if ($this->configurations->isGitEnabled() && false === $input->getOption('exclude-git')) {
+                $this->updateGit();
+            }
         } catch (Exception $exception) {
             $this->colors ? $io->error($exception->getMessage()) : $io->writeln($exception->getMessage());
             exit(2);
@@ -209,6 +225,7 @@ class UpdateVersionCommand extends ContainerAwareCommand
 
         $successMessage = 'All targets were successfully updated.';
         $this->colors ? $io->success($successMessage) : $io->writeln($successMessage);
+        $this->io->writeln($this->version);
     }
 
     /**
@@ -231,14 +248,15 @@ class UpdateVersionCommand extends ContainerAwareCommand
                     }
 
                     $fileParser = new FileParser($file, $handler);
-                    $versionParser = new VersionParser($this->options->getVersion());
+
+                    $providedVersion = $this->options->getVersion();
+                    if ($this->configurations->isGitEnabled()) {
+                        $providedVersion = $this->options->getGitVersion();
+                    }
+                    $versionParser = new VersionParser($providedVersion);
 
                     /** @var AbstractParser $parser */
                     $parser = $this->options->hasVersion() ? $versionParser : $fileParser;
-
-                    if ($this->configurations->isGitEnabled()) {
-                        $parser = new VersionParser($this->service->getVersionFromGit());
-                    }
 
                     $mutator = new VersionMutator($parser->parse(), $this->options);
 
@@ -248,9 +266,9 @@ class UpdateVersionCommand extends ContainerAwareCommand
 
                     $fileFormatter = new FileFormatter($fileParser);
                     $fileFormatter->setHandler($handler);
-                    $version = $fileFormatter->format($mutator->getFormatter());
+                    $this->version = $fileFormatter->format($mutator->getFormatter());
 
-                    $updatedMessage = sprintf('Updated file "%s". Version: %s', $file, $version);
+                    $updatedMessage = sprintf('Updated file "%s". Version: %s', $file, $this->version);
                     $this->colors ? $this->io->writeln('✔ '.$updatedMessage) : $this->io->writeln($updatedMessage);
                 }
             );
@@ -291,5 +309,37 @@ class UpdateVersionCommand extends ContainerAwareCommand
         }
 
         exit($exitCode);
+    }
+
+    /**
+     * @throws VersionFinderException
+     */
+    private function updateGit()
+    {
+        $this->io->newLine(1);
+
+        $gitUpdatingMessage = 'Updating Git repository';
+        $this->colors ? $this->io->title($gitUpdatingMessage) : $this->io->writeln($gitUpdatingMessage);
+
+        // TODO GitCommand::commit('.', 'Version update: $version');
+        // TODO GitCommand::push();
+
+        $commitMessage = 'All updated files were committed.';
+        $this->colors ? $this->io->writeln('✱ '.$commitMessage) : $this->io->writeln($commitMessage);
+
+        $parser = new VersionParser($this->service->getVersionFromGit());
+        $mutator = new VersionMutator($parser->parse(), $this->options);
+
+        // TODO GitCommand::createTag($version);
+        $tagCreatedMessage = sprintf('Created tag "%s".', ''); // TODO
+        $this->colors ? $this->io->writeln('✱ '.$tagCreatedMessage) : $this->io->writeln($tagCreatedMessage);
+
+        if ($this->configurations->isGitPushEnabled()) {
+            // TODO GitCommand::pushTag($version);
+            $updatedMessage = 'Pushed to remote git repository';
+            $this->colors ? $this->io->writeln('✔ '.$updatedMessage) : $this->io->writeln($updatedMessage);
+        }
+
+        $this->io->newLine(1);
     }
 }
