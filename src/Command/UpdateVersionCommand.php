@@ -325,6 +325,7 @@ class UpdateVersionCommand extends ContainerAwareCommand
         $gitUpdatingMessage = 'Updating Git repository';
         $this->colors ? $this->io->title($gitUpdatingMessage) : $this->io->writeln($gitUpdatingMessage);
 
+        GitCommand::addAllFiles();
         GitCommand::commit(sprintf('Version update: %s', $this->version), true);
         if ($this->configurations->isGitPushEnabled()) {
             GitCommand::push();

@@ -31,6 +31,8 @@ final class ComposerHandler extends JsonHandler
      */
     public function handle(FormatterInterface $formatter): string
     {
+        $formatter = clone $formatter;
+
         $formatter->updateBaseVersionOnly(); // Composer don't understand suffixes and meta tags
         $formatter->disablePrefix();
 

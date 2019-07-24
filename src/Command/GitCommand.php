@@ -68,4 +68,22 @@ class GitCommand
     {
         self::run(sprintf('push origin %s', $tag));
     }
+
+    /**
+     * @param array $files
+     *
+     * @return void
+     */
+    public static function addFiles(array $files): void
+    {
+        self::run(sprintf('add %s', implode(' ', $files)));
+    }
+
+    /**
+     * @return void
+     */
+    public static function addAllFiles(): void
+    {
+        self::addFiles(['.']);
+    }
 }
