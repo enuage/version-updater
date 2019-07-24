@@ -334,7 +334,7 @@ class UpdateVersionCommand extends ContainerAwareCommand
         $commitMessage = 'All updated files were committed.';
         $this->colors ? $this->io->writeln('✱ '.$commitMessage) : $this->io->writeln($commitMessage);
 
-        GitCommand::createTag($this->version);
+        GitCommand::createTag($this->version, 'New release');
 
         $tagCreatedMessage = sprintf('Created tag "%s".', $this->version);
         $this->colors ? $this->io->writeln('✱ '.$tagCreatedMessage) : $this->io->writeln($tagCreatedMessage);

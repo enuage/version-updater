@@ -51,12 +51,13 @@ class GitCommand
 
     /**
      * @param string $tag
+     * @param string $message
      *
      * @return void
      */
-    public static function createTag(string $tag): void
+    public static function createTag(string $tag, string $message): void
     {
-        self::run(sprintf('tag %s', $tag));
+        self::run(sprintf('tag -a %s -m %s', $tag, $message));
     }
 
     /**
