@@ -18,6 +18,7 @@ use Enuage\VersionUpdaterBundle\DTO\VersionOptions;
 use Enuage\VersionUpdaterBundle\Exception\FileNotFoundException;
 use Enuage\VersionUpdaterBundle\Exception\InvalidFileException;
 use Enuage\VersionUpdaterBundle\Finder\FilesFinder;
+use Enuage\VersionUpdaterBundle\Finder\VersionFinder;
 use Enuage\VersionUpdaterBundle\Formatter\FileFormatter;
 use Enuage\VersionUpdaterBundle\Handler\AbstractHandler;
 use Enuage\VersionUpdaterBundle\Handler\JsonHandler;
@@ -31,7 +32,6 @@ use Enuage\VersionUpdaterBundle\Parser\CommandOptionsParser;
 use Enuage\VersionUpdaterBundle\Parser\ConfigurationParser;
 use Enuage\VersionUpdaterBundle\Parser\FileParser;
 use Enuage\VersionUpdaterBundle\Parser\VersionParser;
-use Enuage\VersionUpdaterBundle\Service\VersionService;
 use Exception;
 use Symfony\Bundle\FrameworkBundle\Command\ContainerAwareCommand;
 use Symfony\Component\Console\Input\InputArgument;
@@ -246,45 +246,34 @@ class UpdateVersionCommand extends ContainerAwareCommand
      */
     private function showCurrentVersion($showSource)
     {
-        $sources = [];
-        $versionService = new VersionService();
+        $finder = new VersionFinder();
+        $exitCode = 1;
 
-        $composerExists = file_exists(getcwd().'/composer.json');
-        if ($composerExists) {
-            $composerVersion = $versionService->getVersionFromFile(
-                getcwd().'/composer.json',
-                FileType::TYPE_JSON_COMPOSER
-            );
-
-            $sources[] = ['source' => 'composer', 'version' => $composerVersion];
-        }
-
-        if ('composer' === $showSource) {
-            if (!$composerExists) {
-                $this->io->error('No composer file found in this directory.');
-
-                exit(2);
+        try {
+            switch ($showSource) {
+                case VersionFinder::SOURCE_COMPOSER:
+                    $version = $finder->getComposerVersion();
+                    break;
+                case VersionFinder::SOURCE_GIT:
+                    $version = $finder->getGitVersion();
+                    break;
+                default:
+                    $version = null;
+                    break;
             }
 
-            $version = $composerVersion;
-        }
-
-        if ($this->io->isVerbose()) {
-            $this->io->table(['source', 'version'], $sources);
-        }
-
-        if (true === filter_var($showSource, FILTER_VALIDATE_BOOLEAN)) {
-            foreach ($sources as $data) {
-                $this->io->writeln(sprintf('%s: %s', $data['source'], $data['version']));
+            if (true === filter_var($showSource, FILTER_VALIDATE_BOOLEAN)) {
+                $finder->findAll()->cliOutput($this->io);
             }
 
-            exit(1);
+            if (null !== $version) {
+                $this->io->writeln($version);
+            }
+        } catch (Exception $exception) {
+            $this->colors ? $this->io->error($exception->getMessage()) : $this->io->writeln($exception->getMessage());
+            $exitCode = 2;
         }
 
-        if (isset($version)) {
-            $this->io->writeln($version);
-
-            exit(1);
-        }
+        exit($exitCode);
     }
 }

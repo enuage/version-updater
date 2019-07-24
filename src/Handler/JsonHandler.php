@@ -15,6 +15,7 @@
 
 namespace Enuage\VersionUpdaterBundle\Handler;
 
+use Enuage\VersionUpdaterBundle\Exception\InvalidFileException;
 use Enuage\VersionUpdaterBundle\Formatter\FormatterInterface;
 
 /**
@@ -47,9 +48,18 @@ class JsonHandler extends StructureHandler
 
     /**
      * {@inheritDoc}
+     *
+     * @throws InvalidFileException
      */
     public function decodeContent(string $content): array
     {
-        return json_decode($content, true);
+        $result = json_decode($content, true);
+
+        if (null === $result) {
+            $file = $this->getParser()->getFile();
+            throw new InvalidFileException("", $file->getFilename());
+        }
+
+        return $result;
     }
 }

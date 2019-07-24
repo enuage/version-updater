@@ -2,6 +2,9 @@
 
 namespace Enuage\VersionUpdaterBundle\Handler;
 
+use Enuage\VersionUpdaterBundle\Exception\InvalidFileException;
+use Exception;
+
 /**
  * Class ComposerHandler
  *
@@ -16,5 +19,26 @@ final class ComposerHandler extends JsonHandler
      */
     public function __construct() {
         $this->setPattern(self::VERSION_PROPERTY);
+    }
+
+    /**
+     * {@inheritDoc}
+     *
+     * @throws Exception
+     */
+    public function decodeContent(string $content): array
+    {
+        $result = parent::decodeContent($content);
+
+        if (
+            empty($result)
+            || !array_key_exists(self::VERSION_PROPERTY, $result)
+            || empty($result[self::VERSION_PROPERTY])
+        ) {
+            $file = $this->getParser()->getFile();
+            throw InvalidFileException::versionNotFound($file->getFilename());
+        }
+
+        return $result;
     }
 }

@@ -22,6 +22,7 @@ use Enuage\VersionUpdaterBundle\Formatter\VersionFormatter;
 use Enuage\VersionUpdaterBundle\Handler\AbstractHandler;
 use Enuage\VersionUpdaterBundle\Mutator\VersionMutator;
 use Enuage\VersionUpdaterBundle\Parser\FileParser;
+use Enuage\VersionUpdaterBundle\Parser\GitParser;
 use Enuage\VersionUpdaterBundle\Parser\VersionParser;
 use Enuage\VersionUpdaterBundle\ValueObject\Version;
 use Exception;
@@ -71,5 +72,15 @@ class VersionService
         $formatter = new VersionFormatter();
 
         return $formatter->setVersion($parser->parse())->format();
+    }
+
+    /**
+     * @return string
+     */
+    public function getVersionFromGit(): string
+    {
+        $parser = new GitParser();
+
+        return $parser->getLatestTag();
     }
 }
