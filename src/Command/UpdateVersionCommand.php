@@ -24,12 +24,14 @@ use Enuage\VersionUpdaterBundle\Handler\JsonHandler;
 use Enuage\VersionUpdaterBundle\Handler\StructureHandler;
 use Enuage\VersionUpdaterBundle\Handler\TextHandler;
 use Enuage\VersionUpdaterBundle\Handler\YamlHandler;
+use Enuage\VersionUpdaterBundle\Helper\Type\FileType;
 use Enuage\VersionUpdaterBundle\Mutator\VersionMutator;
 use Enuage\VersionUpdaterBundle\Parser\AbstractParser;
 use Enuage\VersionUpdaterBundle\Parser\CommandOptionsParser;
 use Enuage\VersionUpdaterBundle\Parser\ConfigurationParser;
 use Enuage\VersionUpdaterBundle\Parser\FileParser;
 use Enuage\VersionUpdaterBundle\Parser\VersionParser;
+use Enuage\VersionUpdaterBundle\Service\VersionService;
 use Exception;
 use Symfony\Bundle\FrameworkBundle\Command\ContainerAwareCommand;
 use Symfony\Component\Console\Input\InputArgument;
@@ -49,8 +51,8 @@ class UpdateVersionCommand extends ContainerAwareCommand
 
     const HANDLERS = [
         'files' => TextHandler::class,
-        'json' => JsonHandler::class,
-        'yaml' => YamlHandler::class,
+        FileType::TYPE_JSON => JsonHandler::class,
+        FileType::TYPE_YAML => YamlHandler::class,
     ];
 
     /**
@@ -139,6 +141,7 @@ class UpdateVersionCommand extends ContainerAwareCommand
         );
 
         $this->addOption('colors', null, InputOption::VALUE_OPTIONAL, 'Enable/disable output colors.', true);
+        $this->addOption('show-current', null, InputOption::VALUE_OPTIONAL, 'Show current version from source');
     }
 
     /**
@@ -151,10 +154,15 @@ class UpdateVersionCommand extends ContainerAwareCommand
     protected function execute(InputInterface $input, OutputInterface $output)
     {
         $io = new SymfonyStyle($input, $output);
+        $this->io = $io;
 
         $this->options = CommandOptionsParser::parse($input);
 
         $this->colors = filter_var($input->getOption('colors'), FILTER_VALIDATE_BOOLEAN);
+
+        if ($showSource = $input->getOption('show-current')) {
+            $this->showCurrentVersion($showSource);
+        }
 
         if ($io->isVerbose()) {
             $configurationsMessage = 'Configurations:';
@@ -178,7 +186,6 @@ class UpdateVersionCommand extends ContainerAwareCommand
                 $this->configurations = ConfigurationParser::parseFile($configFile, $finder);
             }
 
-            $this->io = $io;
             foreach (self::HANDLERS as $type => $handler) {
                 if ($files = $this->configurations->getFiles($type)) {
                     $finder->setFiles($files);
@@ -231,6 +238,53 @@ class UpdateVersionCommand extends ContainerAwareCommand
                     $this->colors ? $this->io->writeln('✔ '.$updatedMessage) : $this->io->writeln($updatedMessage);
                 }
             );
+        }
+    }
+
+    /**
+     * @param $showSource
+     */
+    private function showCurrentVersion($showSource)
+    {
+        $sources = [];
+        $versionService = new VersionService();
+
+        $composerExists = file_exists(getcwd().'/composer.json');
+        if ($composerExists) {
+            $composerVersion = $versionService->getVersionFromFile(
+                getcwd().'/composer.json',
+                FileType::TYPE_JSON_COMPOSER
+            );
+
+            $sources[] = ['source' => 'composer', 'version' => $composerVersion];
+        }
+
+        if ('composer' === $showSource) {
+            if (!$composerExists) {
+                $this->io->error('No composer file found in this directory.');
+
+                exit(2);
+            }
+
+            $version = $composerVersion;
+        }
+
+        if ($this->io->isVerbose()) {
+            $this->io->table(['source', 'version'], $sources);
+        }
+
+        if (true === filter_var($showSource, FILTER_VALIDATE_BOOLEAN)) {
+            foreach ($sources as $data) {
+                $this->io->writeln(sprintf('%s: %s', $data['source'], $data['version']));
+            }
+
+            exit(1);
+        }
+
+        if (isset($version)) {
+            $this->io->writeln($version);
+
+            exit(1);
         }
     }
 }

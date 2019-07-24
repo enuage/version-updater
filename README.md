@@ -7,6 +7,23 @@
 Installation
 ============
 
+Applications that don't use Symfony at all
+----------------------------------
+
+### Step 1: Download the library
+
+Open a command console, enter your project directory and execute:
+
+```console
+$ composer require enuage/version-updater
+```
+
+### Step 2: Use the command for version updating from `vendor/bin`
+
+```
+$ php vendor/bin/version-updater [options] [--] [<version>]
+```
+
 Applications that use Symfony Flex
 ----------------------------------
 
@@ -92,47 +109,43 @@ enuage_version_updater:
 ### Step 2: Use the command for version updating
 
 ```
-$ php bin/console enuage:version:update <version|--option>
+$ php bin/console enuage:version:update [options] [--] [<version>]
 ```
 
 Available options
 -----------------
 
-`--major`: Increase only major version
-
-`--minor`: Increase only minor version
-
-`--patch`: Increase only patch version
-
-`--alpha`: Increase or define the alpha version
-
-`--beta`: Increase or define the beta version
-
-`--rc`: Increase or define the release candidate version
-
-`--down`: Decrease defined version. It's also applicable to prerelease versions
-
-`--release`: Remove all prerelease versions
-
-`--date <none|PHP date format>`: Add date metadata to the version. By default date format is equal to `c`
-
-`--meta <data>`: Add metadata to the version
-
-`--config-file <string>`: Path to configurations file or to directory with `.enuage` configuration file
-
-`--colors <boolean>`: Enable/disable colors in output. Default - `true`
+- `--major`: Increase only major version
+- `--minor`: Increase only minor version
+- `--patch`: Increase only patch version
+- `--alpha`: Increase or define the alpha version
+- `--beta`: Increase or define the beta version
+- `--rc`: Increase or define the release candidate version
+- `--down`: Decrease defined version. It's also applicable to prerelease versions
+- `--release`: Remove all prerelease versions
+- `--date <none|PHP date format>`: Add date metadata to the version. By default date format is equal to `c`
+- `--meta <data>`: Add metadata to the version
+- `--config-file <string>`: Path to configurations file or to directory with `.enuage` configuration file
+- `--colors <boolean>`: Enable/disable colors in output. Default - `true`
+- `--show-current <string|boolean>`: Show current version from file or from all available sources. Currently supported
+sources:
+    - composer
 
 ## Option 2: Updating version via service
 
 Example:
 
 ```php
-/** @var Container $container */
-use Enuage\VersionUpdaterBundle\DTO\VersionOptions;use Symfony\Component\DependencyInjection\Container;$service = $container->get('enuage.version.service');
+use Enuage\VersionUpdaterBundle\DTO\VersionOptions;
+use Symfony\Component\DependencyInjection\Container;
+// use Enuage\VersionUpdaterBundle\Service\VersionService;
 
 $version = '0.1.0-alpha.2';
 
+$service = $container->get('enuage.version.service');
+// $service = VersionService(); // If you don't use Symfony
 $options = new VersionOptions();
+
 $options->increasePreRelease();
 
 $service->update($version, $options); // Result: "0.1.0-alpha.3"
