@@ -21,6 +21,7 @@ use Enuage\VersionUpdaterBundle\Finder\FilesFinder;
 use Enuage\VersionUpdaterBundle\Finder\VersionFinder;
 use Enuage\VersionUpdaterBundle\Formatter\FileFormatter;
 use Enuage\VersionUpdaterBundle\Handler\AbstractHandler;
+use Enuage\VersionUpdaterBundle\Handler\ComposerHandler;
 use Enuage\VersionUpdaterBundle\Handler\JsonHandler;
 use Enuage\VersionUpdaterBundle\Handler\StructureHandler;
 use Enuage\VersionUpdaterBundle\Handler\TextHandler;
@@ -39,6 +40,7 @@ use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
+use Symfony\Component\Finder\SplFileInfo;
 
 /**
  * Class UpdateVersionCommand
@@ -64,11 +66,6 @@ class UpdateVersionCommand extends ContainerAwareCommand
      * @var ArrayCollection
      */
     private $configurations;
-
-    /**
-     * @var string
-     */
-    private $version;
 
     /**
      * @var SymfonyStyle
@@ -202,7 +199,7 @@ class UpdateVersionCommand extends ContainerAwareCommand
             $io->error($exception->getMessage());
         }
 
-        $successMessage = sprintf('Version updated to "%s"', $this->version);
+        $successMessage = 'All targets were successfully updated.';
         $this->colors ? $io->success($successMessage) : $io->writeln($successMessage);
     }
 
@@ -219,6 +216,12 @@ class UpdateVersionCommand extends ContainerAwareCommand
             $finder->iterate(
                 function ($file, $pattern) use ($handler) {
                     $handler->setPattern($pattern);
+
+                    /** @var SplFileInfo $file */
+                    if (ComposerHandler::FILENAME === $file->getBasename()) {
+                        $handler = new ComposerHandler();
+                    }
+
                     $fileParser = new FileParser($file, $handler);
                     $versionParser = new VersionParser($this->options->getVersion());
 
@@ -232,9 +235,9 @@ class UpdateVersionCommand extends ContainerAwareCommand
 
                     $fileFormatter = new FileFormatter($fileParser);
                     $fileFormatter->setHandler($handler);
-                    $this->version = $fileFormatter->format($mutator->getFormatter());
+                    $version = $fileFormatter->format($mutator->getFormatter());
 
-                    $updatedMessage = sprintf('Updated file "%s"', $file);
+                    $updatedMessage = sprintf('Updated file "%s". Version: %s', $file, $version);
                     $this->colors ? $this->io->writeln('✔ '.$updatedMessage) : $this->io->writeln($updatedMessage);
                 }
             );

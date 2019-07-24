@@ -3,6 +3,8 @@
 namespace Enuage\VersionUpdaterBundle\Handler;
 
 use Enuage\VersionUpdaterBundle\Exception\InvalidFileException;
+use Enuage\VersionUpdaterBundle\Formatter\FormatterInterface;
+use Enuage\VersionUpdaterBundle\Formatter\VersionFormatter;
 use Exception;
 
 /**
@@ -12,6 +14,7 @@ use Exception;
  */
 final class ComposerHandler extends JsonHandler
 {
+    const FILENAME = 'composer.json';
     const VERSION_PROPERTY = "version"; // https://getcomposer.org/doc/04-schema.md#version
 
     /**
@@ -19,6 +22,18 @@ final class ComposerHandler extends JsonHandler
      */
     public function __construct() {
         $this->setPattern(self::VERSION_PROPERTY);
+    }
+
+    /**
+     * {@inheritDoc}
+     *
+     * @param VersionFormatter $formatter
+     */
+    public function handle(FormatterInterface $formatter): string
+    {
+        $formatter->updateBaseVersionOnly(); // Composer don't understand suffixes and meta tags
+
+        return parent::handle($formatter);
     }
 
     /**

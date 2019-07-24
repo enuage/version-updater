@@ -33,6 +33,11 @@ class VersionFormatter implements FormatterInterface
     private $version;
 
     /**
+     * @var bool
+     */
+    private $baseVersionOnly = false;
+
+    /**
      * @param Version|VersionMutator $subject
      *
      * @return string
@@ -43,27 +48,29 @@ class VersionFormatter implements FormatterInterface
 
         $result->append(implode('.', $this->version->getMainComponents()->getValues()));
 
-        if ($preRelease = $this->version->getPreRelease()) {
-            $result->append('-')->append($preRelease);
+        if (false === $this->baseVersionOnly) {
+            if ($preRelease = $this->version->getPreRelease()) {
+                $result->append('-')->append($preRelease);
 
-            $preReleaseVersion = $this->version->getPreReleaseComponent($preRelease);
-            if ($preReleaseVersion->getValue() > 0) {
-                $result->append('.')->append($preReleaseVersion->getValue());
-            }
-        }
-
-        $metaComponents = $this->version->getMetaComponents();
-        if (!$metaComponents->isEmpty()) {
-            /** @var MetaComponent $component */
-            foreach ($metaComponents->getIterator() as $component) {
-                $metaValue = $component->getValue();
-                $metaFormat = $component->getFormat();
-                if (null !== $metaFormat && MetaComponent::TYPE_DATETIME === $component->getType()) {
-                    $metaValue = $metaValue->format($metaFormat) ?? 'c';
+                $preReleaseVersion = $this->version->getPreReleaseComponent($preRelease);
+                if ($preReleaseVersion->getValue() > 0) {
+                    $result->append('.')->append($preReleaseVersion->getValue());
                 }
+            }
 
-                if (is_string($metaValue)) {
-                    $result->append('+')->append($metaValue);
+            $metaComponents = $this->version->getMetaComponents();
+            if (!$metaComponents->isEmpty()) {
+                /** @var MetaComponent $component */
+                foreach ($metaComponents->getIterator() as $component) {
+                    $metaValue = $component->getValue();
+                    $metaFormat = $component->getFormat();
+                    if (null !== $metaFormat && MetaComponent::TYPE_DATETIME === $component->getType()) {
+                        $metaValue = $metaValue->format($metaFormat) ?? 'c';
+                    }
+
+                    if (is_string($metaValue)) {
+                        $result->append('+')->append($metaValue);
+                    }
                 }
             }
         }
@@ -93,5 +100,13 @@ class VersionFormatter implements FormatterInterface
         $this->version = $versionMutator->getVersion();
 
         return $this;
+    }
+
+    /**
+     * @return void
+     */
+    public function updateBaseVersionOnly(): void
+    {
+        $this->baseVersionOnly = true;
     }
 }
