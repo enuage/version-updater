@@ -16,7 +16,12 @@
 namespace Enuage\VersionUpdaterBundle\Service;
 
 use Enuage\VersionUpdaterBundle\DTO\VersionOptions;
+use Enuage\VersionUpdaterBundle\Exception\EnuageExceptionInterface;
+use Enuage\VersionUpdaterBundle\Finder\FilesFinder;
+use Enuage\VersionUpdaterBundle\Formatter\VersionFormatter;
+use Enuage\VersionUpdaterBundle\Handler\AbstractHandler;
 use Enuage\VersionUpdaterBundle\Mutator\VersionMutator;
+use Enuage\VersionUpdaterBundle\Parser\FileParser;
 use Enuage\VersionUpdaterBundle\Parser\VersionParser;
 use Enuage\VersionUpdaterBundle\ValueObject\Version;
 use Exception;
@@ -46,5 +51,25 @@ class VersionService
         $versionMutator = new VersionMutator($version, $options);
 
         return $versionMutator->update();
+    }
+
+    /**
+     * @param string $filePath
+     * @param string $type
+     *
+     * @return string
+     *
+     * @throws EnuageExceptionInterface
+     */
+    public function getVersionFromFile(string $filePath, string $type)
+    {
+        $finder = new FilesFinder();
+        $file = $finder->getFile($filePath, false);
+
+        $parser = new FileParser($file, AbstractHandler::getHandlerByFileType($type));
+
+        $formatter = new VersionFormatter();
+
+        return $formatter->setVersion($parser->parse())->format();
     }
 }

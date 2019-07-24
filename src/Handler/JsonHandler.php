@@ -22,7 +22,7 @@ use Enuage\VersionUpdaterBundle\Formatter\FormatterInterface;
  *
  * @author Serghei Niculaev <spam312sn@gmail.com>
  */
-final class JsonHandler extends StructureHandler
+class JsonHandler extends StructureHandler
 {
     /**
      * {@inheritDoc}
