@@ -38,13 +38,18 @@ class VersionFormatter implements FormatterInterface
     private $baseVersionOnly = false;
 
     /**
+     * @var bool
+     */
+    private $prefixEnabled = true;
+
+    /**
      * @param Version|VersionMutator $subject
      *
      * @return string
      */
     public function format($subject = null): string
     {
-        $result = new StringType($this->version->getPrefix() ?? '');
+        $result = new StringType($this->prefixEnabled ? ($this->version->getPrefix() ?? '') : '');
 
         $result->append(implode('.', $this->version->getMainComponents()->getValues()));
 
@@ -108,5 +113,13 @@ class VersionFormatter implements FormatterInterface
     public function updateBaseVersionOnly(): void
     {
         $this->baseVersionOnly = true;
+    }
+
+    /**
+     * @param bool $prefixEnabled
+     */
+    public function disablePrefix(): void
+    {
+        $this->prefixEnabled = false;
     }
 }

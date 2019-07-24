@@ -6,6 +6,7 @@ use Doctrine\Common\Collections\Collection;
 use Enuage\VersionUpdaterBundle\Collection\ArrayCollection;
 use Enuage\VersionUpdaterBundle\Exception\VersionFinderException;
 use Enuage\VersionUpdaterBundle\Helper\Type\FileType;
+use Enuage\VersionUpdaterBundle\Parser\GitParser;
 use Enuage\VersionUpdaterBundle\Service\VersionService;
 use Symfony\Component\Console\Style\SymfonyStyle;
 
@@ -95,16 +96,19 @@ class VersionFinder
      */
     public function getGitVersion(bool $silent = false): string
     {
-        if (!is_dir(getcwd().'/.git')) {
+        try {
+            $gitParser = new GitParser();
+            $gitParser->check();
+
+            $version = $this->versionService->getVersionFromGit();
+
+            $this->addSource(self::SOURCE_GIT, $version);
+        } catch (VersionFinderException $exception) {
             if (false === $silent) {
                 throw VersionFinderException::gitNotFound();
             }
 
             $version = 'No data';
-        } else {
-            $version = $this->versionService->getVersionFromGit();
-
-            $this->addSource(self::SOURCE_GIT, $version);
         }
 
         return $version;

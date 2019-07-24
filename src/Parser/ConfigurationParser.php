@@ -69,4 +69,12 @@ class ConfigurationParser
     {
         return $this->configurations->containsKey($type) ? $this->configurations->get($type) : null;
     }
+
+    /**
+     * @return bool
+     */
+    public function isGitEnabled(): bool
+    {
+        return $this->configurations->containsKey('git');
+    }
 }

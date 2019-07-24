@@ -2,6 +2,8 @@
 
 namespace Enuage\VersionUpdaterBundle\Parser;
 
+use Enuage\VersionUpdaterBundle\Exception\VersionFinderException;
+
 /**
  * Class GitParser
  *
@@ -9,6 +11,16 @@ namespace Enuage\VersionUpdaterBundle\Parser;
  */
 class GitParser
 {
+    /**
+     * @throws VersionFinderException
+     */
+    public function check()
+    {
+        if (!is_dir(getcwd().'/.git')) {
+            throw VersionFinderException::gitNotFound();
+        }
+    }
+
     /**
      * @return string
      */

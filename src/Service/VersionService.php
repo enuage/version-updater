@@ -17,6 +17,7 @@ namespace Enuage\VersionUpdaterBundle\Service;
 
 use Enuage\VersionUpdaterBundle\DTO\VersionOptions;
 use Enuage\VersionUpdaterBundle\Exception\EnuageExceptionInterface;
+use Enuage\VersionUpdaterBundle\Exception\VersionFinderException;
 use Enuage\VersionUpdaterBundle\Finder\FilesFinder;
 use Enuage\VersionUpdaterBundle\Formatter\VersionFormatter;
 use Enuage\VersionUpdaterBundle\Handler\AbstractHandler;
@@ -76,10 +77,13 @@ class VersionService
 
     /**
      * @return string
+     *
+     * @throws VersionFinderException
      */
     public function getVersionFromGit(): string
     {
         $parser = new GitParser();
+        $parser->check();
 
         return $parser->getLatestTag();
     }

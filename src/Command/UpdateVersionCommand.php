@@ -33,6 +33,7 @@ use Enuage\VersionUpdaterBundle\Parser\CommandOptionsParser;
 use Enuage\VersionUpdaterBundle\Parser\ConfigurationParser;
 use Enuage\VersionUpdaterBundle\Parser\FileParser;
 use Enuage\VersionUpdaterBundle\Parser\VersionParser;
+use Enuage\VersionUpdaterBundle\Service\VersionService;
 use Exception;
 use Symfony\Bundle\FrameworkBundle\Command\ContainerAwareCommand;
 use Symfony\Component\Console\Input\InputArgument;
@@ -78,6 +79,11 @@ class UpdateVersionCommand extends ContainerAwareCommand
     private $colors = true;
 
     /**
+     * @var VersionService
+     */
+    private $service;
+
+    /**
      * UpdateVersionCommand constructor.
      *
      * @param ConfigurationParser $configurations
@@ -87,6 +93,7 @@ class UpdateVersionCommand extends ContainerAwareCommand
         parent::__construct(self::COMMAND_NAME);
 
         $this->configurations = $configurations ?: new ConfigurationParser();
+        $this->service = new VersionService();
     }
 
     /**
@@ -196,7 +203,8 @@ class UpdateVersionCommand extends ContainerAwareCommand
                 }
             }
         } catch (Exception $exception) {
-            $io->error($exception->getMessage());
+            $this->colors ? $io->error($exception->getMessage()) : $io->writeln($exception->getMessage());
+            exit(2);
         }
 
         $successMessage = 'All targets were successfully updated.';
@@ -227,6 +235,11 @@ class UpdateVersionCommand extends ContainerAwareCommand
 
                     /** @var AbstractParser $parser */
                     $parser = $this->options->hasVersion() ? $versionParser : $fileParser;
+
+                    if ($this->configurations->isGitEnabled()) {
+                        $parser = new VersionParser($this->service->getVersionFromGit());
+                    }
+
                     $mutator = new VersionMutator($parser->parse(), $this->options);
 
                     if (!$this->options->hasVersion()) {
