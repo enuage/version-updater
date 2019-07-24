@@ -63,10 +63,10 @@ class VersionService
      *
      * @throws EnuageExceptionInterface
      */
-    public function getVersionFromFile(string $filePath, string $type)
+    public function getVersionFromFile(string $filePath, string $type): string
     {
         $finder = new FilesFinder();
-        $file = $finder->getFile($filePath, false);
+        $file = $finder->getFile($filePath);
 
         $parser = new FileParser($file, AbstractHandler::getHandlerByFileType($type));
 

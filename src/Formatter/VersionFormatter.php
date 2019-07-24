@@ -116,7 +116,7 @@ class VersionFormatter implements FormatterInterface
     }
 
     /**
-     * @param bool $prefixEnabled
+     * @return void
      */
     public function disablePrefix(): void
     {

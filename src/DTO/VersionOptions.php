@@ -264,7 +264,7 @@ class VersionOptions
     /**
      * @return null|string
      */
-    public function getVersion()
+    public function getVersion(): ?string
     {
         return $this->version;
     }
@@ -272,7 +272,7 @@ class VersionOptions
     /**
      * @param null|string $version
      */
-    public function setVersion(string $version = null)
+    public function setVersion(string $version = null): void
     {
         $this->version = $version;
     }
@@ -302,7 +302,7 @@ class VersionOptions
      *
      * @return VersionModifier|null
      */
-    public function getMainModifier(string $type)
+    public function getMainModifier(string $type): ?VersionModifier
     {
         return $this->getMainModifiers()->getValue($type);
     }
@@ -362,7 +362,7 @@ class VersionOptions
     /**
      * @return void
      */
-    public function release()
+    public function release(): void
     {
         $this->release = true;
 
@@ -377,7 +377,7 @@ class VersionOptions
      *
      * @return void
      */
-    public function consoleDebug(SymfonyStyle $io)
+    public function consoleDebug(SymfonyStyle $io): void
     {
         $rows[] = ['Set version', $this->getVersion() ?? 'N\\A'];
         foreach (Version::MAIN_VERSIONS as $version) {
@@ -414,7 +414,7 @@ class VersionOptions
     /**
      * @return string|null
      */
-    public function getGitVersion()
+    public function getGitVersion(): ?string
     {
         return $this->gitVersion;
     }

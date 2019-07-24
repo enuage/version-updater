@@ -37,7 +37,7 @@ final class TextHandler extends AbstractHandler
         $content = preg_replace(
             $this->getPattern(),
             sprintf('${1}%s%s', $formatter->format(), $lastMatchValue),
-            parent::getFileContent()
+            $this->getFileContent()
         );
 
         return $content;

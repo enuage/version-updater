@@ -80,7 +80,7 @@ class VersionMutator
     /**
      * @param string $type
      */
-    private function updateMainVersion(string $type)
+    private function updateMainVersion(string $type): void
     {
         $mainModifier = $this->options->getMainModifier($type);
         $value = $this->version->getMainVersion($type) + ($mainModifier ? $mainModifier->getValue() : 0);
@@ -99,7 +99,7 @@ class VersionMutator
     /**
      * @param VersionModifierCollection $modifiers
      */
-    private function updatePreRelease(VersionModifierCollection $modifiers)
+    private function updatePreRelease(VersionModifierCollection $modifiers): void
     {
         $definedType = $this->version->getPreRelease();
 

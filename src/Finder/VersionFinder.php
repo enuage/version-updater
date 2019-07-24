@@ -17,8 +17,8 @@ use Symfony\Component\Console\Style\SymfonyStyle;
  */
 class VersionFinder
 {
-    const SOURCE_COMPOSER = 'composer';
-    const SOURCE_GIT = 'git';
+    public const SOURCE_COMPOSER = 'composer';
+    public const SOURCE_GIT = 'git';
 
     /**
      * @var Collection
@@ -44,7 +44,7 @@ class VersionFinder
      *
      * @throws VersionFinderException
      */
-    public function findAll()
+    public function findAll(): self
     {
         $this->getComposerVersion(true);
         $this->getGitVersion(true);
@@ -82,7 +82,7 @@ class VersionFinder
      * @param string $type
      * @param string $version
      */
-    private function addSource(string $type, string $version)
+    private function addSource(string $type, string $version): void
     {
         $this->sources->add(new ArrayCollection(['type' => $type, 'version' => $version]));
     }
@@ -117,7 +117,7 @@ class VersionFinder
     /**
      * @param SymfonyStyle $io
      */
-    public function cliOutput(SymfonyStyle $io)
+    public function cliOutput(SymfonyStyle $io): void
     {
         if (!$this->sources->isEmpty()) {
             /** @var Collection $source */

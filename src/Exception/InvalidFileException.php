@@ -47,7 +47,7 @@ class InvalidFileException extends Exception implements EnuageExceptionInterface
      *
      * @return Exception
      */
-    public static function versionNotFound(string $filename)
+    public static function versionNotFound(string $filename): Exception
     {
         return new parent(sprintf('No version found in file "%s".', $filename), 404);
     }

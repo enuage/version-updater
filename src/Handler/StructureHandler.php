@@ -48,7 +48,7 @@ abstract class StructureHandler extends AbstractHandler
      *
      * @return array
      */
-    protected function updateProperty(FormatterInterface $formatter)
+    protected function updateProperty(FormatterInterface $formatter): array
     {
         $content = $this->decodeContent(parent::getFileContent());
 
@@ -74,7 +74,7 @@ abstract class StructureHandler extends AbstractHandler
      * @param Closure $closure
      * @param ArrayCollection $properties
      */
-    private function accessProperty(array &$content, Closure $closure, ArrayCollection $properties = null)
+    private function accessProperty(array &$content, Closure $closure, ArrayCollection $properties = null): void
     {
         if (null === $properties) {
             $properties = $this->pattern->explode('/');

@@ -65,7 +65,7 @@ class ConfigurationParser
      *
      * @return array|null
      */
-    public function getFiles(string $type = 'files')
+    public function getFiles(string $type = 'files'): ?array
     {
         return $this->configurations->containsKey($type) ? $this->configurations->get($type) : null;
     }

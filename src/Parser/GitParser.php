@@ -15,7 +15,7 @@ class GitParser
     /**
      * @throws VersionFinderException
      */
-    public function check()
+    public function check(): void
     {
         if (!is_dir(getcwd().'/.git')) {
             throw VersionFinderException::gitNotFound();

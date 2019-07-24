@@ -51,9 +51,9 @@ use Symfony\Component\Finder\SplFileInfo;
  */
 class UpdateVersionCommand extends ContainerAwareCommand
 {
-    const COMMAND_NAME = 'enuage:version:update';
+    public const COMMAND_NAME = 'enuage:version:update';
 
-    const HANDLERS = [
+    private const HANDLERS = [
         'files' => TextHandler::class,
         FileType::TYPE_JSON => JsonHandler::class,
         FileType::TYPE_YAML => YamlHandler::class,
@@ -117,7 +117,7 @@ class UpdateVersionCommand extends ContainerAwareCommand
     /**
      * {@inheritdoc}
      */
-    protected function configure()
+    protected function configure(): void
     {
         $this->setName(self::COMMAND_NAME);
         $this->setDescription('Update the version in project files');
@@ -191,6 +191,7 @@ class UpdateVersionCommand extends ContainerAwareCommand
 
         try {
             if ($this->getContainer()->hasParameter(Configuration::CONFIG_ROOT)) {
+                /** @noinspection NestedPositiveIfStatementsInspection */
                 if ($configuration = $this->getContainer()->getParameter(Configuration::CONFIG_ROOT)) {
                     $this->configurations = ConfigurationParser::parseConfiguration($configuration);
                 }
@@ -235,7 +236,7 @@ class UpdateVersionCommand extends ContainerAwareCommand
      * @throws FileNotFoundException
      * @throws InvalidFileException
      */
-    private function updateFiles(FilesFinder $finder, AbstractHandler $handler)
+    private function updateFiles(FilesFinder $finder, AbstractHandler $handler): void
     {
         if ($finder->hasFiles()) {
             $finder->iterate(
@@ -278,7 +279,7 @@ class UpdateVersionCommand extends ContainerAwareCommand
     /**
      * @param $showSource
      */
-    private function showCurrentVersion($showSource)
+    private function showCurrentVersion($showSource): void
     {
         $finder = new VersionFinder();
         $exitCode = 1;
@@ -314,9 +315,9 @@ class UpdateVersionCommand extends ContainerAwareCommand
     /**
      * @throws VersionFinderException
      */
-    private function updateGit()
+    private function updateGit(): void
     {
-        $this->io->newLine(1);
+        $this->io->newLine();
 
         $gitUpdatingMessage = 'Updating Git repository';
         $this->colors ? $this->io->title($gitUpdatingMessage) : $this->io->writeln($gitUpdatingMessage);
@@ -340,6 +341,6 @@ class UpdateVersionCommand extends ContainerAwareCommand
             $this->colors ? $this->io->writeln('✔ '.$updatedMessage) : $this->io->writeln($updatedMessage);
         }
 
-        $this->io->newLine(1);
+        $this->io->newLine();
     }
 }

@@ -25,7 +25,7 @@ use Enuage\VersionUpdaterBundle\ValueObject\Version;
  */
 abstract class AbstractParser
 {
-    const VERSION_PATTERN = '(?>'.
+    public const VERSION_PATTERN = '(?>'.
     '(?<prefix>[a-zA-Z]+)?'.
     '(?<majorVersion>\d+)\.?'.
     '(?<minorVersion>\d*)\.?'.
@@ -79,7 +79,7 @@ abstract class AbstractParser
     /**
      * @param string $pattern
      */
-    protected function setPattern(string $pattern)
+    protected function setPattern(string $pattern): void
     {
         $this->pattern = $pattern;
     }

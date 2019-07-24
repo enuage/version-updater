@@ -14,8 +14,8 @@ use Exception;
  */
 final class ComposerHandler extends JsonHandler
 {
-    const FILENAME = 'composer.json';
-    const VERSION_PROPERTY = "version"; // https://getcomposer.org/doc/04-schema.md#version
+    public const FILENAME = 'composer.json';
+    private const VERSION_PROPERTY = 'version'; // https://getcomposer.org/doc/04-schema.md#version
 
     /**
      * ComposerHandler constructor.

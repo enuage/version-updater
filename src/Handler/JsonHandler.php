@@ -57,7 +57,7 @@ class JsonHandler extends StructureHandler
 
         if (null === $result) {
             $file = $this->getParser()->getFile();
-            throw new InvalidFileException("", $file->getFilename());
+            throw new InvalidFileException('', $file->getFilename());
         }
 
         return $result;

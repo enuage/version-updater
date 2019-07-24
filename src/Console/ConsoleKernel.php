@@ -47,7 +47,7 @@ class ConsoleKernel extends BaseKernel
      *
      * @throws Exception
      */
-    protected function configureContainer(ContainerBuilder $containerBuilder, LoaderInterface $loader)
+    protected function configureContainer(ContainerBuilder $containerBuilder, LoaderInterface $loader): void
     {
         $containerBuilder->loadFromExtension(
             'framework',
@@ -60,7 +60,7 @@ class ConsoleKernel extends BaseKernel
     /**
      * {@inheritDoc}
      */
-    protected function configureRoutes(RouteCollectionBuilder $routes)
+    protected function configureRoutes(RouteCollectionBuilder $routes): void
     {
     }
 }
