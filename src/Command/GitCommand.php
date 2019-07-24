@@ -36,7 +36,7 @@ class GitCommand
         }
 
         $options[] = '-m';
-        $options[] = $message;
+        $options[] = '"'.$message.'"';
 
         self::run(implode(' ', $options));
     }
@@ -57,7 +57,7 @@ class GitCommand
      */
     public static function createTag(string $tag, string $message): void
     {
-        self::run(sprintf('tag -a %s -m %s', $tag, $message));
+        self::run(sprintf('tag -a %s -m "%s"', $tag, $message));
     }
 
     /**

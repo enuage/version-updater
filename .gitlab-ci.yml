@@ -58,7 +58,7 @@ version:major:
     stage: version
     script:
         - composer install -q
-        - php bin/version-updater --major -v
+        - php bin/version-updater --major
     when: manual
     only:
         - master
@@ -69,7 +69,7 @@ version:minor:
     stage: version
     script:
         - composer install -q
-        - php bin/version-updater --minor -v
+        - php bin/version-updater --minor
     when: manual
     only:
         - master
@@ -80,7 +80,7 @@ version:patch:
     stage: version
     script:
         - composer install -q
-        - php bin/version-updater --patch -v
+        - php bin/version-updater --patch
     when: manual
     only:
         - master
