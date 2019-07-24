@@ -95,6 +95,22 @@ class ConfigurationParser
     }
 
     /**
+     * @return string
+     */
+    public function getGitPrefix(): string
+    {
+        if ($this->isGitEnabled()) {
+            $gitConfiguration = $this->getGitConfiguration();
+
+            if (array_key_exists('prefix', $gitConfiguration)) {
+                return (string) $gitConfiguration['prefix'];
+            }
+        }
+
+        return 'v';
+    }
+
+    /**
      * @return array
      */
     private function getGitConfiguration(): array

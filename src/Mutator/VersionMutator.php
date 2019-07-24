@@ -60,6 +60,10 @@ class VersionMutator
      */
     public function update(): self
     {
+        if ($prefix = $this->options->getPrefix()) {
+            $this->version->setPrefix($prefix);
+        }
+
         foreach (Version::MAIN_VERSIONS as $version) {
             if ($this->options->isMainVersionUpdated($version)) {
                 $this->updateMainVersion($version);

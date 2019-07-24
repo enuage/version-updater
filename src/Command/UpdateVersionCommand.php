@@ -17,7 +17,6 @@ use Enuage\VersionUpdaterBundle\DependencyInjection\Configuration;
 use Enuage\VersionUpdaterBundle\DTO\VersionOptions;
 use Enuage\VersionUpdaterBundle\Exception\FileNotFoundException;
 use Enuage\VersionUpdaterBundle\Exception\InvalidFileException;
-use Enuage\VersionUpdaterBundle\Exception\VersionFinderException;
 use Enuage\VersionUpdaterBundle\Finder\FilesFinder;
 use Enuage\VersionUpdaterBundle\Finder\VersionFinder;
 use Enuage\VersionUpdaterBundle\Formatter\FileFormatter;
@@ -168,6 +167,7 @@ class UpdateVersionCommand extends ContainerAwareCommand
         $this->options = CommandOptionsParser::parse($input);
         if ($this->configurations->isGitEnabled()) {
             $this->options->setGitVersion($this->service->getVersionFromGit());
+            $this->options->setPrefix($this->configurations->getGitPrefix());
         }
 
         $this->colors = filter_var($input->getOption('colors'), FILTER_VALIDATE_BOOLEAN);
@@ -267,9 +267,12 @@ class UpdateVersionCommand extends ContainerAwareCommand
 
                     $fileFormatter = new FileFormatter($fileParser);
                     $fileFormatter->setHandler($handler);
-                    $this->version = $fileFormatter->format($mutator->getFormatter());
+                    $formatter = $mutator->getFormatter();
+                    $version = $fileFormatter->format($formatter);
 
-                    $updatedMessage = sprintf('Updated file "%s". Version: %s', $file, $this->version);
+                    $this->version = $formatter->format();
+
+                    $updatedMessage = sprintf('Updated file "%s". Version: %s', $file, $version);
                     $this->colors ? $this->io->writeln('✔ '.$updatedMessage) : $this->io->writeln($updatedMessage);
                 }
             );
@@ -313,7 +316,7 @@ class UpdateVersionCommand extends ContainerAwareCommand
     }
 
     /**
-     * @throws VersionFinderException
+     * @return void
      */
     private function updateGit(): void
     {
@@ -322,21 +325,22 @@ class UpdateVersionCommand extends ContainerAwareCommand
         $gitUpdatingMessage = 'Updating Git repository';
         $this->colors ? $this->io->title($gitUpdatingMessage) : $this->io->writeln($gitUpdatingMessage);
 
-        // TODO GitCommand::commit('.', 'Version update: $version');
-        // TODO GitCommand::push();
+        GitCommand::commit(sprintf('Version update: %s', $this->version), true);
+        if ($this->configurations->isGitPushEnabled()) {
+            GitCommand::push();
+        }
 
         $commitMessage = 'All updated files were committed.';
         $this->colors ? $this->io->writeln('✱ '.$commitMessage) : $this->io->writeln($commitMessage);
 
-        $parser = new VersionParser($this->service->getVersionFromGit());
-        $mutator = new VersionMutator($parser->parse(), $this->options);
+        GitCommand::createTag($this->version);
 
-        // TODO GitCommand::createTag($version);
-        $tagCreatedMessage = sprintf('Created tag "%s".', ''); // TODO
+        $tagCreatedMessage = sprintf('Created tag "%s".', $this->version);
         $this->colors ? $this->io->writeln('✱ '.$tagCreatedMessage) : $this->io->writeln($tagCreatedMessage);
 
         if ($this->configurations->isGitPushEnabled()) {
-            // TODO GitCommand::pushTag($version);
+            GitCommand::pushTag($this->version);
+
             $updatedMessage = 'Pushed to remote git repository';
             $this->colors ? $this->io->writeln('✔ '.$updatedMessage) : $this->io->writeln($updatedMessage);
         }

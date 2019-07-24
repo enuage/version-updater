@@ -73,6 +73,11 @@ class VersionOptions
     private $gitVersion;
 
     /**
+     * @var string
+     */
+    private $prefix;
+
+    /**
      * VersionOptions constructor.
      */
     public function __construct()
@@ -417,5 +422,21 @@ class VersionOptions
     public function getGitVersion(): ?string
     {
         return $this->gitVersion;
+    }
+
+    /**
+     * @param string|null $prefix
+     */
+    public function setPrefix(?string $prefix): void
+    {
+        $this->prefix = $prefix;
+    }
+
+    /**
+     * @return string|null
+     */
+    public function getPrefix(): ?string
+    {
+        return $this->prefix;
     }
 }
