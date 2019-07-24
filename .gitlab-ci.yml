@@ -40,7 +40,7 @@ test:coverage:
 
 .setup_git: &setup_git
     before_script:
-        - which ssh-agent || ( apt-get update -y && apt-get install openssh-client -y )
+        - 'which ssh-agent || ( apt-get update -qy && apt-get install openssh-client -qqy )'
         - eval $(ssh-agent -s)
         - echo "$SSH_PRIVATE_KEY" | tr -d '\r' | ssh-add - > /dev/null
         - mkdir -p ~/.ssh
@@ -50,8 +50,7 @@ test:coverage:
         - git remote set-url origin git@gitlab.com:enuage/bundles/version-updater.git
         - git config --global user.email "spam312sn@gmail.com"
         - git config --global user.name "Serghei Niculaev"
-        - git checkout --track origin/master
-        - git fetch && git pull
+        - git checkout $CI_COMMIT_REF_NAME
 
 version:major:
     <<: *setup_git
@@ -59,7 +58,7 @@ version:major:
     stage: version
     script:
         - composer install -q
-        - php bin/version-updater --major
+        - php bin/version-updater --major -v
     when: manual
     only:
         - master
@@ -70,7 +69,7 @@ version:minor:
     stage: version
     script:
         - composer install -q
-        - php bin/version-updater --minor
+        - php bin/version-updater --minor -v
     when: manual
     only:
         - master
@@ -81,7 +80,7 @@ version:patch:
     stage: version
     script:
         - composer install -q
-        - php bin/version-updater --patch
+        - php bin/version-updater --patch -v
     when: manual
     only:
         - master

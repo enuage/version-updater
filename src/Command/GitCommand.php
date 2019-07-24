@@ -67,7 +67,7 @@ class GitCommand
      */
     public static function pushTag(string $tag): void
     {
-        self::run(sprintf('push origin %s', $tag));
+        self::run(sprintf('push -u origin %s', $tag));
     }
 
     /**
