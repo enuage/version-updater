@@ -27,7 +27,7 @@ use Symfony\Component\Finder\SplFileInfo;
  */
 class FileParser extends AbstractParser
 {
-    const FILE_VERSION_PATTERN = '\V';
+    public const FILE_VERSION_PATTERN = '\V';
 
     /**
      * @var SplFileInfo

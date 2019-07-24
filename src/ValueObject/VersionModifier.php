@@ -22,9 +22,9 @@ namespace Enuage\VersionUpdaterBundle\ValueObject;
  */
 class VersionModifier
 {
-    const MAXIMAL_MODIFIER_VALUE = 1;
-    const IGNORED_MODIFIER_VALUE = 0;
-    const MINIMAL_MODIFIER_VALUE = -1;
+    private const MAXIMAL_MODIFIER_VALUE = 1;
+    private const IGNORED_MODIFIER_VALUE = 0;
+    private const MINIMAL_MODIFIER_VALUE = -1;
 
     /**
      * @var int
@@ -116,7 +116,7 @@ class VersionModifier
     /**
      * @return void
      */
-    public function enable()
+    public function enable(): void
     {
         $this->enabled = true;
     }
@@ -124,7 +124,7 @@ class VersionModifier
     /**
      * @return void
      */
-    public function disable()
+    public function disable(): void
     {
         $this->enabled = false;
     }

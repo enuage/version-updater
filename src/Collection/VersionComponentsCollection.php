@@ -27,8 +27,8 @@ use Enuage\VersionUpdaterBundle\ValueObject\VersionComponent;
  */
 class VersionComponentsCollection extends ArrayCollection
 {
-    const DISABLE_ALL = false;
-    const ENABLE_ALL = true;
+    public const DISABLE_ALL = false;
+    public const ENABLE_ALL = true;
 
     /**
      * {@inheritDoc}
@@ -46,7 +46,7 @@ class VersionComponentsCollection extends ArrayCollection
      * @param $type
      * @param $value
      */
-    public function set($type, $value)
+    public function set($type, $value): void
     {
         if (Version::MAJOR === $type && $value > 0) {
             $this->get(Version::MINOR)->setValue(0);
@@ -66,7 +66,7 @@ class VersionComponentsCollection extends ArrayCollection
         $this->get($type)->setValue($value);
     }
 
-    public function disableAll()
+    public function disableAll(): void
     {
         /** @var VersionComponent $type */
         foreach ($this->getIterator() as $type) {

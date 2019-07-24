@@ -22,8 +22,8 @@ namespace Enuage\VersionUpdaterBundle\ValueObject;
  */
 class MetaComponent
 {
-    const TYPE_DATETIME = 'datetime';
-    const TYPE_STRING = 'string';
+    public const TYPE_DATETIME = 'datetime';
+    public const TYPE_STRING = 'string';
 
     /**
      * @var string
@@ -67,7 +67,7 @@ class MetaComponent
     /**
      * @return null|string
      */
-    public function getFormat()
+    public function getFormat(): ?string
     {
         return $this->format;
     }

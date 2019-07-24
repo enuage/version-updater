@@ -23,8 +23,8 @@ use Symfony\Component\Config\Definition\ConfigurationInterface;
  */
 class Configuration implements ConfigurationInterface
 {
-    const CONFIG_ROOT = 'enuage_version_updater';
-    const CONFIG_FILE = '.enuage';
+    public const CONFIG_ROOT = 'enuage_version_updater';
+    public const CONFIG_FILE = '.enuage';
 
     /**
      * {@inheritdoc}

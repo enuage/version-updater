@@ -1,5 +1,10 @@
 # Version updater command changelog
 
+### v1.5.0
+
+- [#7][3]: Added Git tag updating and parsing latest version from remote
+repository
+
 ### v1.4.1
 
 - Added feature for disabling colors in output
@@ -100,3 +105,4 @@ files
 
 [1]: https://gitlab.com/enuage/bundles/version-updater/issues/1
 [2]: https://gitlab.com/enuage/bundles/version-updater/issues/2
+[3]: https://gitlab.com/enuage/bundles/version-updater/issues/7

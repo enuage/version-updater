@@ -53,7 +53,7 @@ class VersionComponent
     /**
      * @param int $value
      */
-    public function setValue(int $value)
+    public function setValue(int $value): void
     {
         $this->value = $value;
     }
@@ -69,7 +69,7 @@ class VersionComponent
     /**
      * @param bool $enabled
      */
-    public function setEnabled(bool $enabled)
+    public function setEnabled(bool $enabled): void
     {
         $this->enabled = $enabled;
     }

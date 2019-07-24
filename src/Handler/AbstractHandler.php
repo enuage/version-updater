@@ -16,6 +16,7 @@
 namespace Enuage\VersionUpdaterBundle\Handler;
 
 use Enuage\VersionUpdaterBundle\Formatter\FormatterInterface;
+use Enuage\VersionUpdaterBundle\Helper\Type\FileType;
 use Enuage\VersionUpdaterBundle\Helper\Type\StringType;
 use Enuage\VersionUpdaterBundle\Parser\AbstractParser;
 use Enuage\VersionUpdaterBundle\Parser\FileParser;
@@ -62,7 +63,7 @@ abstract class AbstractHandler
     /**
      * @param string $pattern
      */
-    public function setPattern(string $pattern)
+    public function setPattern(string $pattern): void
     {
         $this->pattern = new StringType($pattern);
     }
@@ -85,5 +86,28 @@ abstract class AbstractHandler
     protected function getParser(): FileParser
     {
         return $this->parser;
+    }
+
+    /**
+     * @param string $fileType
+     *
+     * @return AbstractHandler|ComposerHandler
+     */
+    public static function getHandlerByFileType(string $fileType): AbstractHandler
+    {
+        switch ($fileType) {
+            case FileType::TYPE_JSON:
+                return new JsonHandler();
+                break;
+            case FileType::TYPE_JSON_COMPOSER:
+                return new ComposerHandler();
+                break;
+            case FileType::TYPE_YAML:
+                return new YamlHandler();
+                break;
+            default:
+                return new TextHandler();
+                break;
+        }
     }
 }

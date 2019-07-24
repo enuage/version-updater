@@ -65,8 +65,56 @@ class ConfigurationParser
      *
      * @return array|null
      */
-    public function getFiles(string $type = 'files')
+    public function getFiles(string $type = 'files'): ?array
     {
         return $this->configurations->containsKey($type) ? $this->configurations->get($type) : null;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isGitEnabled(): bool
+    {
+        return $this->configurations->containsKey('git');
+    }
+
+    /**
+     * @return bool
+     */
+    public function isGitPushEnabled(): bool
+    {
+        if ($this->isGitEnabled()) {
+            $gitConfiguration = $this->getGitConfiguration();
+
+            if (array_key_exists('push', $gitConfiguration)) {
+                return filter_var($gitConfiguration['push'], FILTER_VALIDATE_BOOLEAN);
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * @return string
+     */
+    public function getGitPrefix(): string
+    {
+        if ($this->isGitEnabled()) {
+            $gitConfiguration = $this->getGitConfiguration();
+
+            if (array_key_exists('prefix', $gitConfiguration)) {
+                return (string) $gitConfiguration['prefix'];
+            }
+        }
+
+        return 'v';
+    }
+
+    /**
+     * @return array
+     */
+    private function getGitConfiguration(): array
+    {
+        return $this->configurations->getValue('git') ?: [];
     }
 }

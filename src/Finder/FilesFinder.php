@@ -74,7 +74,7 @@ class FilesFinder
      * @throws FileNotFoundException
      * @throws InvalidFileException
      */
-    public function iterate(Closure $closure)
+    public function iterate(Closure $closure): void
     {
         foreach ($this->files as $filePath => $pattern) {
             $file = $this->getFile($filePath);

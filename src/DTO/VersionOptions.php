@@ -68,6 +68,16 @@ class VersionOptions
     private $metaComponents;
 
     /**
+     * @var string
+     */
+    private $gitVersion;
+
+    /**
+     * @var string
+     */
+    private $prefix;
+
+    /**
      * VersionOptions constructor.
      */
     public function __construct()
@@ -259,7 +269,7 @@ class VersionOptions
     /**
      * @return null|string
      */
-    public function getVersion()
+    public function getVersion(): ?string
     {
         return $this->version;
     }
@@ -267,7 +277,7 @@ class VersionOptions
     /**
      * @param null|string $version
      */
-    public function setVersion(string $version = null)
+    public function setVersion(string $version = null): void
     {
         $this->version = $version;
     }
@@ -297,7 +307,7 @@ class VersionOptions
      *
      * @return VersionModifier|null
      */
-    public function getMainModifier(string $type)
+    public function getMainModifier(string $type): ?VersionModifier
     {
         return $this->getMainModifiers()->getValue($type);
     }
@@ -357,7 +367,7 @@ class VersionOptions
     /**
      * @return void
      */
-    public function release()
+    public function release(): void
     {
         $this->release = true;
 
@@ -372,7 +382,7 @@ class VersionOptions
      *
      * @return void
      */
-    public function consoleDebug(SymfonyStyle $io)
+    public function consoleDebug(SymfonyStyle $io): void
     {
         $rows[] = ['Set version', $this->getVersion() ?? 'N\\A'];
         foreach (Version::MAIN_VERSIONS as $version) {
@@ -393,6 +403,40 @@ class VersionOptions
             $rows[] = ['Add '.$meta, BooleanType::toShortStatement($this->getMetaComponents()->containsKey($meta))];
         }
 
+        $rows[] = ['Git version', $this->getGitVersion() ?? 'N\\A'];
+
         $io->table(['Option', 'Value'], $rows);
+    }
+
+    /**
+     * @param string $gitVersion
+     */
+    public function setGitVersion(string $gitVersion): void
+    {
+        $this->gitVersion = $gitVersion;
+    }
+
+    /**
+     * @return string|null
+     */
+    public function getGitVersion(): ?string
+    {
+        return $this->gitVersion;
+    }
+
+    /**
+     * @param string|null $prefix
+     */
+    public function setPrefix(?string $prefix): void
+    {
+        $this->prefix = $prefix;
+    }
+
+    /**
+     * @return string|null
+     */
+    public function getPrefix(): ?string
+    {
+        return $this->prefix;
     }
 }

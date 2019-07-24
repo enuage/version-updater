@@ -4,7 +4,9 @@
 use Enuage\VersionUpdaterBundle\Command\UpdateVersionCommand;
 use Enuage\VersionUpdaterBundle\Console\ConsoleKernel;
 use Enuage\VersionUpdaterBundle\DependencyInjection\Configuration;
+use Enuage\VersionUpdaterBundle\Helper\Type\FileType;
 use Enuage\VersionUpdaterBundle\Parser\ConfigurationParser;
+use Enuage\VersionUpdaterBundle\Service\VersionService;
 use Symfony\Bundle\FrameworkBundle\Console\Application;
 
 gc_disable();
@@ -21,8 +23,6 @@ if (is_file($devAutoload)) {
     require_once $devAutoload;
 }
 
-$composer = json_decode(file_get_contents(__DIR__.'/../composer.json'));
-
 $kernel = new ConsoleKernel('prod', false);
 $application = new Application($kernel);
 
@@ -35,7 +35,10 @@ if (is_file($configurationFilePath)) {
 $command = new UpdateVersionCommand($configurations);
 
 $application->setName('éNuage version updater command');
-$application->setVersion($composer->version);
+
+$versionService = new VersionService();
+$version = $versionService->getVersionFromFile(__DIR__.'/../composer.json', FileType::TYPE_JSON_COMPOSER);
+$application->setVersion($version);
 
 $application->add($command);
 $application->setDefaultCommand(UpdateVersionCommand::COMMAND_NAME, true);

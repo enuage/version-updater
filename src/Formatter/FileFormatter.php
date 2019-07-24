@@ -77,7 +77,7 @@ class FileFormatter implements FormatterInterface
     /**
      * @param AbstractHandler $handler
      */
-    public function setHandler(AbstractHandler $handler)
+    public function setHandler(AbstractHandler $handler): void
     {
         $this->handler = $handler;
     }

@@ -25,7 +25,7 @@ use Symfony\Component\HttpKernel\DependencyInjection\Extension;
  */
 class EnuageVersionUpdaterExtension extends Extension
 {
-    const MAIN_TYPES = [
+    private const MAIN_TYPES = [
         'files',
         'json',
         'yaml',
@@ -36,7 +36,7 @@ class EnuageVersionUpdaterExtension extends Extension
      *
      * @throws Exception
      */
-    public function load(array $configs, ContainerBuilder $container)
+    public function load(array $configs, ContainerBuilder $container): void
     {
         $configuration = new Configuration();
         $config = $this->processConfiguration($configuration, $configs);
