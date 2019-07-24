@@ -26,8 +26,8 @@ use Enuage\VersionUpdaterBundle\ValueObject\VersionModifier;
  */
 class VersionModifierCollection extends ArrayCollection
 {
-    const DISABLE_ALL = false;
-    const ENABLE_ALL = true;
+    public const DISABLE_ALL = false;
+    public const ENABLE_ALL = true;
 
     /**
      * VersionModifierCollection constructor.
@@ -47,7 +47,7 @@ class VersionModifierCollection extends ArrayCollection
     /**
      * @param string $type
      */
-    public function enable(string $type)
+    public function enable(string $type): void
     {
         $this->get($type)->enable();
     }
@@ -55,7 +55,7 @@ class VersionModifierCollection extends ArrayCollection
     /**
      * @param string $type
      */
-    public function decrease(string $type)
+    public function decrease(string $type): void
     {
         $this->get($type)->setDowngrade(true)->update();
     }
@@ -63,7 +63,7 @@ class VersionModifierCollection extends ArrayCollection
     /**
      * @param string $type
      */
-    public function increase(string $type)
+    public function increase(string $type): void
     {
         $this->get($type)->setDowngrade(false)->update();
     }

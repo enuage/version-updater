@@ -63,7 +63,7 @@ abstract class AbstractHandler
     /**
      * @param string $pattern
      */
-    public function setPattern(string $pattern)
+    public function setPattern(string $pattern): void
     {
         $this->pattern = new StringType($pattern);
     }

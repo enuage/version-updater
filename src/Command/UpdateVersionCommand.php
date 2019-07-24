@@ -18,8 +18,10 @@ use Enuage\VersionUpdaterBundle\DTO\VersionOptions;
 use Enuage\VersionUpdaterBundle\Exception\FileNotFoundException;
 use Enuage\VersionUpdaterBundle\Exception\InvalidFileException;
 use Enuage\VersionUpdaterBundle\Finder\FilesFinder;
+use Enuage\VersionUpdaterBundle\Finder\VersionFinder;
 use Enuage\VersionUpdaterBundle\Formatter\FileFormatter;
 use Enuage\VersionUpdaterBundle\Handler\AbstractHandler;
+use Enuage\VersionUpdaterBundle\Handler\ComposerHandler;
 use Enuage\VersionUpdaterBundle\Handler\JsonHandler;
 use Enuage\VersionUpdaterBundle\Handler\StructureHandler;
 use Enuage\VersionUpdaterBundle\Handler\TextHandler;
@@ -39,6 +41,7 @@ use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
+use Symfony\Component\Finder\SplFileInfo;
 
 /**
  * Class UpdateVersionCommand
@@ -47,9 +50,9 @@ use Symfony\Component\Console\Style\SymfonyStyle;
  */
 class UpdateVersionCommand extends ContainerAwareCommand
 {
-    const COMMAND_NAME = 'enuage:version:update';
+    public const COMMAND_NAME = 'enuage:version:update';
 
-    const HANDLERS = [
+    private const HANDLERS = [
         'files' => TextHandler::class,
         FileType::TYPE_JSON => JsonHandler::class,
         FileType::TYPE_YAML => YamlHandler::class,
@@ -66,11 +69,6 @@ class UpdateVersionCommand extends ContainerAwareCommand
     private $configurations;
 
     /**
-     * @var string
-     */
-    private $version;
-
-    /**
      * @var SymfonyStyle
      */
     private $io;
@@ -79,6 +77,16 @@ class UpdateVersionCommand extends ContainerAwareCommand
      * @var boolean
      */
     private $colors = true;
+
+    /**
+     * @var VersionService
+     */
+    private $service;
+
+    /**
+     * @var string
+     */
+    private $version;
 
     /**
      * UpdateVersionCommand constructor.
@@ -90,6 +98,7 @@ class UpdateVersionCommand extends ContainerAwareCommand
         parent::__construct(self::COMMAND_NAME);
 
         $this->configurations = $configurations ?: new ConfigurationParser();
+        $this->service = new VersionService();
     }
 
     /**
@@ -107,7 +116,7 @@ class UpdateVersionCommand extends ContainerAwareCommand
     /**
      * {@inheritdoc}
      */
-    protected function configure()
+    protected function configure(): void
     {
         $this->setName(self::COMMAND_NAME);
         $this->setDescription('Update the version in project files');
@@ -141,15 +150,14 @@ class UpdateVersionCommand extends ContainerAwareCommand
         );
 
         $this->addOption('colors', null, InputOption::VALUE_OPTIONAL, 'Enable/disable output colors.', true);
-        $this->addOption('show-current', null, InputOption::VALUE_OPTIONAL, 'Show current version from source');
+        $this->addOption('show-current', null, InputOption::VALUE_OPTIONAL, 'Show current version from source.');
+        $this->addOption('exclude-git', null, InputOption::VALUE_NONE, 'Disable updating Git repository.');
     }
 
     /**
      * {@inheritdoc}
      *
      * @throws Exception
-     * @throws FileNotFoundException
-     * @throws InvalidFileException
      */
     protected function execute(InputInterface $input, OutputInterface $output)
     {
@@ -157,6 +165,10 @@ class UpdateVersionCommand extends ContainerAwareCommand
         $this->io = $io;
 
         $this->options = CommandOptionsParser::parse($input);
+        if ($this->configurations->isGitEnabled()) {
+            $this->options->setGitVersion($this->service->getVersionFromGit());
+            $this->options->setPrefix($this->configurations->getGitPrefix());
+        }
 
         $this->colors = filter_var($input->getOption('colors'), FILTER_VALIDATE_BOOLEAN);
 
@@ -165,8 +177,12 @@ class UpdateVersionCommand extends ContainerAwareCommand
         }
 
         if ($io->isVerbose()) {
+            $debugMessage = 'Debug mode enabled.';
+            $this->colors
+                ? $this->io->block($debugMessage, 'DEBUG', 'fg=black;bg=yellow', ' ', true)
+                : $this->io->writeln($debugMessage);
             $configurationsMessage = 'Configurations:';
-            $this->colors ? $io->section($configurationsMessage) : $io->writeln($configurationsMessage);
+            $this->colors ? $io->title($configurationsMessage) : $io->writeln($configurationsMessage);
             $this->options->consoleDebug($io);
         }
 
@@ -175,6 +191,7 @@ class UpdateVersionCommand extends ContainerAwareCommand
 
         try {
             if ($this->getContainer()->hasParameter(Configuration::CONFIG_ROOT)) {
+                /** @noinspection NestedPositiveIfStatementsInspection */
                 if ($configuration = $this->getContainer()->getParameter(Configuration::CONFIG_ROOT)) {
                     $this->configurations = ConfigurationParser::parseConfiguration($configuration);
                 }
@@ -198,12 +215,18 @@ class UpdateVersionCommand extends ContainerAwareCommand
                     $this->updateFiles($finder, $handler);
                 }
             }
+
+            if ($this->configurations->isGitEnabled() && false === $input->getOption('exclude-git')) {
+                $this->updateGit();
+            }
         } catch (Exception $exception) {
-            $io->error($exception->getMessage());
+            $this->colors ? $io->error($exception->getMessage()) : $io->writeln($exception->getMessage());
+            exit(2);
         }
 
-        $successMessage = sprintf('Version updated to "%s"', $this->version);
+        $successMessage = 'All targets were successfully updated.';
         $this->colors ? $io->success($successMessage) : $io->writeln($successMessage);
+        $this->io->writeln($this->version);
     }
 
     /**
@@ -213,17 +236,29 @@ class UpdateVersionCommand extends ContainerAwareCommand
      * @throws FileNotFoundException
      * @throws InvalidFileException
      */
-    private function updateFiles(FilesFinder $finder, AbstractHandler $handler)
+    private function updateFiles(FilesFinder $finder, AbstractHandler $handler): void
     {
         if ($finder->hasFiles()) {
             $finder->iterate(
                 function ($file, $pattern) use ($handler) {
                     $handler->setPattern($pattern);
+
+                    /** @var SplFileInfo $file */
+                    if (ComposerHandler::FILENAME === $file->getBasename()) {
+                        $handler = new ComposerHandler();
+                    }
+
                     $fileParser = new FileParser($file, $handler);
-                    $versionParser = new VersionParser($this->options->getVersion());
+
+                    $providedVersion = $this->options->getVersion();
+                    if ($this->configurations->isGitEnabled()) {
+                        $providedVersion = $this->options->getGitVersion();
+                    }
+                    $versionParser = new VersionParser($providedVersion);
 
                     /** @var AbstractParser $parser */
                     $parser = $this->options->hasVersion() ? $versionParser : $fileParser;
+
                     $mutator = new VersionMutator($parser->parse(), $this->options);
 
                     if (!$this->options->hasVersion()) {
@@ -232,9 +267,12 @@ class UpdateVersionCommand extends ContainerAwareCommand
 
                     $fileFormatter = new FileFormatter($fileParser);
                     $fileFormatter->setHandler($handler);
-                    $this->version = $fileFormatter->format($mutator->getFormatter());
+                    $formatter = $mutator->getFormatter();
+                    $version = $fileFormatter->format($formatter);
 
-                    $updatedMessage = sprintf('Updated file "%s"', $file);
+                    $this->version = $formatter->format();
+
+                    $updatedMessage = sprintf('Updated file "%s". Version: %s', $file, $version);
                     $this->colors ? $this->io->writeln('✔ '.$updatedMessage) : $this->io->writeln($updatedMessage);
                 }
             );
@@ -244,47 +282,70 @@ class UpdateVersionCommand extends ContainerAwareCommand
     /**
      * @param $showSource
      */
-    private function showCurrentVersion($showSource)
+    private function showCurrentVersion($showSource): void
     {
-        $sources = [];
-        $versionService = new VersionService();
+        $finder = new VersionFinder();
+        $exitCode = 1;
 
-        $composerExists = file_exists(getcwd().'/composer.json');
-        if ($composerExists) {
-            $composerVersion = $versionService->getVersionFromFile(
-                getcwd().'/composer.json',
-                FileType::TYPE_JSON_COMPOSER
-            );
-
-            $sources[] = ['source' => 'composer', 'version' => $composerVersion];
-        }
-
-        if ('composer' === $showSource) {
-            if (!$composerExists) {
-                $this->io->error('No composer file found in this directory.');
-
-                exit(2);
+        try {
+            switch ($showSource) {
+                case VersionFinder::SOURCE_COMPOSER:
+                    $version = $finder->getComposerVersion();
+                    break;
+                case VersionFinder::SOURCE_GIT:
+                    $version = $finder->getGitVersion();
+                    break;
+                default:
+                    $version = null;
+                    break;
             }
 
-            $version = $composerVersion;
-        }
-
-        if ($this->io->isVerbose()) {
-            $this->io->table(['source', 'version'], $sources);
-        }
-
-        if (true === filter_var($showSource, FILTER_VALIDATE_BOOLEAN)) {
-            foreach ($sources as $data) {
-                $this->io->writeln(sprintf('%s: %s', $data['source'], $data['version']));
+            if (true === filter_var($showSource, FILTER_VALIDATE_BOOLEAN)) {
+                $finder->findAll()->cliOutput($this->io);
             }
 
-            exit(1);
+            if (null !== $version) {
+                $this->io->writeln($version);
+            }
+        } catch (Exception $exception) {
+            $this->colors ? $this->io->error($exception->getMessage()) : $this->io->writeln($exception->getMessage());
+            $exitCode = 2;
         }
 
-        if (isset($version)) {
-            $this->io->writeln($version);
+        exit($exitCode);
+    }
 
-            exit(1);
+    /**
+     * @return void
+     */
+    private function updateGit(): void
+    {
+        $this->io->newLine();
+
+        $gitUpdatingMessage = 'Updating Git repository';
+        $this->colors ? $this->io->title($gitUpdatingMessage) : $this->io->writeln($gitUpdatingMessage);
+
+        GitCommand::addAllFiles();
+        GitCommand::commit(sprintf('Version update: %s', $this->version), true);
+        if ($this->configurations->isGitPushEnabled()) {
+            GitCommand::push();
         }
+
+        $commitMessage = 'All updated files were committed.';
+        $this->colors ? $this->io->writeln('✱ '.$commitMessage) : $this->io->writeln($commitMessage);
+
+        GitCommand::createTag($this->version);
+
+        $tagCreatedMessage = sprintf('Created tag "%s".', $this->version);
+        $this->colors ? $this->io->writeln('✱ '.$tagCreatedMessage) : $this->io->writeln($tagCreatedMessage);
+
+        if ($this->configurations->isGitPushEnabled()) {
+            GitCommand::pushTag($this->version);
+
+            $updatedMessage = 'Pushed to remote git repository';
+            $this->colors ? $this->io->writeln('✔ '.$updatedMessage) : $this->io->writeln($updatedMessage);
+        }
+
+        $this->io->newLine();
     }
 }

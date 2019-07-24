@@ -25,28 +25,28 @@ use Enuage\VersionUpdaterBundle\Collection\VersionComponentsCollection;
  */
 class Version
 {
-    const MAJOR = 'major';
-    const MINOR = 'minor';
-    const PATCH = 'patch';
+    public const MAJOR = 'major';
+    public const MINOR = 'minor';
+    public const PATCH = 'patch';
 
-    const MAIN_VERSIONS = [
+    public const MAIN_VERSIONS = [
         self::MAJOR,
         self::MINOR,
         self::PATCH,
     ];
 
-    const ALPHA = 'alpha';
-    const BETA = 'beta';
-    const RELEASE_CANDIDATE = 'rc';
+    public const ALPHA = 'alpha';
+    public const BETA = 'beta';
+    public const RELEASE_CANDIDATE = 'rc';
 
-    const PRE_RELEASE_VERSIONS = [
+    public const PRE_RELEASE_VERSIONS = [
         self::ALPHA,
         self::BETA,
         self::RELEASE_CANDIDATE,
     ];
 
-    const META = 'meta';
-    const META_DATE = 'date';
+    public const META = 'meta';
+    public const META_DATE = 'date';
 
     /**
      * @var string|null
@@ -85,7 +85,7 @@ class Version
     /**
      * @return null|string
      */
-    public function getPrefix()
+    public function getPrefix(): ?string
     {
         return $this->prefix;
     }
@@ -107,7 +107,7 @@ class Version
      *
      * @return null|int
      */
-    public function getMainVersion(string $type)
+    public function getMainVersion(string $type): ?int
     {
         return $this->getMainComponentValue($type);
     }
@@ -238,7 +238,7 @@ class Version
     /**
      * @return null|int
      */
-    public function getPreReleaseVersion()
+    public function getPreReleaseVersion(): ?int
     {
         return $this->getPreReleaseComponent($this->getPreRelease())->getValue();
     }
@@ -246,7 +246,7 @@ class Version
     /**
      * @return null|string
      */
-    public function getPreRelease()
+    public function getPreRelease(): ?string
     {
         /** @var VersionComponent $component */
         foreach ($this->preReleaseComponents->getIterator() as $type => $component) {
@@ -262,7 +262,7 @@ class Version
      * @param string $type
      * @param int $value
      */
-    public function setPreReleaseVersion(string $type, int $value)
+    public function setPreReleaseVersion(string $type, int $value): void
     {
         $this->getPreReleaseComponent($type)->setValue($value);
     }
@@ -278,7 +278,7 @@ class Version
     /**
      * @param ArrayCollection $metaComponents
      */
-    public function setMetaComponents(ArrayCollection $metaComponents)
+    public function setMetaComponents(ArrayCollection $metaComponents): void
     {
         $this->metaComponents = $metaComponents;
     }

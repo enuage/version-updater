@@ -11,8 +11,8 @@ use Enuage\VersionUpdaterBundle\Collection\ArrayCollection;
  */
 class StringType
 {
-    const REMOVE_EMPTY_ELEMENTS = 1;
-    const EMPTY_VALUE = '';
+    public const REMOVE_EMPTY_ELEMENTS = 1;
+    private const EMPTY_VALUE = '';
 
     /**
      * @var string

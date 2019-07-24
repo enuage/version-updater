@@ -9,7 +9,7 @@ namespace Enuage\VersionUpdaterBundle\Helper\Type;
  */
 class FileType
 {
-    const TYPE_JSON = 'json';
-    const TYPE_JSON_COMPOSER = 'json-composer';
-    const TYPE_YAML = 'yaml';
+    public const TYPE_JSON = 'json';
+    public const TYPE_JSON_COMPOSER = 'json-composer';
+    public const TYPE_YAML = 'yaml';
 }

@@ -136,6 +136,8 @@ Available options
 - `--show-current <string|boolean>`: Show current version from file or from all available sources. Currently supported
 sources:
     - composer
+    - Git repository (if enabled)
+- `--exclude-git`: Disable updating Git repository
 
 ## Option 2: Updating version via service
 
