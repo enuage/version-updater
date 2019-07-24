@@ -42,9 +42,11 @@ test:coverage:
     before_script:
         - which ssh-agent || ( apt-get update -y && apt-get install openssh-client -y )
         - eval $(ssh-agent -s)
-        - echo "${SSH_PRIVATE_KEY}" | tr -d '\r' | ssh-add - > /dev/null
+        - echo "$SSH_PRIVATE_KEY" | tr -d '\r' | ssh-add - > /dev/null
         - mkdir -p ~/.ssh
         - chmod 700 ~/.ssh
+        - echo "$SSH_KNOWN_HOSTS" > ~/.ssh/known_hosts
+        - chmod 644 ~/.ssh/known_hosts
         - git remote set-url origin git@gitlab.com:enuage/bundles/version-updater.git
         - git config --global user.email "spam312sn@gmail.com"
         - git config --global user.name "Serghei Niculaev"
