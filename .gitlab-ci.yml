@@ -1,6 +1,7 @@
 stages:
     - lint
     - test
+    - version
 
 lint:full:
     image: spam312sn/symfony:php7.2-xdebug
@@ -36,3 +37,33 @@ test:coverage:
     when: manual
     only:
         - merge_requests
+
+version:major:
+    image: spam312sn/symfony:php7.2-xdebug
+    stage: version
+    script:
+        - composer install -q
+        - php bin/version-updater --major
+    when: manual
+    only:
+        - master
+
+version:minor:
+    image: spam312sn/symfony:php7.2-xdebug
+    stage: version
+    script:
+        - composer install -q
+        - php bin/version-updater --minor
+    when: manual
+    only:
+        - master
+
+version:patch:
+    image: spam312sn/symfony:php7.2-xdebug
+    stage: version
+    script:
+        - composer install -q
+        - php bin/version-updater --patch
+    when: manual
+    only:
+        - master
