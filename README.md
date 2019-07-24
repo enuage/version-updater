@@ -4,6 +4,12 @@
 [![Packagist](https://img.shields.io/packagist/v/enuage/version-updater.svg)](https://packagist.org/packages/enuage/version-updater)
 [![Packagist](https://img.shields.io/packagist/l/enuage/version-updater.svg)](https://packagist.org/packages/enuage/version-updater)
 
+Requirements
+============
+
+- PHP >= 7.1.3
+- Symfony is optional
+
 Installation
 ============
 
