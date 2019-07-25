@@ -157,7 +157,7 @@ class FilesFinder
         $finder->in($directory->getValue());
         $finder->notPath('vendor');
         $finder->depth(0); // Restrict recursive search
-        $finder->name($name);
+        $finder->name($name->getValue());
         $finder->ignoreDotFiles(false);
 
         $file = ArrayCollection::fromIterator($finder->getIterator())->first();
