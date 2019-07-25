@@ -27,6 +27,7 @@ use Enuage\VersionUpdaterBundle\Handler\StructureHandler;
 use Enuage\VersionUpdaterBundle\Handler\TextHandler;
 use Enuage\VersionUpdaterBundle\Handler\YamlHandler;
 use Enuage\VersionUpdaterBundle\Helper\Type\FileType;
+use Enuage\VersionUpdaterBundle\Helper\Type\StringType;
 use Enuage\VersionUpdaterBundle\Mutator\VersionMutator;
 use Enuage\VersionUpdaterBundle\Parser\AbstractParser;
 use Enuage\VersionUpdaterBundle\Parser\CommandOptionsParser;
@@ -87,6 +88,11 @@ class UpdateVersionCommand extends ContainerAwareCommand
      * @var string
      */
     private $version;
+
+    /**
+     * @var bool
+     */
+    private $printVersionOnly = false;
 
     /**
      * UpdateVersionCommand constructor.
@@ -152,6 +158,12 @@ class UpdateVersionCommand extends ContainerAwareCommand
         $this->addOption('colors', null, InputOption::VALUE_OPTIONAL, 'Enable/disable output colors.', true);
         $this->addOption('show-current', null, InputOption::VALUE_OPTIONAL, 'Show current version from source.');
         $this->addOption('exclude-git', null, InputOption::VALUE_NONE, 'Disable updating Git repository.');
+        $this->addOption(
+            'print-version-only',
+            null,
+            InputOption::VALUE_NONE,
+            'Only latest version will be printed in output.'
+        );
     }
 
     /**
@@ -170,6 +182,7 @@ class UpdateVersionCommand extends ContainerAwareCommand
             $this->options->setPrefix($this->configurations->getGitPrefix());
         }
 
+        $this->printVersionOnly = $input->getOption('print-version-only');
         $this->colors = filter_var($input->getOption('colors'), FILTER_VALIDATE_BOOLEAN);
 
         if ($showSource = $input->getOption('show-current')) {
@@ -181,14 +194,11 @@ class UpdateVersionCommand extends ContainerAwareCommand
             $this->colors
                 ? $this->io->block($debugMessage, 'DEBUG', 'fg=black;bg=yellow', ' ', true)
                 : $this->io->writeln($debugMessage);
-            $configurationsMessage = 'Configurations:';
-            $this->colors ? $io->title($configurationsMessage) : $io->writeln($configurationsMessage);
+            $this->print('Configurations:', true, null, 'title');
             $this->options->consoleDebug($io);
         }
 
-        $processStartMessage = 'Started files updating';
-        $this->colors ? $io->title($processStartMessage) : $io->writeln($processStartMessage);
-
+        $this->print('Started files updating', true, null, 'title');
         try {
             if ($this->getContainer()->hasParameter(Configuration::CONFIG_ROOT)) {
                 /** @noinspection NestedPositiveIfStatementsInspection */
@@ -224,8 +234,7 @@ class UpdateVersionCommand extends ContainerAwareCommand
             exit(2);
         }
 
-        $successMessage = 'All targets were successfully updated.';
-        $this->colors ? $io->success($successMessage) : $io->writeln($successMessage);
+        $this->print('All targets were successfully updated.', true, null, 'success');
         $this->io->writeln($this->version);
     }
 
@@ -272,8 +281,7 @@ class UpdateVersionCommand extends ContainerAwareCommand
 
                     $this->version = $formatter->format();
 
-                    $updatedMessage = sprintf('Updated file "%s". Version: %s', $file, $version);
-                    $this->colors ? $this->io->writeln('✔ '.$updatedMessage) : $this->io->writeln($updatedMessage);
+                    $this->print(sprintf('Updated file "%s". Version: %s', $file, $version), true, '✔');
                 }
             );
         }
@@ -305,10 +313,10 @@ class UpdateVersionCommand extends ContainerAwareCommand
             }
 
             if (null !== $version) {
-                $this->io->writeln($version);
+                $this->print($version);
             }
         } catch (Exception $exception) {
-            $this->colors ? $this->io->error($exception->getMessage()) : $this->io->writeln($exception->getMessage());
+            $this->print($exception->getMessage(), true, null, 'error');
             $exitCode = 2;
         }
 
@@ -320,10 +328,8 @@ class UpdateVersionCommand extends ContainerAwareCommand
      */
     private function updateGit(): void
     {
-        $this->io->newLine();
-
-        $gitUpdatingMessage = 'Updating Git repository';
-        $this->colors ? $this->io->title($gitUpdatingMessage) : $this->io->writeln($gitUpdatingMessage);
+        $this->print();
+        $this->print('Updating Git repository', true, null, 'title');
 
         GitCommand::addAllFiles();
         GitCommand::commit(sprintf('Version update: %s', $this->version), true);
@@ -331,21 +337,60 @@ class UpdateVersionCommand extends ContainerAwareCommand
             GitCommand::push();
         }
 
-        $commitMessage = 'All updated files were committed.';
-        $this->colors ? $this->io->writeln('✱ '.$commitMessage) : $this->io->writeln($commitMessage);
+        $this->print('All updated files were committed', true, '✱');
 
         GitCommand::createTag($this->version, 'New release');
 
-        $tagCreatedMessage = sprintf('Created tag "%s".', $this->version);
-        $this->colors ? $this->io->writeln('✱ '.$tagCreatedMessage) : $this->io->writeln($tagCreatedMessage);
+        $this->print(sprintf('Created tag "%s".', $this->version), true, '✱');
 
         if ($this->configurations->isGitPushEnabled()) {
             GitCommand::pushTag($this->version);
 
-            $updatedMessage = 'Pushed to remote git repository';
-            $this->colors ? $this->io->writeln('✔ '.$updatedMessage) : $this->io->writeln($updatedMessage);
+            $this->print('Pushed to remote git repository', true, '✔');
         }
 
-        $this->io->newLine();
+        $this->print();
+    }
+
+    /**
+     * @param string|null $message
+     * @param bool $newLine
+     * @param string|null $prefix
+     * @param string|null $type
+     */
+    private function print(?string $message = null, bool $newLine = true, ?string $prefix = null, ?string $type = null)
+    {
+        if (!$this->printVersionOnly || $this->io->isVerbose()) {
+            if (null !== $message) {
+                $message = new StringType($message);
+                if (null !== $prefix) {
+                    $message->prepend($prefix.' ');
+                }
+
+                if (false === $this->colors) {
+                    $type = null;
+                }
+
+                $result = $message->getValue();
+                switch ($type) {
+                    case 'title':
+                        $this->io->title($result);
+                        break;
+                    case 'success':
+                        $this->io->success($result);
+                        break;
+                    case 'error':
+                        $this->io->error($result);
+                        break;
+                    default:
+                        $this->io->write($message, $newLine);
+                        break;
+                }
+            } else {
+                if (true === $newLine) {
+                    $this->io->newLine();
+                }
+            }
+        }
     }
 }
