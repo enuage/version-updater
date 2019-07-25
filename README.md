@@ -138,6 +138,8 @@ sources:
     - composer
     - Git repository (if enabled)
 - `--exclude-git`: Disable updating Git repository
+- `--print-version-only`: Hide all messages and print only new version when script job will be finished. Messages can be
+displayed again with increased verbosity level (`-v`)
 
 ## Option 2: Updating version via service
 
