@@ -1,6 +1,10 @@
 include:
   template: Dependency-Scanning.gitlab-ci.yml
 
+variables:
+    DS_DISABLE_REMOTE_CHECKS: false
+    DS_DEFAULT_ANALYZERS: gemnasium
+
 stages:
     - lint
     - test
