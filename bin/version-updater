@@ -11,7 +11,7 @@ use Symfony\Bundle\FrameworkBundle\Console\Application;
 
 gc_disable();
 
-$prodAutoload = getcwd().'/vendor/autoload.php';
+$prodAutoload = __DIR__.'/../../../autoload.php';
 if (is_file($prodAutoload)) {
     /** @noinspection PhpIncludeInspection */
     require_once $prodAutoload;
