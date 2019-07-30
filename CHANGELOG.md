@@ -1,5 +1,18 @@
 # Version updater command changelog
 
+### v1.5.3
+
+- Fix bugs
+
+### v1.5.2
+
+- Fix `bin` property in composer configuration file
+
+### v1.5.1
+
+- Update composer requirements
+- Add new option for hide all messages except new version
+
 ### v1.5.0
 
 - [#7][3]: Added Git tag updating and parsing latest version from remote
