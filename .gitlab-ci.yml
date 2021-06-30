@@ -4,7 +4,7 @@ stages:
     - version
 
 lint:full:
-    image: spam312sn/symfony:php7.2-xdebug
+    image: php:7.1.33-alpine
     stage: lint
     before_script: # Override global `before_script`
         - php -v
@@ -15,7 +15,7 @@ lint:full:
         - merge_requests
 
 test:all:
-    image: spam312sn/symfony:php7.2-xdebug
+    image: php:7.1.33-alpine
     stage: test
     script:
         - composer install --dev -q
@@ -25,7 +25,7 @@ test:all:
         - merge_requests
 
 test:coverage:
-    image: spam312sn/symfony:php7.2-xdebug
+    image: php:7.1.33-alpine
     stage: test
     artifacts:
         paths:
@@ -38,8 +38,10 @@ test:coverage:
     only:
         - merge_requests
 
-.setup_git: &setup_git
+.setup_env: &setup_env
     before_script:
+        - wget https://getcomposer.org/download/1.10.22/composer.phar
+        - mv composer.phar /usr/local/bin/composer
         - 'which ssh-agent || ( apt-get update -qy && apt-get install openssh-client -qqy )'
         - eval $(ssh-agent -s)
         - echo "$SSH_PRIVATE_KEY" | tr -d '\r' | ssh-add - > /dev/null
@@ -53,8 +55,8 @@ test:coverage:
         - git checkout $CI_COMMIT_REF_NAME
 
 version:major:
-    <<: *setup_git
-    image: spam312sn/symfony:php7.2-xdebug
+    <<: *setup_env
+    image: php:7.1.33-alpine
     stage: version
     script:
         - composer install -q
@@ -64,8 +66,8 @@ version:major:
         - master
 
 version:minor:
-    <<: *setup_git
-    image: spam312sn/symfony:php7.2-xdebug
+    <<: *setup_env
+    image: php:7.1.33-alpine
     stage: version
     script:
         - composer install -q
@@ -75,8 +77,8 @@ version:minor:
         - master
 
 version:patch:
-    <<: *setup_git
-    image: spam312sn/symfony:php7.2-xdebug
+    <<: *setup_env
+    image: php:7.1.33-alpine
     stage: version
     script:
         - composer install -q
