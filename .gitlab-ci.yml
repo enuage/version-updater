@@ -42,7 +42,7 @@ test:coverage:
     before_script:
         - wget https://getcomposer.org/download/1.10.22/composer.phar
         - mv composer.phar /usr/local/bin/composer
-        - 'which ssh-agent || ( apt-get update -qy && apt-get install openssh-client -qqy )'
+        - 'which ssh-agent || apk add --no-cache openssh'
         - eval $(ssh-agent -s)
         - echo "$SSH_PRIVATE_KEY" | tr -d '\r' | ssh-add - > /dev/null
         - mkdir -p ~/.ssh
