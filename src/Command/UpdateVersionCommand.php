@@ -332,14 +332,24 @@ class UpdateVersionCommand extends ContainerAwareCommand
         $this->print('Updating Git repository', true, null, 'title');
 
         GitCommand::addAllFiles();
-        GitCommand::commit(sprintf('Version update: %s', $this->version), true);
+
+        GitCommand::commit(str_replace(
+            '\V',
+            $this->version,
+            $this->configurations->getGitCommitMessage('Version update: \V')
+        ), true);
+
         if ($this->configurations->isGitPushEnabled()) {
             GitCommand::push();
         }
 
-        $this->print('All updated files were committed', true, '✱');
+        $this->print('All updated files has been committed', true, '✱');
 
-        GitCommand::createTag($this->version, 'New release');
+        GitCommand::createTag($this->version, str_replace(
+            '\V',
+            $this->version,
+            $this->configurations->getGitReleaseMessage('New release')
+        ));
 
         $this->print(sprintf('Created tag "%s".', $this->version), true, '✱');
 

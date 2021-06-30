@@ -15,6 +15,9 @@ use Enuage\VersionUpdaterBundle\Handler\YamlHandler;
  */
 class ConfigurationParser
 {
+    protected const GET_MESSAGE_COMMIT = 'commit';
+    protected const GET_MESSAGE_RELEASE = 'release';
+
     /**
      * @var ArrayCollection
      */
@@ -115,6 +118,48 @@ class ConfigurationParser
      */
     private function getGitConfiguration(): array
     {
-        return $this->configurations->getValue('git') ?: [];
+        return $this->configurations->getValue('git', []);
+    }
+
+    /**
+     * @param string $defaultMessage
+     *
+     * @return string
+     */
+    public function getGitCommitMessage(string $defaultMessage): string
+    {
+        return $this->getGitMessage(self::GET_MESSAGE_COMMIT, $defaultMessage);
+    }
+
+    /**
+     * @param string $defaultMessage
+     *
+     * @return string
+     */
+    public function getGitReleaseMessage(string $defaultMessage): string
+    {
+        return $this->getGitMessage(self::GET_MESSAGE_RELEASE, $defaultMessage);
+    }
+
+    protected function getGitMessage(
+        string $type,
+        string $defaultMessage
+    ): string {
+        if ($this->isGitEnabled()) {
+            $gitConfiguration = $this->getGitConfiguration();
+
+            $messageConfiguration = [];
+            if (array_key_exists('message', $gitConfiguration)) {
+                $messageConfiguration = $gitConfiguration['message'] ?? [];
+            }
+
+            if (array_key_exists($type, $messageConfiguration)) {
+                if (!empty($messageConfiguration[$type])) {
+                    return $messageConfiguration[$type];
+                }
+            }
+        }
+
+        return $defaultMessage;
     }
 }

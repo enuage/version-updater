@@ -15,7 +15,7 @@
 
 ### v1.5.0
 
-- [#7][3]: Added Git tag updating and parsing latest version from remote
+- [EVUB-7][3]: Added Git tag updating and parsing latest version from remote
 repository
 
 ### v1.4.1
@@ -24,7 +24,7 @@ repository
 
 ### v1.4.0
 
-- Added executable file for using command from `vendor/bin` directory
+- [EVUB-4][4]: Added executable file for using command from `vendor/bin` directory
 - Updated files finder
 - Updated command
     - improved output
@@ -47,13 +47,13 @@ repository
 
 ##### 2019-06-30 09:51
 
-- [#2][2]: added handler for YAML files version updating by pattern
+- [EVUB-2][2]: added handler for YAML files version updating by pattern
 
 ### v1.2.0
 
 ##### 2019-06-30 05:48
 
-- [#1][1]: added handler for JSON files version updating by pattern
+- [EVUB-1][1]: added handler for JSON files version updating by pattern
 
 ### v1.1.0
 
@@ -116,6 +116,7 @@ files
 
 - Moved version updater command from API project to separated bundle
 
-[1]: https://gitlab.com/enuage/bundles/version-updater/issues/1
-[2]: https://gitlab.com/enuage/bundles/version-updater/issues/2
-[3]: https://gitlab.com/enuage/bundles/version-updater/issues/7
+[1]: https://enuage.myjetbrains.com/youtrack/issue/EVUB-1
+[2]: https://enuage.myjetbrains.com/youtrack/issue/EVUB-2
+[3]: https://enuage.myjetbrains.com/youtrack/issue/EVUB-7
+[4]: https://enuage.myjetbrains.com/youtrack/issue/EVUB-4

@@ -43,6 +43,14 @@ class VersionComponent
     }
 
     /**
+     * @return string
+     */
+    public function __toString(): string
+    {
+        return (string) $this->value;
+    }
+
+    /**
      * @return int
      */
     public function getValue(): int

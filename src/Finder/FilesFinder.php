@@ -148,10 +148,6 @@ class FilesFinder
             $name->reset()->append('.')->append($fileExtension);
         }
 
-        if (!$directory->startsWith('.')) {
-            $directory->regexPrepare();
-        }
-
         $finder = new Finder();
         $finder->files();
         $finder->in($directory->getValue());
