@@ -86,7 +86,8 @@ Usage
 
 ### Step 1: Define files and regular expression for version updating
 
-Use `\V` for define the version in regular expression. It will be replaced with the SemVer regular expression
+Use `\V` for define the version in regular expression.
+It will be replaced with the SemVer regular expression
 
 **New in version 1.2.0**: you can easily define property of the json
 file which should be updated - just add file path and path to the
@@ -98,18 +99,26 @@ file which should be updated - just add file path and path to the
 property delimited by slash under `yaml` configuration in following
 format: `path-to/file: property/path`
 
+**New in version 1.5.4**: custom commit and tag (release) messages
+
 Example:
 
-```yml
-enuage_version_updater:
-    files:
-        - '.env': '/^(API_VERSION=)\V/m'
-        - 'README.md': '/^(Version:\s)\V/m'
-    json:
-        - composer: version                 # File: <project>/composer.json
-        - doc/api: info/version             # File <project>/doc/api.json
-    yaml:
-        - doc/api: info/version             # File <project>/doc/api.yaml
+```yaml
+files:
+  - '.env': '/^(API_VERSION=)\V/m'
+  - 'README.md': '/^(Version:\s)\V/m'
+json:
+  - composer: version                 # File: <project>/composer.json
+  - doc/api: info/version             # File <project>/doc/api.json
+yaml:
+  - doc/api: info/version             # File <project>/doc/api.yaml
+git: # 
+  source: true # The latest tag will be got from Git history
+  push: true # Push tag to repository after its creation
+  prefix: v # Tag prefix
+  message:
+    commit: 'Your custom commit message (\V)' # If you want, you can use \V to define the place for version string
+    release: 'Your custom release message'
 ```
 
 ### Step 2: Use the command for version updating

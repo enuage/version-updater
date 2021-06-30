@@ -13,6 +13,7 @@
 namespace Enuage\VersionUpdaterBundle\Tests;
 
 use Enuage\VersionUpdaterBundle\Command\UpdateVersionCommand;
+use Enuage\VersionUpdaterBundle\Parser\VersionParser;
 use Symfony\Bundle\FrameworkBundle\Console\Application;
 use Symfony\Component\Console\Tester\ApplicationTester;
 use Symfony\Component\Yaml\Yaml;
@@ -103,7 +104,11 @@ class CommandTest extends FunctionalTestCase
 
         foreach ($this->files as $file => $content) {
             if (strpos('composer.json', $file) !== false) {
-                $expected = json_encode(['version' => $universalData], JSON_PRETTY_PRINT).PHP_EOL;
+                $versionParser = new VersionParser($universalData);
+                $expected = json_encode(
+                        ['version' => $versionParser->parse()->implodeMainComponents()],
+                        JSON_PRETTY_PRINT
+                    ).PHP_EOL;
             }
 
             if (strpos('doc/api.json', $file) !== false) {
@@ -490,7 +495,6 @@ class CommandTest extends FunctionalTestCase
     {
         $date = date('U');
         $meta = sha1($date);
-
         $initialValue = 'version=0.1.0';
         $this->setTestFileContent($initialValue);
         $this->runCommand(
@@ -503,6 +507,8 @@ class CommandTest extends FunctionalTestCase
         $this->assertContentEqualTo('version=0.1.0-alpha+'.$date.'+'.$meta);
         $this->statusQuo();
 
+        $date = date('U');
+        $meta = sha1($date);
         $initialValue = 'version=0.1.0';
         $this->setTestFileContent($initialValue);
         $this->runCommand(
@@ -515,6 +521,8 @@ class CommandTest extends FunctionalTestCase
         $this->assertContentEqualTo('version=0.1.0-beta+'.$date.'+'.$meta);
         $this->statusQuo();
 
+        $date = date('U');
+        $meta = sha1($date);
         $initialValue = 'version=0.1.0';
         $this->setTestFileContent($initialValue);
         $this->runCommand(
@@ -532,7 +540,6 @@ class CommandTest extends FunctionalTestCase
     {
         $date = date('U');
         $meta = sha1($date);
-
         $initialValue = 'version=0.1.0-alpha.1';
         $this->setTestFileContent($initialValue);
         $this->runCommand(
@@ -546,6 +553,8 @@ class CommandTest extends FunctionalTestCase
         $this->assertContentEqualTo('version=0.1.0-alpha+'.$date.'+'.$meta);
         $this->statusQuo();
 
+        $date = date('U');
+        $meta = sha1($date);
         $initialValue = 'version=0.1.0-beta.1';
         $this->setTestFileContent($initialValue);
         $this->runCommand(
@@ -559,6 +568,8 @@ class CommandTest extends FunctionalTestCase
         $this->assertContentEqualTo('version=0.1.0-beta+'.$date.'+'.$meta);
         $this->statusQuo();
 
+        $date = date('U');
+        $meta = sha1($date);
         $initialValue = 'version=0.1.0-rc.1';
         $this->setTestFileContent($initialValue);
         $this->runCommand(

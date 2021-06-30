@@ -282,4 +282,12 @@ class Version
     {
         $this->metaComponents = $metaComponents;
     }
+
+    /**
+     * @return string
+     */
+    public function implodeMainComponents(): string
+    {
+        return implode('.', $this->getMainComponents()->toArray());
+    }
 }
