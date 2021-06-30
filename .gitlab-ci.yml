@@ -43,6 +43,7 @@ test:coverage:
         - wget https://getcomposer.org/download/1.10.22/composer.phar
         - mv composer.phar /usr/local/bin/composer
         - 'which ssh-agent || apk add --no-cache openssh'
+        - 'which git || apk add --no-cache git'
         - eval $(ssh-agent -s)
         - echo "$SSH_PRIVATE_KEY" | tr -d '\r' | ssh-add - > /dev/null
         - mkdir -p ~/.ssh
