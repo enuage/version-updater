@@ -110,7 +110,7 @@ class ConfigurationParser
             }
         }
 
-        return 'v';
+        return '';
     }
 
     /**
