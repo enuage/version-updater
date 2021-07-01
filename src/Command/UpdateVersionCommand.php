@@ -340,7 +340,7 @@ class UpdateVersionCommand extends ContainerAwareCommand
         ), true);
 
         if ($this->configurations->isGitPushEnabled()) {
-            GitCommand::push();
+            GitCommand::pushLatestCommit();
         }
 
         $this->print('All updated files has been committed', true, '✱');

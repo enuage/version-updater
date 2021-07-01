@@ -44,9 +44,9 @@ class GitCommand
     /**
      * @return void
      */
-    public static function push(): void
+    public static function pushLatestCommit(): void
     {
-        self::run('push');
+        self::run('push -u origin HEAD');
     }
 
     /**
