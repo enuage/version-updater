@@ -11,23 +11,30 @@ class GitCommand
 {
     /**
      * @param string $gitCommand
+     * @param bool $raw
      *
-     * @return mixed
+     * @return mixed|string|null
      */
-    public static function run(string $gitCommand)
+    public static function run(string $gitCommand, bool $raw = false)
     {
         exec(sprintf('git %s 2>&1', $gitCommand), $output, $exitCode);
 
-        return $output;
+        if (true === $raw) {
+            return $output;
+        }
+
+        if (null === $output) {
+            return null;
+        }
+
+        if (\is_array($output)) {
+            return \implode(PHP_EOL, $output);
+        }
+
+        return \strval($output);
     }
 
-    /**
-     * @param string $message
-     * @param bool $all
-     *
-     * @return void
-     */
-    public static function commit(string $message, bool $all = false): void
+    public static function commit(string $message, bool $all = false): ?string
     {
         $options = [];
 
@@ -38,53 +45,31 @@ class GitCommand
         $options[] = '-m';
         $options[] = sprintf('"%s"', $message);
 
-        self::run('commit '.implode(' ', $options));
+        return self::run('commit '.implode(' ', $options));
     }
 
-    /**
-     * @return void
-     */
-    public static function pushLatestCommit(): void
+    public static function pushLatestCommit(): ?string
     {
-        self::run('push -u origin HEAD');
+        return self::run('push -u origin HEAD');
     }
 
-    /**
-     * @param string $tag
-     * @param string $message
-     *
-     * @return void
-     */
-    public static function createTag(string $tag, string $message): void
+    public static function createTag(string $tag, string $message): ?string
     {
-        self::run(sprintf('tag -a %s -m "%s"', $tag, $message));
+        return self::run(sprintf('tag -a %s -m "%s"', $tag, $message));
     }
 
-    /**
-     * @param string $tag
-     *
-     * @return void
-     */
-    public static function pushTag(string $tag): void
+    public static function pushTag(string $tag): ?string
     {
-        self::run(sprintf('push -u origin %s', $tag));
+        return self::run(sprintf('push -u origin %s', $tag));
     }
 
-    /**
-     * @param array $files
-     *
-     * @return void
-     */
-    public static function addFiles(array $files): void
+    public static function addFiles(array $files): ?string
     {
-        self::run(sprintf('add %s', implode(' ', $files)));
+        return self::run(sprintf('add %s', implode(' ', $files)));
     }
 
-    /**
-     * @return void
-     */
-    public static function addAllFiles(): void
+    public static function addAllFiles(): ?string
     {
-        self::addFiles(['.']);
+        return self::addFiles(['.']);
     }
 }

@@ -78,7 +78,19 @@ class ConfigurationParser
      */
     public function isGitEnabled(): bool
     {
-        return $this->configurations->containsKey('git');
+        if (false === $this->configurations->containsKey('git')) {
+            return false;
+        }
+
+        $gitConfiguration = $this->configurations->getValue('git', []);
+        if (\array_key_exists('enabled', $gitConfiguration)) {
+            return \filter_var(
+                $gitConfiguration['enabled'],
+                FILTER_VALIDATE_BOOLEAN
+            );
+        }
+
+        return true;
     }
 
     /**

@@ -27,7 +27,6 @@ use Enuage\VersionUpdaterBundle\Handler\StructureHandler;
 use Enuage\VersionUpdaterBundle\Handler\TextHandler;
 use Enuage\VersionUpdaterBundle\Handler\YamlHandler;
 use Enuage\VersionUpdaterBundle\Helper\Type\FileType;
-use Enuage\VersionUpdaterBundle\Helper\Type\StringType;
 use Enuage\VersionUpdaterBundle\Mutator\VersionMutator;
 use Enuage\VersionUpdaterBundle\Parser\AbstractParser;
 use Enuage\VersionUpdaterBundle\Parser\CommandOptionsParser;
@@ -44,14 +43,14 @@ use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 use Symfony\Component\Finder\SplFileInfo;
 
-/**
- * Class UpdateVersionCommand
- *
- * @package Enuage\VersionUpdaterBundle\Command
- */
 class UpdateVersionCommand extends ContainerAwareCommand
 {
     public const COMMAND_NAME = 'enuage:version:update';
+
+    public const IO_TITLE = 'title';
+    public const IO_GREEN = 'success';
+    public const IO_ERROR = 'error';
+    public const IO_DEBUG = 'debug';
 
     private const HANDLERS = [
         'files' => TextHandler::class,
@@ -97,7 +96,7 @@ class UpdateVersionCommand extends ContainerAwareCommand
     /**
      * UpdateVersionCommand constructor.
      *
-     * @param ConfigurationParser $configurations
+     * @param ConfigurationParser|null $configurations
      */
     public function __construct(ConfigurationParser $configurations = null)
     {
@@ -105,18 +104,6 @@ class UpdateVersionCommand extends ContainerAwareCommand
 
         $this->configurations = $configurations ?: new ConfigurationParser();
         $this->service = new VersionService();
-    }
-
-    /**
-     * @param array $configurations
-     *
-     * @return UpdateVersionCommand
-     */
-    public function setConfigurations(array $configurations): UpdateVersionCommand
-    {
-        $this->configurations = new ArrayCollection($configurations);
-
-        return $this;
     }
 
     /**
@@ -173,8 +160,7 @@ class UpdateVersionCommand extends ContainerAwareCommand
      */
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        $io = new SymfonyStyle($input, $output);
-        $this->io = $io;
+        $this->io = new SymfonyStyle($input, $output);
 
         $this->options = CommandOptionsParser::parse($input);
         if ($this->configurations->isGitEnabled()) {
@@ -189,16 +175,14 @@ class UpdateVersionCommand extends ContainerAwareCommand
             $this->showCurrentVersion($showSource);
         }
 
-        if ($io->isVerbose()) {
+        if ($this->io->isVerbose()) {
             $debugMessage = 'Debug mode enabled.';
-            $this->colors
-                ? $this->io->block($debugMessage, 'DEBUG', 'fg=black;bg=yellow', ' ', true)
-                : $this->io->writeln($debugMessage);
-            $this->print('Configurations:', true, null, 'title');
-            $this->options->consoleDebug($io);
+            $this->print($debugMessage, self::IO_DEBUG);
+            $this->print('Configurations:', self::IO_TITLE);
+            $this->options->consoleDebug($this->io);
         }
 
-        $this->print('Started files updating', true, null, 'title');
+        $this->print('Started files updating', self::IO_TITLE);
         try {
             if ($this->getContainer()->hasParameter(Configuration::CONFIG_ROOT)) {
                 /** @noinspection NestedPositiveIfStatementsInspection */
@@ -230,11 +214,16 @@ class UpdateVersionCommand extends ContainerAwareCommand
                 $this->updateGit();
             }
         } catch (Exception $exception) {
-            $this->colors ? $io->error($exception->getMessage()) : $io->writeln($exception->getMessage());
+            if ($this->colors) {
+                $this->io->error($exception->getMessage());
+            } else {
+                $this->io->writeln($exception->getMessage());
+            }
+
             exit(2);
         }
 
-        $this->print('All targets were successfully updated.', true, null, 'success');
+        $this->print('All targets were successfully updated.', self::IO_GREEN);
         $this->io->writeln($this->version);
     }
 
@@ -244,6 +233,7 @@ class UpdateVersionCommand extends ContainerAwareCommand
      *
      * @throws FileNotFoundException
      * @throws InvalidFileException
+     * @throws Exception
      */
     private function updateFiles(FilesFinder $finder, AbstractHandler $handler): void
     {
@@ -281,7 +271,7 @@ class UpdateVersionCommand extends ContainerAwareCommand
 
                     $this->version = $formatter->format();
 
-                    $this->print(sprintf('Updated file "%s". Version: %s', $file, $version), true, '✔');
+                    $this->print(sprintf('Updated file "%s". Version: %s', $file, $version));
                 }
             );
         }
@@ -316,7 +306,7 @@ class UpdateVersionCommand extends ContainerAwareCommand
                 $this->print($version);
             }
         } catch (Exception $exception) {
-            $this->print($exception->getMessage(), true, null, 'error');
+            $this->print($exception->getMessage(), self::IO_ERROR);
             $exitCode = 2;
         }
 
@@ -328,79 +318,103 @@ class UpdateVersionCommand extends ContainerAwareCommand
      */
     private function updateGit(): void
     {
-        $this->print();
-        $this->print('Updating Git repository', true, null, 'title');
+        $this->io->newLine();
+        $this->print('Updating Git repository', self::IO_TITLE);
 
-        GitCommand::addAllFiles();
+        $this->debug(GitCommand::addAllFiles());
 
-        GitCommand::commit(str_replace(
+        $this->debug(GitCommand::commit(str_replace(
             '\V',
             $this->version,
             $this->configurations->getGitCommitMessage('Version update: \V')
-        ), true);
+        ), true));
 
         if ($this->configurations->isGitPushEnabled()) {
-            GitCommand::pushLatestCommit();
+            $this->debug(GitCommand::pushLatestCommit());
         }
 
-        $this->print('All updated files has been committed', true, '✱');
+        $this->print('All updated files have been committed');
 
-        GitCommand::createTag($this->version, str_replace(
+        $this->debug(GitCommand::createTag($this->version, str_replace(
             '\V',
             $this->version,
             $this->configurations->getGitReleaseMessage('New release')
-        ));
+        )));
 
-        $this->print(sprintf('Created tag "%s".', $this->version), true, '✱');
+        $this->print(sprintf('Created tag "%s".', $this->version));
 
         if ($this->configurations->isGitPushEnabled()) {
-            GitCommand::pushTag($this->version);
-
-            $this->print('Pushed to remote git repository', true, '✔');
+            $this->debug(GitCommand::pushTag($this->version));
+            $this->print('Pushed to remote git repository');
         }
 
-        $this->print();
+        $this->io->newLine();
+    }
+
+    public function debug($message)
+    {
+        if (empty($message)) {
+            return;
+        }
+
+        if (false === (
+            $this->io->isVerbose() &&
+            OutputInterface::VERBOSITY_DEBUG === $this->io->getVerbosity()
+        )) {
+            return;
+        }
+
+        $this->print($message, self::IO_DEBUG);
     }
 
     /**
      * @param string|null $message
-     * @param bool $newLine
-     * @param string|null $prefix
+     * @param bool|true $newLine
      * @param string|null $type
+     *
+     * @noinspection PhpSameParameterValueInspection
      */
-    private function print(?string $message = null, bool $newLine = true, ?string $prefix = null, ?string $type = null)
-    {
-        if (!$this->printVersionOnly || $this->io->isVerbose()) {
-            if (null !== $message) {
-                $message = new StringType($message);
-                if (null !== $prefix) {
-                    $message->prepend($prefix.' ');
-                }
+    private function print(
+        ?string $message = null,
+        ?string $type = null,
+        bool $newLine = true
+    ) {
+        if ($this->printVersionOnly && !$this->io->isVerbose()) {
+            return;
+        }
 
-                if (false === $this->colors) {
-                    $type = null;
-                }
+        if (null === $message) {
+            $this->io->newLine();
 
-                $result = $message->getValue();
-                switch ($type) {
-                    case 'title':
-                        $this->io->title($result);
-                        break;
-                    case 'success':
-                        $this->io->success($result);
-                        break;
-                    case 'error':
-                        $this->io->error($result);
-                        break;
-                    default:
-                        $this->io->write($message, $newLine);
-                        break;
-                }
-            } else {
-                if (true === $newLine) {
-                    $this->io->newLine();
-                }
-            }
+            return;
+        }
+
+        if (false === $this->colors) {
+            $type = null;
+        }
+
+        switch ($type) {
+            case self::IO_TITLE:
+                $this->io->title($message);
+                break;
+            case self::IO_GREEN:
+                $this->io->success($message);
+                break;
+            case self::IO_ERROR:
+                $this->io->error($message);
+                break;
+            case self::IO_DEBUG:
+                $this->io->block(
+                    $message,
+                    'DEBUG',
+                    'fg=black;bg=yellow',
+                    ' ',
+                    true
+                );
+                break;
+            default:
+                $this->io->write($message, $newLine);
+                break;
         }
     }
 }

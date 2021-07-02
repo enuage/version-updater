@@ -112,10 +112,11 @@ json:
   - doc/api: info/version             # File <project>/doc/api.json
 yaml:
   - doc/api: info/version             # File <project>/doc/api.yaml
-git: # 
+git:
+  enabled: true # Optional parameter. You can disable Git operations without removing its configuration
   source: true # The latest tag will be got from Git history
   push: true # Push tag to repository after its creation
-  prefix: v # Tag prefix
+  prefix: v # Tag prefix. Empty by default
   message:
     commit: 'Your custom commit message (\V)' # If you want, you can use \V to define the place for version string
     release: 'Your custom release message'

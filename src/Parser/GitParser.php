@@ -27,7 +27,7 @@ class GitParser
      */
     public function getLatestTag(): string
     {
-        $tags = GitCommand::run('tag');
+        $tags = GitCommand::run('tag', true);
 
         return end($tags);
     }

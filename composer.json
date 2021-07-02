@@ -1,7 +1,7 @@
 {
     "name": "enuage/version-updater",
     "description": "The tool for version updating",
-    "version": "1.5.6",
+    "version": "1.5.7",
     "keywords": [
         "enuage"
     ],
